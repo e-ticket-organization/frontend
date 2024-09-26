@@ -1,0 +1,49 @@
+.container{
+    display: flex;
+    justify-content: space-between !important;
+    align-items: center;
+    max-width: 95%;
+    margin: 1% auto;
+    width: 100%;
+    position: fixed;
+    background-color: transparent ;
+    z-index: 1000;
+    left: 2%;
+}
+
+.container li{
+    list-style: none;
+    font-family: var(--font-family1);
+}
+
+ol{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background-color: transparent
+}
+
+ol li{
+    font-size: 18px;
+    color: var(--foreground);
+    font-weight: 400;
+    background-color: transparent;
+}
+a{
+    background-color: transparent;
+}
+*{
+    font-family: var(--font-family);
+
+}
+
+.profile-icon{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+svg{
+    background-color: transparent
+}
