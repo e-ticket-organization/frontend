@@ -59,7 +59,8 @@
 }
 
 .embla-slide:hover .recomendation-img {
-    opacity: 1;
+    opacity: 0.9;
+    cursor: pointer;
 }
 
 .embla-slide:hover::before {

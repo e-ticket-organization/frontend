@@ -3,11 +3,29 @@
     width: 100%;
 }
 
+.embla {
+    overflow: hidden;
+    width: 100%;
+}
+
+.embla__container {
+    display: flex;
+}
+
+.embla__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+    position: relative;
+}
+
 .favorite img {
-    width: 97%;
+    width: 100%;
     height: 80vh;
     display: block;
     margin: 0 auto;
+    position: relative;
+    z-index: 0;
+    opacity: 0.6;
 }
 
 .favorite::before {
@@ -18,8 +36,6 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
-    background: radial-gradient( transparent, transparent 20%, #010F29 100%);
-    filter: blur(10px);
     z-index: 1; 
 }
 
@@ -34,30 +50,17 @@
     z-index: 2;
 }
 
-.favorite img {
-    position: relative;
-    z-index: 0;
-    opacity: 0.6;
-}
-
-.favorite-main{
-    position: absolute;
-    top: 35%;
-    left: 15%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    background-color: transparent;
-
-}
-.favorite-wrapper{
+.favorite-wrapper {
     display: flex;
     position: absolute;
-    z-index: 10000;
+    z-index: 3;
     top: 55%;
     left: 5%;
     gap: 75%;
+    width: 90%;
 }
-.favorite-trending-block{
+
+.favorite-trending-block {
     background-color: #0B2868;
     font-family: var(--font-family2);
     padding: 5px 15px;
@@ -67,45 +70,56 @@
     justify-content: space-between;
 }
 
-.favorite-trending-block p{
+.favorite-trending-block p {
     color: #fff;
     align-items: center;
 }
 
-
-.favorite-block-container{
+.favorite-block-container {
     display: flex;
     flex-direction: column;
     z-index: 14;
     gap: 40px;
 }
 
-.favorite-date_info-container{
+.favorite-date_info-container {
     display: flex;
     flex-direction: row;
     gap: 20px;
 }
 
-.favorite-button-container{
+.favorite-button-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 20px;
 }
 
-#button1{
+#button1 {
     background-color: #C1272D;
     border: none;
     padding: 10px 32px;
     border-radius: 10px;
+    color: white;
 }
 
-#button2{
+#button2 {
     padding: 10px 32px;
     border-radius: 10px;
+    color: white;
 }
 
-#button2 p{
+#button2 p {
     color: black;
     opacity: 1 !important;
+}
+
+button {
+    border: none;
+}
+
+button:hover {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: 0.3s;
 }
