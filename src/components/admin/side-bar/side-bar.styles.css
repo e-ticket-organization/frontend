@@ -1,0 +1,93 @@
+.side-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: #081731;
+    transition: transform 0.3s ease;
+    transform: translateX(-100%);
+    z-index: 1000;
+}
+
+.side-bar.open {
+    transform: translateX(0);
+}
+
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    z-index: 999;
+    cursor: pointer;
+}
+
+.toggle-button {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 30px;
+    height: 30px;
+    background-color: #05132b;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 1001;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.toggle-button::before {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 8px;
+    border-color: transparent transparent transparent white;
+}
+
+.side-bar.open .toggle-button::before {
+    border-width: 5px 8px 5px 0;
+    border-color: transparent white transparent transparent;
+}
+
+.left-click-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 50px; /* Ширина області для натискання */
+    height: 100vh;
+    background: transparent;
+    z-index: 999;
+    cursor: pointer;
+}
+.menu-content{
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.menu-content button{
+    padding: 15px;
+    background-color: #042053;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.menu-content button:hover{
+    background-color: #05132b;
+    transition: background-color 0.3s;
+}
+

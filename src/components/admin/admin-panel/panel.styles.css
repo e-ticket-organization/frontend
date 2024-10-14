@@ -1,0 +1,74 @@
+.elements-container{
+    width: 85%;
+    margin: 3% auto;
+    height: 80vh;
+    left: 0;
+    background-color: #081731;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-radius: 10px;
+}
+
+.element-actors{
+    display: flex;
+    align-items: center;
+    width: 95%;
+    border-radius: 10px;
+    background-color: #09214a;
+    height: 50px;
+    gap: 22%;
+    margin: 20px auto
+}
+
+.element-actors p{
+    margin-left: 15px;
+}
+
+
+.element-events{
+    display: flex;
+    align-items: center;
+    width: 95%;
+    border-radius: 10px;
+    background-color: #09214a;
+    height: 50px;
+    gap: 25%;
+    margin: 20px auto
+}
+
+.element-events p{
+    text-wrap: nowrap;
+}
+
+
+.element-events img{
+    width: 3.5%;
+    height: 85%;
+    border-radius: 5px;
+    margin-left: 40px;
+}
+
+.buttons-container {
+    display: flex;
+    width: 100%;
+}
+
+.buttons-container button {
+    flex: 1; /* Додає рівномірний розподіл ширини між кнопками */
+    padding: 10px 20px;
+    border: none;
+    background-color: #05132b;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.buttons-container button.active {
+    background-color: #081731;
+    font-weight: bold;
+}
+
+.buttons-container button:hover {
+    background-color: #0a1d3d;
+}
