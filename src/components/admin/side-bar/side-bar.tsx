@@ -21,10 +21,11 @@ export default function SideBar() {
         </button>
         {isOpen && 
         <div className="menu-content">
-            <button onClick={() => handleNavigation('admin/add-actor')}>Додати актора</button>
-            <button onClick={() => handleNavigation('admin/add-show')}>Додати виставу</button>
-            <button onClick={() => handleNavigation('admin/add-genre')}>Додати жанр вистави</button>
-            <button onClick={() => handleNavigation('admin/view-sales')}>Переглянути статистику продажу</button>
+            <button onClick={() => handleNavigation('admin/add/actor')}>Додати актора</button>
+            <button onClick={() => handleNavigation('admin/add/show')}>Додати виставу</button>
+            <button onClick={() => handleNavigation('admin/add/genre')}>Додати жанр вистави</button>
+            <button onClick={() => handleNavigation('admin/add/genre')}>Додати жанр вистави</button>
+            <button onClick={() => handleNavigation('admin/view/sales')}>Переглянути статистику продажу</button>
         </div>
         }
       </div>

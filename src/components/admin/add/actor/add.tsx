@@ -18,7 +18,6 @@ export default function Add() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Actor added:', actor);
-    // Додайте логіку для обробки даних форми
   };
 
   return (
