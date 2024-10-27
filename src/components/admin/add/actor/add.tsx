@@ -1,6 +1,9 @@
 'use client'
 import React, { useState } from 'react';
 import './add.styles.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Link from 'next/link';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 export default function Add() {
   const [actor, setActor] = useState({
@@ -22,24 +25,25 @@ export default function Add() {
 
   return (
     <section className='add-actor-container'>
+      <button className='back-button'>
+            <Link href="/admin">
+                <FontAwesomeIcon icon={faArrowLeft} /> Повернутися
+            </Link>
+        </button>
       <form onSubmit={handleSubmit}>
         <label>
-          Name:
-          <input type="text" name="name" value={actor.name} onChange={handleChange} required />
+          <input type="text" placeholder='Ім`я' name="name" value={actor.name} onChange={handleChange} required />
         </label>
         <label>
-          Date of Birth:
-          <input type="date" name="dateOfBirth" value={actor.dateOfBirth} onChange={handleChange} required />
+          <input type="date" placeholder='Дата народження' name="dateOfBirth" value={actor.dateOfBirth} onChange={handleChange} required />
         </label>
         <label>
-          Passport Code:
-          <input type="text" name="passportCode" value={actor.passportCode} onChange={handleChange} required />
+          <input type="text" placeholder='Код паспорта' name="passportCode" value={actor.passportCode} onChange={handleChange} required />
         </label>
         <label>
-          Phone Number:
-          <input type="tel" name="phoneNumber" value={actor.phoneNumber} onChange={handleChange} required />
+          <input type="tel" placeholder='Номер телефону' name="phoneNumber" value={actor.phoneNumber} onChange={handleChange} required />
         </label>
-        <button type="submit">Add Actor</button>
+        <button type="submit">Додати актора</button>
       </form>
     </section>
   );

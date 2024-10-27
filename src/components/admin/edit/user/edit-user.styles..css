@@ -1,4 +1,4 @@
-.add-actor-container {
+.add-user-container {
     padding: 20px;
     background-color: #09072b;
     border-radius: 10px;
@@ -36,33 +36,4 @@ button {
 
 button:hover {
     background-color: #0a1d3d;
-}
-
-.back-button {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: #081731;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.back-button:hover {
-    background-color: #0a1d3d;
-}
-
-.back-button:hover .fa-arrow-left {
-    animation: moveLeft 0.5s infinite alternate;
-}
-
-@keyframes moveLeft {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-5px);
-    }
 }

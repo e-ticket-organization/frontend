@@ -105,3 +105,35 @@
     margin: 0 10px;
 }
 
+.edit-user-button {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .edit-user-button svg {
+    width: 20px;
+    height: 20px;
+    fill: #ffffff;
+  }
+  
+  .edit-user-button:hover svg {
+    fill: #007bff;
+  }
+  
+  .element-users {
+    position: relative; 
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin: 10px auto;
+    width: 95%;
+    border-radius: 10px;
+    background-color: #09214a;
+    height: 50px;
+  }

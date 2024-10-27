@@ -1,4 +1,4 @@
-.add-actor-container {
+.add-show-container {
     padding: 20px;
     background-color: #09072b;
     border-radius: 10px;
@@ -6,25 +6,25 @@
     margin: 0 auto;
 }
 
-form {
+.show-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-label {
+.form-label {
     display: flex;
     flex-direction: column;
     font-weight: bold;
 }
 
-input {
+.form-input {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-button {
+.submit-button {
     padding: 10px;
     background-color: #081731;
     color: white;
@@ -34,8 +34,16 @@ button {
     transition: background-color 0.3s;
 }
 
-button:hover {
+.submit-button:hover, .back-button:hover {
     background-color: #0a1d3d;
+}
+
+.form-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #09072b;
+    color: #ffffff;
 }
 
 .back-button {
