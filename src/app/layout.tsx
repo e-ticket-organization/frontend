@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { AuthProvider } from './context/authContext';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,9 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="uk">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <AuthProvider>
           {children}
+        </AuthProvider>
       </body>
     </html>
   );

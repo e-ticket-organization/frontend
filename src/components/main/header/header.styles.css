@@ -5,9 +5,9 @@
     max-width: 95%;
     margin: 1% auto;
     width: 100%;
-    position: fixed;
+    position: absolute;
     background-color: transparent ;
-    z-index: 1000000;
+    z-index: 10000;
     left: 2%;
 }
 
@@ -19,15 +19,19 @@
 ol{
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 20px;
     background-color: transparent
 }
 
-ol li{
+ol li {
     font-size: 18px;
     color: var(--foreground);
     font-weight: 400;
     background-color: transparent;
+    display: flex;
+    align-items: center; 
+    height: 100%;
 }
 a{
     background-color: transparent;
@@ -64,4 +68,48 @@ svg:hover{
 #logo:hover{
     cursor: default !important;
     opacity: 1 !important;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+    transition: width 0.3s ease;
+    width: 40px; 
+    overflow: hidden;
+}
+
+.search-wrapper.open {
+    width: 200px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, width 0.3s ease;
+    width: 0;
+    margin-right: -40px;
+}
+
+.search-wrapper.open .search-input {
+    opacity: 1;
+    width: 160px; 
+    margin-right: 0;
+}
+
+.search-icon {
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: absolute;
+    right: 0;
+    z-index: 100;
+}
+
+.search-wrapper.open .search-icon {
+    transform: translateX(-170px); 
+    opacity: 1;
 }
