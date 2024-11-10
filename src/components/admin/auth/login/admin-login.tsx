@@ -1,16 +1,21 @@
+'use client';
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '@/app/context/authContext';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { LoginCredentials } from '@/app/types/auth';
+import './admin-login.styles.css';
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
+const AdminLogin = () => {
+  const { admin_login } = useContext(AuthContext);
   const router = useRouter();
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
   });
+
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredentials({
@@ -21,41 +26,55 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
     try {
-      await login(credentials);
-      router.push('/dashboard');
+      await admin_login(credentials);
+      router.push('/admin');
     } catch (error) {
       console.error('Помилка при вході:', error);
-      // Обробка помилок
+      setError('Невірний електронний лист або пароль.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Вхід</h2>
-      <div>
-        <label>Email:</label>
-        <input 
-          type="email" 
-          name="email" 
-          value={credentials.email} 
-          onChange={handleChange} 
-          required 
-        />
-      </div>
-      <div>
-        <label>Пароль:</label>
-        <input 
-          type="password" 
-          name="password" 
-          value={credentials.password} 
-          onChange={handleChange} 
-          required 
-        />
-      </div>
-      <button type="submit">Увійти</button>
-    </form>
+    <div className="admin-login-container">
+      <h2>Адмін Вхід</h2>
+      {isLoading && <div className="loading-spinner"></div>}
+      {error && <div className="error-message">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="email">Електронна пошта:</label>
+          <input 
+            type="email" 
+            id="email"
+            name="email" 
+            value={credentials.email} 
+            onChange={handleChange} 
+            required 
+            placeholder="Введіть ваш Email"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Пароль:</label>
+          <input 
+            type="password" 
+            id="password"
+            name="password" 
+            value={credentials.password} 
+            onChange={handleChange} 
+            required 
+            placeholder="Введіть ваш пароль"
+          />
+        </div>
+        <button type="submit" className="submit-button" disabled={isLoading}>
+          {isLoading ? 'Входжу...' : 'Увійти'}
+        </button>
+      </form>
+    </div>
   );
 };
 
-export default Login;
+export default AdminLogin;

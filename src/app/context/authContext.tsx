@@ -2,14 +2,14 @@
 
 import React, { createContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, RegisterCredentials } from '@/app/types/auth';
-import * as authService from '@/app/services/authService';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  admin_login: (credentials: LoginCredentials) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -17,7 +17,8 @@ export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   login: async () => {},
   register: async () => {},
-  logout: () => {},
+  logout: async () => {},
+  admin_login: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -25,38 +26,115 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = authService.getToken();
-    const user = authService.getUser();
-    
-    if (token && user) {
-      setUser(user);
-      setIsAuthenticated(true);
-      authService.fetchUserProfile()
-        .then(setUser)
-        .catch(() => authService.logout());
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserProfile();
     }
   }, []);
 
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        logout();
+      }
+    } catch (error) {
+      logout();
+    }
+  };
+
   const login = async (credentials: LoginCredentials) => {
-    const response = await authService.login(credentials);
-    setUser(response.user);
-    setIsAuthenticated(true);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      throw new Error('Невірний email або пароль');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    await fetchUserProfile();
   };
 
   const register = async (credentials: RegisterCredentials) => {
-    const response = await authService.register(credentials);
-    setUser(response.user);
-    setIsAuthenticated(true);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      throw new Error('Помилка реєстрації');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    await fetchUserProfile();
   };
 
   const logout = async () => {
-    await authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        });
+        
+        if (!response.ok) {
+          console.error('Помилка при виході');
+        }
+      }
+    } catch (error) {
+      console.error('Помилка при виході:', error);
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const admin_login = async (credentials: LoginCredentials) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}login/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      throw new Error('Невірні облікові дані адміністратора');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    await fetchUserProfile();
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, admin_login }}>
       {children}
     </AuthContext.Provider>
   );

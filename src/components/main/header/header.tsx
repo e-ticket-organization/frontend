@@ -5,6 +5,7 @@ import './header.styles.css';
 import AuthPopup from '@/components/main/header/auth-popup/auth-popup';
 import Search from '@/components/main/header/search/search';
 import { AuthContext } from '@/app/context/authContext';
+import { logout as logoutService } from '@/app/services/authService';
 
 export default function Header() {
   const { isAuthenticated, logout } = useContext(AuthContext);
@@ -23,9 +24,15 @@ export default function Header() {
     setIsSearchOpen(false);
   };
 
-  const handleAuthAction = () => {
+  const handleAuthAction = async () => {
     if (isAuthenticated) {
-      logout();
+      try {
+        await logout();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      } catch (error) {
+        console.error('Помилка при виході:', error);
+      }
     } else {
       setIsAuthPopupOpen(true);
     }

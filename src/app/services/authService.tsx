@@ -9,6 +9,10 @@ interface LoginResponse {
   user: User;
 }
 
+interface RefreshResponse {
+  token: string;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -36,6 +40,23 @@ api.interceptors.request.use((config) => {
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
     const response = await api_auth.post('login', credentials);
+    const { token, user } = response.data;
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Помилка авторизації');
+    }
+    throw error;
+  }
+};
+
+export const admin_login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
+  try {
+    const response = await api_auth.post('admin/login', credentials);
     const { token, user } = response.data;
     
     localStorage.setItem('token', token);
@@ -98,3 +119,55 @@ export const fetchUserProfile = async (): Promise<User> => {
     throw error;
   }
 };
+
+export const refreshToken = async (): Promise<string> => {
+  try {
+    const response = await api_auth.post<RefreshResponse>('refresh');
+    const { token } = response.data;
+    localStorage.setItem('token', token);
+    return token;
+  } catch (error) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    throw error;
+  }
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const token = await refreshToken();
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+api_auth.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const token = await refreshToken();
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api_auth(originalRequest);
+      } catch (refreshError) {
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);

@@ -7,7 +7,7 @@ import './favorite.styles.css';
 
 export default function Favorite() {
   const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
-
+  
   return (
     <section className='favorite'>
       <div className="embla" ref={emblaRef}>

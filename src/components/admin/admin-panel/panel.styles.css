@@ -2,51 +2,64 @@
     width: 85%;
     margin: 3% auto;
     height: 80vh;
-    left: 0;
     background-color: #081731;
     display: flex;
     flex-direction: column;
     gap: 15px;
     border-radius: 10px;
+    overflow-y: auto;
+}
+
+.elements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 0 20px;
+    width: 100%;
 }
 
 .element-actors{
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     align-items: center;
-    justify-content: space-around;
-    width: 95%;
+    width: 100%;
     border-radius: 10px;
     background-color: #09214a;
-    height: 50px;
-    margin: 20px auto
+    height: 60px;
+    padding: 0 20px;
 }
 
 .element-actors p{
-    margin-left: 15px;
+    margin: 0;
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
 .element-events{
-    display: flex;
+    display: grid;
+    grid-template-columns: 40% 1fr 20%;
     align-items: center;
-    width: 95%;
+    width: 100%;
     border-radius: 10px;
     background-color: #09214a;
-    height: 50px;
-    gap: 25%;
-    margin: 20px auto
+    height: 60px;
+    padding: 0 20px;
 }
 
 .element-events p{
     text-wrap: nowrap;
+    margin: 0;
 }
 
 
 .element-events img{
-    width: 3.5%;
-    height: 85%;
+    width: 40px;
+    height: 40px;
     border-radius: 5px;
-    margin-left: 40px;
+    object-fit: cover;
 }
 
 .buttons-container {
@@ -74,24 +87,30 @@
 }
 
 .element-users {
-    display: flex;
+    display: grid;
+    grid-template-columns: 65% 1fr 1fr;
     align-items: center;
-    justify-content: space-around;
-    margin: 10px auto;
-    width: 95%;
+    width: 100%;
+    padding: 0 20px;
     border-radius: 10px;
     background-color: #09214a;
-    height: 50px;
+    height: 60px;
 }
 
+.element-users p {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .tab-labels {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     align-items: center;
     width: 95%;
     margin: 10px auto;
-    padding: 10px 0;
+    padding: 10px 20px;
     background-color: #09214a;
     border-radius: 10px;
     color: white;
@@ -102,38 +121,41 @@
     width: 1px;
     height: 20px;
     background-color: #ffffff;
-    margin: 0 10px;
+    margin: 0 auto;
 }
 
 .edit-user-button {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0;
-  }
-  
-  .edit-user-button svg {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-user-button svg {
     width: 20px;
     height: 20px;
     fill: #ffffff;
-  }
-  
-  .edit-user-button:hover svg {
+}
+
+.edit-user-button:hover svg {
     fill: #007bff;
-  }
-  
-  .element-users {
-    position: relative; 
-    display: flex;
+}
+
+.element-producers{
+    display: grid;
+    grid-template-columns: 30% 1fr 1fr 15%;
     align-items: center;
-    justify-content: space-around;
-    margin: 10px auto;
-    width: 95%;
+    width: 100%;
     border-radius: 10px;
     background-color: #09214a;
-    height: 50px;
-  }
+    height: 60px;
+    padding: 0 20px;
+}
+
+#user_name{
+    justify-self: center;
+}
+  
