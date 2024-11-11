@@ -1,6 +1,17 @@
-export interface IShow{
-    perfomance_id: number;
+export interface IShow {
+    id: number;
+    performance_id: number;
     datetime: string;
-    price: number;
     hall_id: number;
+    price: string | number;
+    performance?: {
+        id: number;
+        title: string;
+        duration: number;
+        image: string;
+    };
+    hall?: {
+        id: number;
+        hall_number: number;
+    };
 }

@@ -1,22 +1,24 @@
 'use client'
-import React, { useState, useEffect } from 'react';
-import './add.styles.css';
+import React, { useEffect, useState } from 'react';
+import './producer.styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { IActor } from '@/app/types/actor';
-import { addActor } from '@/app/services/filmService';
+import { IProducer } from '@/app/types/producer';
+import { addProducer } from '@/app/services/filmService';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
 
-export default function Add() {
-  const [actor, setActor] = useState<IActor>({
+export default function Producers() {
+  const [producer, setProducer] = useState<IProducer>({
     id: 0,
     first_name: '',
     last_name: '',
-    date_of_birth: '',
-    passport: '',
     phone_number: '',
+    email: '',
+    date_of_birth: '',
+    created_at: '',
+    updated_at: '',
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -25,31 +27,23 @@ export default function Add() {
   const router = useRouter();
 
   const validateForm = () => {
-    if (!actor.first_name.trim()) {
+    if (!producer.first_name.trim()) {
       setError("Ім'я є обов'язковим полем");
       return false;
     }
-    if (!actor.last_name.trim()) {
+    if (!producer.last_name.trim()) {
       setError('Прізвище є обов\'язковим полем');
       return false;
     }
-    if (!actor.date_of_birth) {
-      setError('Дата народження є обов\'язковим полем');
-      return false;
-    }
-    if (!actor.phone_number) {
-      setError('Номер телефону є обов\'язковим полем');
-      return false;
-    }
-    if (!actor.passport) {
-      setError('Код паспорта є обов\'язковим полем');
-      return false;
-    }
-    if (actor.date_of_birth && !/^\d{2}\/\d{2}\/\d{4}$/.test(actor.date_of_birth)) {
+    if (producer.date_of_birth && !/^\d{2}\/\d{2}\/\d{4}$/.test(producer.date_of_birth)) {
       setError('Невірний формат дати. Використовуйте формат ДД/ММ/РРРР');
       return false;
     }
-    if (actor.phone_number && !/^\+?\d{10,13}$/.test(actor.phone_number)) {
+    if (producer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(producer.email)) {
+      setError('Невірний формат email');
+      return false;
+    }
+    if (producer.phone_number && !/^\+?\d{10,13}$/.test(producer.phone_number)) {
       setError('Невірний формат номера телефону');
       return false;
     }
@@ -57,22 +51,8 @@ export default function Add() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError('');
-    setActor({ ...actor, [e.target.name]: e.target.value });
-  };
-
-  const formatDateForBackend = (dateString: string) => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputDate = e.target.value;
-    const [year, month, day] = inputDate.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
-    setActor({ ...actor, date_of_birth: formattedDate });
-    setError('');
+    setError(''); // Очищаємо помилки при зміні полів
+    setProducer({ ...producer, [e.target.name]: e.target.value });
   };
 
   const formatDateForInput = (dateString: string) => {
@@ -81,34 +61,44 @@ export default function Add() {
     return `${year}-${month}-${day}`;
   };
 
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputDate = e.target.value;
+    const [year, month, day] = inputDate.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+    setProducer({ ...producer, date_of_birth: formattedDate });
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
     
     setIsLoading(true);
     try {
-      if (!actor.first_name || !actor.last_name || !actor.phone_number || 
-          !actor.date_of_birth || !actor.passport) {
-        setError('Всі поля є обов\'язковими');
-        return;
-      }
-
-      const actorData = {
-        first_name: actor.first_name.trim(),
-        last_name: actor.last_name.trim(),
-        phone_number: actor.phone_number.trim(),
-        passport: actor.passport.trim(),
-        date_of_birth: formatDateForBackend(actor.date_of_birth),
+      const producerData: IProducer = {
+        id: Number(producer.id),
+        first_name: producer.first_name.trim(),
+        last_name: producer.last_name.trim(),
+        date_of_birth: producer.date_of_birth,
+        email: producer.email.trim(),
+        phone_number: producer.phone_number.trim(),
+        created_at: '',
+        updated_at: ''
       };
       
-      await addActor(actorData);
+      await addProducer(producerData);
       setSuccess(true);
       setTimeout(() => {
         router.push('/admin');
       }, 2000);
     } catch (error: any) {
-      console.error('Error details:', error);
-      setError(error.response?.data?.message || 'Помилка при додаванні актора');
+      setError(error.response?.data?.message || 'Помилка при додаванні продюсера');
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +108,7 @@ export default function Add() {
     const token = getToken();
     if (!token) {
       router.push('/login');
+      return;
     }
   }, [router]);
 
@@ -130,15 +121,15 @@ export default function Add() {
       </button>
 
       {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">Актора успішно додано!</div>}
+      {success && <div className="success-message">Продюсера успішно додано!</div>}
       
       <form onSubmit={handleSubmit}>
         <label>
           <input 
             type="text" 
-            placeholder="Ім'я *" 
+            placeholder="Ім'я" 
             name="first_name" 
-            value={actor.first_name} 
+            value={producer.first_name} 
             onChange={handleChange} 
             required 
           />
@@ -146,9 +137,9 @@ export default function Add() {
         <label>
           <input 
             type="text" 
-            placeholder="Прізвище *" 
+            placeholder="Прізвище" 
             name="last_name" 
-            value={actor.last_name} 
+            value={producer.last_name} 
             onChange={handleChange} 
             required 
           />
@@ -156,33 +147,31 @@ export default function Add() {
         <label>
           <input 
             type="date" 
-            placeholder='Дата народження *' 
+            placeholder='Дата народження' 
             name="date_of_birth" 
-            value={actor.date_of_birth ? formatDateForInput(actor.date_of_birth) : ''}
+            value={producer.date_of_birth ? formatDateForInput(producer.date_of_birth) : ''}
             onChange={handleDateChange}
             max={new Date().toISOString().split('T')[0]}
-            required
           />
         </label>
         <label>
           <input 
-            type="text" 
-            placeholder='Код паспорта *' 
-            name="passport" 
-            value={actor.passport || ''} 
+            type="email" 
+            placeholder='Email' 
+            name="email" 
+            value={producer.email || ''} 
             onChange={handleChange}
-            required
+            pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
           />
         </label>
         <label>
           <input 
             type="tel" 
-            placeholder='Номер телефону (+380...) *' 
+            placeholder='Номер телефону (+380...)' 
             name="phone_number" 
-            value={actor.phone_number || ''} 
+            value={producer.phone_number || ''} 
             onChange={handleChange}
             pattern="\+?\d{10,13}"
-            required
           />
         </label>
         <button 
@@ -190,7 +179,7 @@ export default function Add() {
           disabled={isLoading}
           className={isLoading ? 'loading' : ''}
         >
-          {isLoading ? 'Додавання...' : 'Додати актора'}
+          {isLoading ? 'Додавання...' : 'Додати продюсера'}
         </button>
       </form>
     </section>

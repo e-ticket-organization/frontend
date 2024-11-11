@@ -1,86 +1,90 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import './favorite.styles.css';
+import { getPerfomances } from '@/app/services/filmService';
+import { IPerfomance } from '@/app/types/perfomance';
+import BookingModal from '@/components/booking/BookingModal';
 
 export default function Favorite() {
   const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
-  
+  const [perfomances, setPerfomances] = useState<IPerfomance[]>([]);
+  const [randomPerfomances, setRandomPerfomances] = useState<IPerfomance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPerformance, setSelectedPerformance] = useState<IPerfomance | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const performancesData = await getPerfomances();
+        setPerfomances(performancesData);
+        
+        const shuffled = [...performancesData].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 6);
+        setRandomPerfomances(selected);
+      } catch (error) {
+        console.error('Помилка завантаження даних:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  const handleBookingClick = (performance: IPerfomance) => {
+    setSelectedPerformance(performance);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPerformance(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
   return (
     <section className='favorite'>
       <div className="embla" ref={emblaRef}>
         <div className="embla__container">
-
-          <div className="embla__slide">
-            <img className='favorite-img' src="https://storage.concert.ua/JTR/27/aK/66cdc4cd67ed9/7edd.jpg:31-eventpage-main_banner-desktop2x" alt="" />
-            <div className='favorite-wrapper'>
-              <div className='favorite-block-container'>
-                <div className='favorite-trending-block'>
-                  <p>Trending</p>
+          {randomPerfomances.map((performance) => (
+            <div key={performance.id} className="embla__slide">
+              <img className='favorite-img' src={performance.image} alt={performance.title} />
+              <div className='favorite-wrapper'>
+                <div className='favorite-block-container'>
+                  <div className='favorite-trending-block'>
+                    <p>Trending</p>
+                  </div>
+                  <div className='favorite-block'>
+                    <h2>{performance.title}</h2>
+                  </div>
                 </div>
-                <div className='favorite-block'>
-                  <h2>Name</h2>
+                <div className='favorite-button-container'>
+                  <button id='button1' onClick={() => handleBookingClick(performance)}>Придбати</button>
+                  <button id='button2'>Детальніше</button>
                 </div>
-                <div className='favorite-date_info-container'>
-                  <p>Date</p>
-                  <p>Info</p>
-                </div>
-              </div>
-              <div className='favorite-button-container'>
-                <button id='button1'>Придбати</button>
-                <button id='button2'>Детальніше</button>
               </div>
             </div>
-          </div>
-
-          <div className="embla__slide">
-            <img className='favorite-img' src="https://storage.concert.ua/JTR/27/aK/66cdc4cd67ed9/7edd.jpg:31-eventpage-main_banner-desktop2x" alt="" />
-            <div className='favorite-wrapper'>
-              <div className='favorite-block-container'>
-                <div className='favorite-trending-block'>
-                  <p>Trending</p>
-                </div>
-                <div className='favorite-block'>
-                  <h2>Name</h2>
-                </div>
-                <div className='favorite-date_info-container'>
-                  <p>Date</p>
-                  <p>Info</p>
-                </div>
-              </div>
-              <div className='favorite-button-container'>
-                <button id='button1'>Придбати</button>
-                <button id='button2'>Детальніше</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="embla__slide">
-            <img className='favorite-img' src="https://storage.concert.ua/JTR/27/aK/66cdc4cd67ed9/7edd.jpg:31-eventpage-main_banner-desktop2x" alt="" />
-            <div className='favorite-wrapper'>
-              <div className='favorite-block-container'>
-                <div className='favorite-trending-block'>
-                  <p>Trending</p>
-                </div>
-                <div className='favorite-block'>
-                  <h2>Name</h2>
-                </div>
-                <div className='favorite-date_info-container'>
-                  <p>Date</p>
-                  <p>Info</p>
-                </div>
-              </div>
-              <div className='favorite-button-container'>
-                <button id='button1'>Придбати</button>
-                <button id='button2'>Детальніше</button>
-              </div>
-            </div>
-          </div>
-
+          ))}
         </div>
       </div>
+
+      <BookingModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        selectedPerformance={selectedPerformance}
+      />
     </section>
   );
 }

@@ -5,7 +5,6 @@ export interface IActor {
     phone_number?: string;
     date_of_birth?: string;
     passport?: string;
-    deleted_at?: string;
   }
   
   export interface IActorCreate {

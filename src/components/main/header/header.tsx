@@ -6,11 +6,13 @@ import AuthPopup from '@/components/main/header/auth-popup/auth-popup';
 import Search from '@/components/main/header/search/search';
 import { AuthContext } from '@/app/context/authContext';
 import { logout as logoutService } from '@/app/services/authService';
+import ProfilePopup from './profile-popup/profile-popup';
 
 export default function Header() {
   const { isAuthenticated, logout } = useContext(AuthContext);
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
 
   const handleCloseAuthPopup = () => {
     setIsAuthPopupOpen(false);
@@ -33,6 +35,14 @@ export default function Header() {
       } catch (error) {
         console.error('Помилка при виході:', error);
       }
+    } else {
+      setIsAuthPopupOpen(true);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (isAuthenticated) {
+      setIsProfilePopupOpen(!isProfilePopupOpen);
     } else {
       setIsAuthPopupOpen(true);
     }
@@ -65,13 +75,25 @@ export default function Header() {
           </svg>
         </li>
         <li>
-          <div className='profile-icon' onClick={handleAuthAction}>
-            {isAuthenticated ? 'Вийти' : 'Увійти'}
+          <div className='profile-icon' onClick={handleProfileClick}>
+            {isAuthenticated ? (
+              <div className="profile-circle">
+                U
+              </div>
+            ) : (
+              'Увійти'
+            )}
           </div>
         </li>
       </ol>
       {isAuthPopupOpen && !isAuthenticated && (
         <AuthPopup onClose={handleCloseAuthPopup} />
+      )}
+      {isProfilePopupOpen && isAuthenticated && (
+        <ProfilePopup 
+          onClose={() => setIsProfilePopupOpen(false)}
+          onLogout={handleAuthAction}
+        />
       )}
     </nav>
   );

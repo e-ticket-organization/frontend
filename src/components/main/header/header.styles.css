@@ -113,3 +113,20 @@ svg:hover{
     transform: translateX(-170px); 
     opacity: 1;
 }
+
+.profile-circle {
+  width: 32px;
+  height: 32px;
+  background: #486CCB;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.profile-icon {
+  cursor: pointer;
+}

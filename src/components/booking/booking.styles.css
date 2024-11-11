@@ -1,0 +1,87 @@
+.show-dates {
+    padding: 2rem;
+    background: #010F29;
+}
+
+.dates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.date-button {
+    padding: 1rem;
+    background: #0B2868;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.date-button:hover {
+    background: #1a3a8f;
+}
+
+.seats-container {
+    padding: 2rem;
+    background: #010F29;
+    color: white;
+}
+
+.screen {
+    width: 80%;
+    height: 50px;
+    margin: 0 auto 2rem;
+    background: #1a3a8f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.seats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.seat-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.row-number {
+    width: 30px;
+    text-align: right;
+    margin-right: 1rem;
+}
+
+.seat {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: #0B2868;
+    color: white;
+    cursor: pointer;
+}
+
+.seat.booked {
+    background: #C1272D;
+    cursor: not-allowed;
+}
+
+.seat.selected {
+    background: #28a745;
+}
+
+.booking-summary {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #0B2868;
+    border-radius: 8px;
+    text-align: center;
+}

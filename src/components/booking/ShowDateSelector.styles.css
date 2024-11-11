@@ -1,0 +1,102 @@
+.date-selector {
+    padding: 20px;
+    color: #ffffff;
+}
+
+.react-calendar {
+    width: 100%;
+    background: #0B2868;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    color: white;
+}
+
+.react-calendar__tile {
+    color: white;
+    padding: 10px;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+    background-color: #486CCB;
+    border-radius: 4px;
+}
+
+.react-calendar__tile--active {
+    background-color: #C1272D !important;
+    border-radius: 4px;
+}
+
+.available-date {
+    background-color: #486CCB;
+    border-radius: 4px;
+    color: white !important;
+}
+
+.time-slots-container {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.time-slot {
+    padding: 12px 20px;
+    border: 2px solid #C1272D;
+    border-radius: 4px;
+    background: none;
+    color: #C1272D;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.time-slot:hover {
+    background-color: #C1272D;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.show-date-selector {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.show-date-selector h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dates-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.date-group {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.date-group h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.back-button {
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: #C1272D;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+}

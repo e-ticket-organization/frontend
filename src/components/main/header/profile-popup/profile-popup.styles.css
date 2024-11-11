@@ -1,0 +1,32 @@
+.profile-popup {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: #1f1f1f;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 1000;
+}
+
+.profile-popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-popup-content a,
+.profile-popup-content button {
+  padding: 8px 16px;
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-popup-content a:hover,
+.profile-popup-content button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+} 
