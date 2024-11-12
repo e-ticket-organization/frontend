@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import './Modal.styles.css';
-import Spinner from '../ui/Spinner';
 
 interface ModalProps {
     isOpen: boolean;
@@ -28,7 +27,6 @@ export default function Modal({ isOpen, onClose, children, isLoading = false }: 
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
-                {isLoading && <Spinner />} {/* Відображення спінера якщо необхідно */}
                 {children}
             </div>
         </div>

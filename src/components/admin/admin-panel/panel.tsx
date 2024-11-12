@@ -8,6 +8,7 @@ import { IProducer } from '@/app/types/producer';
 import { IUser } from '@/app/types/user';
 import { IShow } from '@/app/types/show';
 import { IActor } from '@/app/types/actor';
+import { getToken } from '@/app/services/authService';
 
 export default function Panel() {
   const router = useRouter();
@@ -18,8 +19,13 @@ export default function Panel() {
   const [users, setUsers] = useState<IUser[]>([]);
   const [shows, setShows] = useState<IShow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  const token = getToken;
   useEffect(() => {
+
+    if(!token) {
+      router.push('/admin/login');
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {

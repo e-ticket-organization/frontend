@@ -1,0 +1,185 @@
+.performance-main {
+    padding: 30px;
+    background-color: #010F29;
+    min-height: 100vh;
+}
+
+.filters {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #09072b;
+    border-radius: 10px;
+}
+
+.filters input,
+.filters select {
+    padding: 10px;
+    border: 1px solid #0B2868;
+    border-radius: 10px;
+    background-color: #1f1f1f;
+    color: white;
+    min-width: 200px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filters input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.filters input:hover,
+.filters select:hover {
+    border-color: #C1272D;
+    background-color: #2a2a2a;
+}
+
+.filters input:focus,
+.filters select:focus {
+    outline: none;
+    border-color: #C1272D;
+    box-shadow: 0 0 0 2px rgba(193, 39, 45, 0.2);
+}
+
+.filters select option {
+    background-color: #1f1f1f;
+    color: white;
+}
+
+.performances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+.performance-card {
+    background-color: #09072b;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.performance-card:hover {
+    transform: translateY(-5px);
+    border-color: #0B2868;
+    box-shadow: 0 5px 15px rgba(11, 40, 104, 0.3);
+}
+
+.performance-card img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-bottom: 2px solid #0B2868;
+}
+
+.performance-card img[src=''] {
+    display: none;
+}
+
+.performance-card img::after {
+    content: 'Зображення недоступне';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 250px;
+    background-color: #1f1f1f;
+    color: white;
+    font-size: 14px;
+}
+
+.performance-card h3 {
+    color: white;
+    padding: 15px;
+    margin: 0;
+    font-family: var(--font-family2);
+    transition: color 0.3s ease;
+}
+
+.performance-card:hover h3 {
+    color: #C1272D;
+}
+
+.performance-card p {
+    color: white;
+    padding: 0 15px;
+    margin: 5px 0;
+    opacity: 0.8;
+}
+
+.genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 15px;
+}
+
+.genre-tag {
+    background-color: #0B2868;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 10px;
+    font-size: 0.9em;
+    font-family: var(--font-family2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.genre-tag:hover {
+    background-color: #C1272D;
+    transform: scale(1.05);
+}
+
+.performance-card .price {
+    color: #C1272D;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+
+.performance-card:hover .price {
+    color: #e13138;
+}
+
+.performance-card .next-show {
+    border-top: 1px solid #0B2868;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.performance-card .no-shows {
+    color: #666;
+    font-style: italic;
+    padding: 15px;
+    text-align: center;
+    border-top: 1px solid #0B2868;
+    margin-top: 10px;
+}
+
+/* Loader styles */
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    width: 100%;
+}
+
+.loader {
+    width: 50px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid;
+    border-color: #fff #0000;
+    animation: l1 1s infinite;
+}
+
+@keyframes l1 {
+    to {
+        transform: rotate(.5turn)
+    }
+}

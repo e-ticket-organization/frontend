@@ -56,6 +56,11 @@ export const getPerfomances = async (): Promise<IPerfomance[]> => {
     return response.data;
 };
 
+export const getPerfomancesWithFilters = async (url: string): Promise<IPerfomance[]> => {
+    const response = await api.get<IPerfomance[]>(url);
+    return response.data;
+};
+
 export const getProducers = async (): Promise<IProducer[]> => {
     const response = await api.get<IProducer[]>('/producers');
     return response.data;
@@ -248,14 +253,6 @@ export const getShowSeats = async (showId: number): Promise<ShowWithSeats> => {
     }
 };
 
-interface UpdateUserData {
-    name?: string;
-    email?: string;
-    phone_numbers?: string;
-    password?: string;
-    password_confirmation?: string;
-    age?: string;
-}
 
 interface BookTicketsRequest {
     tickets: {
@@ -315,4 +312,34 @@ export const updateUserProfile = async (userId: number, userData: Partial<IUser>
         }
         throw new Error('Помилка при оновленні профілю');
     }
+};
+
+interface SearchResponse {
+    data: IPerfomance[];
+}
+
+export const searchPerformances = async (query: string, type: 'title' | 'actor'): Promise<IPerfomance[]> => {
+    try {
+        const response = await api.get<IPerfomance[]>('/performances', {
+            params: {
+                search: query
+            }
+        });
+        
+        if (response.data) {
+            return response.data.filter(performance => 
+                performance.title.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+        
+        return [];
+    } catch (error) {
+        console.error('Помилка пошуку:', error);
+        return [];
+    }
+};
+
+export const getPerfomanceById = async (id: number): Promise<IPerfomance> => {
+    const response = await api.get<IPerfomance>(`/performances/${id}`);
+    return response.data;
 };

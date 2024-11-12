@@ -68,11 +68,15 @@ export default function Favorite() {
                   </div>
                   <div className='favorite-block'>
                     <h2>{performance.title}</h2>
+                    <div className='favorite-button-container'>
+                      <button id='button1' onClick={() => handleBookingClick(performance)}>
+                        Придбати
+                      </button>
+                      <button id='button2'>
+                        Детальніше
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className='favorite-button-container'>
-                  <button id='button1' onClick={() => handleBookingClick(performance)}>Придбати</button>
-                  <button id='button2'>Детальніше</button>
                 </div>
               </div>
             </div>

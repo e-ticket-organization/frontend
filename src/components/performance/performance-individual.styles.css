@@ -1,24 +1,19 @@
-.favorite {
+.hero {
     position: relative;
     width: 100%;
+    background-color: #010F29;
 }
 
-.embla {
+.hero__container {
     overflow: hidden;
     width: 100%;
 }
 
-.embla__container {
-    display: flex;
-}
-
-.embla__slide {
-    flex: 0 0 100%;
-    min-width: 0;
+.hero__content {
     position: relative;
 }
 
-.favorite img {
+.hero-img {
     width: 100%;
     height: 80vh;
     display: block;
@@ -30,7 +25,7 @@
     object-position: center;
 }
 
-.favorite::before {
+.hero::before {
     content: '';
     position: absolute;
     top: 0;
@@ -38,10 +33,10 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
-    z-index: 1; 
+    z-index: 1;
 }
 
-.favorite::after {
+.hero::after {
     content: '';
     position: absolute;
     left: 0;
@@ -52,10 +47,10 @@
     z-index: 2;
 }
 
-.favorite-wrapper {
+.hero-wrapper {
     position: absolute;
     z-index: 3;
-    top: 50%;
+    top: 75%;
     left: 0;
     transform: translateY(-50%);
     width: 40%;
@@ -63,28 +58,29 @@
     padding: 40px;
 }
 
-.favorite-block-container {
+.hero-block-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
     align-items: flex-start;
 }
 
-.favorite-block {
+.hero-block {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    align-items: flex-start;
     width: 100%;
 }
 
-.favorite-block h2 {
+.hero-block h2 {
     color: #fff;
     font-size: 2.5rem;
     margin: 0;
     text-align: left;
 }
 
-.favorite-trending-block {
+.hero-trending-block {
     background-color: #0B2868;
     display: inline-block;
     padding: 5px 15px;
@@ -92,45 +88,68 @@
     width: fit-content;
 }
 
-.favorite-button-container {
+.genres {
     display: flex;
-    flex-direction: row;
-    gap: 20px;
-    margin-top: 20px;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
 }
 
-#button1 {
+#hero-button1 {
     background-color: #C1272D;
     border: none;
     padding: 12px 32px;
     border-radius: 10px;
     color: white;
     font-size: 1.1rem;
+    width: fit-content;
+    margin-top: 10px;
 }
 
-#button2 {
-    background-color: transparent;
-    border: 1px solid white;
-    padding: 12px 32px;
-    border-radius: 10px;
-    color: white;
-    font-size: 1.1rem;
-}
-
-.favorite-date_info-container {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-}
-
-button {
-    border: none;
-}
-
-button:hover {
-    cursor: pointer;
+#hero-button1:disabled {
+    background-color: #666;
+    cursor: not-allowed;
     opacity: 0.7;
+}
+
+.next-show {
+    color: #fff;
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: left;
+}
+
+.shows-list {
+    padding: 20px;
+    margin: 20px 5%;
+    background-color: rgba(11, 40, 104, 0.1);
+    border-radius: 10px;
+}
+
+.shows-list h3 {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.shows-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.shows-list li {
+    color: #fff;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: rgba(11, 40, 104, 0.3);
+    border-radius: 5px;
+    cursor: pointer;
     transition: 0.3s;
+}
+
+.shows-list li:hover {
+    background-color: rgba(11, 40, 104, 0.5);
 }
 
 .loader-container {
@@ -156,28 +175,9 @@ button:hover {
     }
 }
 
-.booking-modal {
+.genre-tag {
+    background-color: #0B2868;
+    padding: 5px 15px;
+    border-radius: 10px;
     color: white;
-}
-
-.booking-modal h2 {
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
-
-.booking-confirm-button {
-    display: block;
-    width: 100%;
-    padding: 1rem;
-    margin-top: 1.5rem;
-    background-color: #C1272D;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-}
-
-.booking-confirm-button:hover {
-    background-color: #a61f24;
 }

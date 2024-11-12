@@ -27,7 +27,6 @@ export default function BookingModal({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [step, setStep] = useState<'dates' | 'seats'>('dates');
-    const [success, setSuccess] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchShows = async () => {
@@ -56,7 +55,6 @@ export default function BookingModal({
             setBookedSeats([]);
             setError(null);
             setStep('dates');
-            setSuccess(false);
         }
     }, [isOpen, selectedPerformance]);
 
@@ -111,7 +109,6 @@ export default function BookingModal({
             );
             setSelectedSeats([]);
             console.log('Бронювання успішне');
-            setSuccess(true);
         } catch (error: any) {
             console.error('Помилка бронювання:', error);
             setError(error.message || 'Помилка при бронюванні квитків');
@@ -127,50 +124,40 @@ export default function BookingModal({
         setAvailableSeats([]);
         setBookedSeats([]);
         setError(null);
-        setSuccess(false);
-        setIsLoading(false);
         onClose();
     };
 
     return (
-        <>
-            {isLoading && <Spinner />}
-            <Modal isOpen={isOpen} onClose={handleCloseModal}>
-                {error ? (
-                    <div className="error">
-                        <p>{error}</p>
-                        <button onClick={handleCloseModal}>Спробувати знову</button>
-                    </div>
-                ) : success ? (
-                    <div className="success">
-                        <p>Квитки успішно заброньовані!</p>
-                        <button onClick={handleCloseModal}>Закрити</button>
-                    </div>
+        <Modal isOpen={isOpen} onClose={handleCloseModal}>
+            {error ? (
+                <div className="error">
+                    <p>{error}</p>
+                    <button onClick={() => setError(null)}>Спробувати знову</button>
+                </div>
+            ) : (
+                step === 'dates' ? (
+                    <ShowDateSelector
+                        shows={shows}
+                        onShowSelect={handleShowSelect}
+                        selectedPerformance={selectedPerformance}
+                        isLoading={isLoading}
+                    />
                 ) : (
-                    step === 'dates' ? (
-                        <ShowDateSelector
-                            shows={shows}
-                            onShowSelect={handleShowSelect}
-                            selectedPerformance={selectedPerformance}
-                            isLoading={isLoading}
-                        />
-                    ) : (
-                        <SeatsGrid
-                            availableSeats={availableSeats}
-                            bookedSeats={bookedSeats}
-                            selectedSeats={selectedSeats}
-                            onSeatSelect={handleSeatSelect}
-                            price={Number(selectedShow?.price) || 0}
-                            selectedShow={selectedShow}
-                            handleBooking={handleBooking}
-                            onClose={handleCloseModal}
-                            setAvailableSeats={setAvailableSeats}
-                            setBookedSeats={setBookedSeats}
-                            isLoading={isLoading}
-                        />
-                    )
-                )}
-            </Modal>
-        </>
+                    <SeatsGrid
+                        availableSeats={availableSeats}
+                        bookedSeats={bookedSeats}
+                        selectedSeats={selectedSeats}
+                        onSeatSelect={handleSeatSelect}
+                        price={Number(selectedShow?.price) || 0}
+                        selectedShow={selectedShow}
+                        handleBooking={handleBooking}
+                        onClose={handleCloseModal}
+                        setAvailableSeats={setAvailableSeats}
+                        setBookedSeats={setBookedSeats}
+                        isLoading={isLoading}
+                    />
+                )
+            )}
+        </Modal>
     );
 };

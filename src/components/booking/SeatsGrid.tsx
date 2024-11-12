@@ -100,7 +100,6 @@ export default function SeatsGrid({
 
     return (
         <div className="seats-container">
-            {isLoading && <Spinner />} {/* Відображення спінера під час завантаження */}
             <div className="seats-grid">
                 <div className="side-seats left">
                     {leftSeats.map((seat, index) => (
@@ -132,7 +131,7 @@ export default function SeatsGrid({
                 </div>
                 <div className="legend-item">
                     <div className="legend-color legend-selected"></div>
-                    <span>Обране</span>
+                    <span>Обрані</span>
                 </div>
             </div>
             
@@ -140,11 +139,12 @@ export default function SeatsGrid({
                 <p>Обрані місця: {selectedSeats.length}</p>
                 <p>Загальна вартість: {price * selectedSeats.length} грн</p>
                 <button 
-                    className="booking-button"
+                    className={`booking-button ${isLoading ? 'loading' : ''}`}
                     disabled={selectedSeats.length === 0 || isLoading}
                     onClick={handleBooking}
                 >
-                    Забронювати
+                    <span>Забронювати</span>
+                    {isLoading && <div className="button-spinner" />}
                 </button>
             </div>
         </div>

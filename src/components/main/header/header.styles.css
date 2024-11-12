@@ -66,8 +66,8 @@ svg:hover{
 }
 
 #logo:hover{
-    cursor: default !important;
     opacity: 1 !important;
+    cursor: pointer;
 }
 
 .search-wrapper {

@@ -88,6 +88,35 @@
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    position: relative;
+    min-width: 140px;
+}
+
+.booking-button.loading {
+    color: transparent;
+}
+
+.booking-button.loading span {
+    visibility: hidden;
+}
+
+.button-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
 
 .booking-button:disabled {
@@ -172,32 +201,4 @@
         padding: 8px 16px;
         font-size: 14px;
     }
-}
-
-/* Додайте ці стилі */
-.loading-spinner {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.loading-spinner::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.booking-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
 }
