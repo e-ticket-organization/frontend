@@ -114,10 +114,11 @@ export default function Add() {
     }
   };
 
+  
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      router.push('/login');
+      window.location.href = '/admin/login';
     }
   }, [router]);
 

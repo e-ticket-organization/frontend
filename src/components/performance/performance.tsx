@@ -9,7 +9,10 @@ import { useRouter } from 'next/navigation';
 import { getPerfomances, getPerfomancesWithFilters, getGenres, getShowsByPerformance } from '@/app/services/filmService';
 
 interface PerformanceWithGenres extends IPerfomance {
-    genres?: IGenre[];
+    genres: {
+        id: number;
+        name: string;
+    }[];
 }
 
 export default function PerformanceMain() {

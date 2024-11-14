@@ -130,3 +130,83 @@ svg:hover{
 .profile-icon {
   cursor: pointer;
 }
+
+@media screen and (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    left: 0;
+    padding: 0 15px;
+    margin: 15px auto;
+  }
+
+  #logo {
+    width: 100px;
+    height: auto;
+  }
+
+  ol {
+    gap: 15px;
+  }
+
+  ol li {
+    font-size: 16px;
+  }
+
+  .search-wrapper.open {
+    width: 150px;
+  }
+
+  .search-wrapper.open .search-input {
+    width: 110px;
+  }
+
+  .search-wrapper.open .search-icon {
+    transform: translateX(-120px);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .container {
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+    background-color: rgba(1, 15, 41, 0.9);
+    padding: 10px;
+  }
+
+  ol {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .search-wrapper.open {
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding: 10px;
+    background-color: rgba(1, 15, 41, 0.9);
+  }
+
+  .search-wrapper.open .search-input {
+    width: calc(100% - 40px);
+  }
+
+  .search-wrapper.open .search-icon {
+    transform: translateX(-100%);
+  }
+
+  #logo {
+    width: 80px;
+  }
+  
+  .header-item svg{
+    width: 25px;
+    height: 25px;
+}
+
+  ol li {
+    font-size: 14px;
+  }
+}

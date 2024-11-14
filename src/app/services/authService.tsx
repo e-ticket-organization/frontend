@@ -164,7 +164,12 @@ api_auth.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return api_auth(originalRequest);
       } catch (refreshError) {
-        window.location.href = '/login';
+        const user = getUser();
+        if (user?.status === 'admin') {
+          window.location.href = '/admin/login';
+        } else {
+          window.location.href = '/';
+        }
         return Promise.reject(refreshError);
       }
     }

@@ -1,5 +1,10 @@
-import Profile from "@/components/profile/profile";
+import MainProfile from "@/components/profile/main-profile";
 
-export default function page() {
-    return <div><Profile/></div>;
+
+export default function Page() {
+    return (
+        <div className="page-container">
+            <MainProfile />
+        </div>
+    );
 }

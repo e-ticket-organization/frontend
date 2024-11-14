@@ -7,6 +7,7 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
   const { login, register } = useContext(AuthContext);
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -36,6 +37,7 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     try {
       if (isLogin) {
@@ -56,6 +58,8 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Помилка авторизації');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,6 +71,7 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
         </button>
         <h2>{isLogin ? 'Увійти' : 'Реєстрація'}</h2>
         {error && <div className='error-message'>{error}</div>}
+        {isLoading && <div className='loading-spinner'></div>}
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div className='form-group'>

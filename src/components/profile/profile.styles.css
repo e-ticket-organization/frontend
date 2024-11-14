@@ -1,6 +1,7 @@
 .profile-container {
-  max-width: 600px;
-  margin: 40px auto;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
 }
 
@@ -12,6 +13,8 @@
 }
 
 .profile-form {
+  width: 100%;
+  min-width: 600px;
   background: rgba(2, 9, 25, 0.5);
   border-radius: 16px;
   padding: 30px;
@@ -19,6 +22,7 @@
 }
 
 .form-group {
+  width: 100%;
   margin-bottom: 20px;
 }
 
@@ -89,4 +93,85 @@
 .save-button:disabled {
   background: #666;
   cursor: not-allowed;
+}
+
+.main-profile-container {
+  display: flex;
+  gap: 30px;
+  padding: 40px;
+  min-height: calc(100vh - 80px);
+  justify-content: center;
+}
+
+.profile-sidebar {
+  width: 280px;
+  background: rgba(2, 9, 25, 0.5);
+  border-radius: 16px;
+  padding: 20px;
+  height: fit-content;
+  backdrop-filter: blur(10px);
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-item {
+  padding: 15px 20px;
+  color: white;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 68, 0, 0.1);
+}
+
+.sidebar-item.active {
+  background: #FF4400;
+}
+
+@media screen and (max-width: 1024px) {
+  .main-profile-container {
+    padding: 20px;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .profile-container {
+    width: 95%;
+    max-width: 800px;
+  }
+
+  .profile-sidebar {
+    position: static;
+    width: 95%;
+    max-width: 800px;
+    margin-bottom: 20px;
+  }
+
+  .profile-form {
+    min-width: unset;
+    width: 100%;
+    max-width: 800px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .profile-container,
+  .profile-sidebar,
+  .profile-form {
+    width: 100%;
+  }
+
+
+  .profile-container {
+    width: 100%;
+    min-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
 } 

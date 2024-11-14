@@ -8,7 +8,6 @@ import { IProducer } from '@/app/types/producer';
 import { addProducer } from '@/app/services/filmService';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
-
 export default function Producers() {
   const [producer, setProducer] = useState<IProducer>({
     id: 0,
@@ -103,6 +102,7 @@ export default function Producers() {
       setIsLoading(false);
     }
   };
+
 
   useEffect(() => {
     const token = getToken();

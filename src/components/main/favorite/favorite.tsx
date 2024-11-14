@@ -7,8 +7,10 @@ import './favorite.styles.css';
 import { getPerfomances } from '@/app/services/filmService';
 import { IPerfomance } from '@/app/types/perfomance';
 import BookingModal from '@/components/booking/BookingModal';
+import { useRouter } from 'next/navigation';
 
 export default function Favorite() {
+  const router = useRouter();
   const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
   const [perfomances, setPerfomances] = useState<IPerfomance[]>([]);
   const [randomPerfomances, setRandomPerfomances] = useState<IPerfomance[]>([]);
@@ -46,6 +48,10 @@ export default function Favorite() {
     setSelectedPerformance(null);
   };
 
+  const handleDetailsClick = (performance: IPerfomance) => {
+    router.push(`/performances/${performance.id}`);
+  };
+
   if (isLoading) {
     return (
       <div className="loader-container">
@@ -64,7 +70,7 @@ export default function Favorite() {
               <div className='favorite-wrapper'>
                 <div className='favorite-block-container'>
                   <div className='favorite-trending-block'>
-                    <p>Trending</p>
+                    <p>Популярне</p>
                   </div>
                   <div className='favorite-block'>
                     <h2>{performance.title}</h2>
@@ -72,7 +78,7 @@ export default function Favorite() {
                       <button id='button1' onClick={() => handleBookingClick(performance)}>
                         Придбати
                       </button>
-                      <button id='button2'>
+                      <button id='button2' onClick={() => handleDetailsClick(performance)}>
                         Детальніше
                       </button>
                     </div>

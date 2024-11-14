@@ -162,3 +162,101 @@
 .search-results::-webkit-scrollbar-thumb:hover {
     background: #C1272D;
 }
+
+@media screen and (max-width: 768px) {
+  .search-wrapper.open {
+    width: 150px;
+  }
+
+  .search-wrapper.open .search-input {
+    width: 110px;
+  }
+
+  .search-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-wrapper.open .search-icon {
+    transform: translateX(-110px);
+  }
+
+  .search-results {
+    width: 250px;
+    right: -100px;
+  }
+
+  .result-info h4 {
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .search-container {
+    position: static;
+    width: 100%;
+  }
+
+  .search-wrapper {
+    width: 25px;
+  }
+
+  .search-icon {
+    width: 18px;
+    height: 18px;
+    right: 0;
+  }
+
+  .search-wrapper.open {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background: #021435;
+    z-index: 1001;
+  }
+
+  .search-wrapper.open .search-input {
+    width: calc(100% - 40px);
+    margin-right: 30px;
+    opacity: 1;
+  }
+
+  .search-wrapper.open .search-icon {
+    transform: none;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .search-results {
+    position: fixed;
+    top: 45px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 45px);
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .search-result-item {
+    padding: 15px;
+  }
+
+  .search-result-item img {
+    width: 50px;
+    height: 70px;
+  }
+
+  .result-info h4 {
+    font-size: 14px;
+  }
+
+  .search-loading,
+  .no-results {
+    padding: 20px;
+  }
+}

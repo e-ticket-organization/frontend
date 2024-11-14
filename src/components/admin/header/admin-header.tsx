@@ -13,9 +13,6 @@ export default function AdminHeader() {
           </linearGradient>
           </defs>
         </svg>
-          <div className='auth'>
-            Увійти
-          </div>
       </nav>
     )
   }

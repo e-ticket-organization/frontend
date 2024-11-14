@@ -21,3 +21,54 @@
     display: flex;
     gap: 10px;
 }
+
+@media screen and (max-width: 768px) {
+  .footer-wrapper {
+    width: 95%;
+    padding: 20px 0;
+  }
+
+  .footer-text-wrapper p {
+    font-size: 12px;
+  }
+
+  svg {
+    width: 80px;
+    height: 40px;
+  }
+
+  .footer-social svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .footer {
+    margin-top: 40px;
+  }
+
+  .footer-wrapper {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+    padding: 15px 0;
+  }
+
+  .footer-text-wrapper {
+    order: 2;
+  }
+
+  .footer-text-wrapper p {
+    font-size: 11px;
+  }
+
+  .footer-social {
+    order: 1;
+  }
+
+  svg {
+    width: 70px;
+    height: 35px;
+  }
+}

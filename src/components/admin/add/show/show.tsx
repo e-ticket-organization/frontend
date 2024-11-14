@@ -18,6 +18,8 @@ export default function Show() {
   const [halls, setHalls] = useState<IHall[]>([]);
   const router = useRouter();
 
+
+
   useEffect(() => {
     const token = getToken();
     if (!token) {

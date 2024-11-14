@@ -1,0 +1,104 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #09214a;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    margin: 0 0 20px 0;
+    color: white;
+    font-size: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #2c4975;
+    border-radius: 8px;
+    background-color: #0c2b5e;
+    color: white;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.modal-actions button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-actions button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+.modal-actions button[type="button"] {
+    background-color: #f44336;
+    color: white;
+}
+
+.modal-actions button[type="button"]:hover {
+    background-color: #da190b;
+}
+
+.form-group input[type="date"] {
+    background-color: #0c2b5e;
+    color: white;
+    font-family: inherit;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.form-group input[type="tel"] {
+    font-family: inherit;
+} 

@@ -67,6 +67,26 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
               <h2>{performance.title}</h2>
               <div className='hero-block'>
                 <p className='hero-block-text'>Тривалість: {performance.duration} хв</p>
+                
+                {performance.producer && (
+                  <p className='hero-block-text'>
+                    Режисер: {performance.producer.first_name} {performance.producer.last_name}
+                  </p>
+                )}
+
+                {performance.actors && performance.actors.length > 0 && (
+                  <div className='actors-section'>
+                    <p className='hero-block-text'>Актори:</p>
+                    <div className='actors-list'>
+                      {performance.actors.map(actor => (
+                        <span key={actor.id} className="actor-tag">
+                          {actor.first_name} {actor.last_name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <p className="next-show">
                   {shows.length > 0 ? 
                     `Наступний показ: ${new Date(shows[0].datetime).toLocaleString('uk-UA')}` : 
@@ -75,9 +95,12 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
                 {performance.genres && performance.genres.length > 0 && (
                   <div className="genres">
                     {performance.genres.map((genre: IGenre) => (
-                      <span key={genre.id} className="genre-tag">
-                        {genre.name}
-                      </span>
+                      <p className='hero-block-text'>
+                        Жанр:
+                        <span key={genre.id} className="genre-tag">
+                           {genre.name}
+                        </span>
+                      </p>
                     ))}
                   </div>
                 )}

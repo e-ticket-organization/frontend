@@ -1,6 +1,7 @@
 .favorite {
     position: relative;
     width: 100%;
+    margin-bottom: 300px;
 }
 
 .embla {
@@ -38,7 +39,7 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
-    z-index: 1; 
+    z-index: 1;
 }
 
 .favorite::after {
@@ -50,17 +51,19 @@
     height: 20%;
     background: linear-gradient(to bottom, transparent, #010F29);
     z-index: 2;
+    pointer-events: none;
 }
 
 .favorite-wrapper {
     position: absolute;
     z-index: 3;
-    top: 50%;
+    top: 76%;
     left: 0;
     transform: translateY(-50%);
     width: 40%;
-    background-color: rgba(1, 15, 41, 0.9);
+    background-color: rgba(1, 15, 41, 0.95);
     padding: 40px;
+    pointer-events: auto;
 }
 
 .favorite-block-container {
@@ -97,24 +100,55 @@
     flex-direction: row;
     gap: 20px;
     margin-top: 20px;
+    width: 100%;
+    position: relative;
+    z-index: 4;
 }
 
-#button1 {
+#button1, #button2 {
+    flex: 1;
+    min-width: 120px;
     background-color: #C1272D;
     border: none;
     padding: 12px 32px;
     border-radius: 10px;
     color: white;
     font-size: 1.1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    z-index: 5;
+    pointer-events: all;
+}
+
+#button1:hover {
+    background-color: #e62932;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(193, 39, 45, 0.3);
+    opacity: 1;
+}
+
+#button1:active {
+    transform: translateY(0);
 }
 
 #button2 {
     background-color: transparent;
     border: 1px solid white;
-    padding: 12px 32px;
-    border-radius: 10px;
     color: white;
-    font-size: 1.1rem;
+}
+
+#button2:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #e62932;
+    color: #e62932;
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+#button2:active {
+    transform: translateY(0);
 }
 
 .favorite-date_info-container {
@@ -129,8 +163,6 @@ button {
 
 button:hover {
     cursor: pointer;
-    opacity: 0.7;
-    transition: 0.3s;
 }
 
 .loader-container {
@@ -176,8 +208,138 @@ button:hover {
     border-radius: 8px;
     cursor: pointer;
     font-size: 1.1rem;
+    transition: all 0.3s ease;
 }
 
 .booking-confirm-button:hover {
-    background-color: #a61f24;
+    background-color: #e62932;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(193, 39, 45, 0.3);
+    opacity: 1;
+}
+
+.booking-confirm-button:active {
+    transform: translateY(0);
+}
+
+.favorite-button-container button {
+    pointer-events: all;
+}
+
+@media screen and (max-width: 768px) {
+  .favorite {
+    margin-bottom: 150px;
+  }
+
+  .favorite img {
+    height: 60vh;
+  }
+
+  .favorite-wrapper {
+    width: 100%;
+    top: 85%;
+    padding: 20px;
+    transform: translateY(-40%);
+    z-index: 3;
+  }
+
+  .favorite-block-container {
+    gap: 5px;
+  }
+
+  .favorite-block {
+    gap: 5px;
+  }
+
+  .favorite-block h2 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    max-height: 3.6em;
+    overflow: hidden;
+  }
+
+  .favorite-button-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+    z-index: 4;
+  }
+
+  #button1, #button2 {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    display: inline-block;
+    z-index: 5;
+  }
+
+  .favorite-trending-block {
+    padding: 3px 10px;
+  }
+
+  .favorite-trending-block p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .favorite {
+    margin-bottom: 100px;
+  }
+
+  .favorite img {
+    height: 50vh;
+  }
+
+  .favorite-wrapper {
+    padding: 15px;
+    top: 80%;
+  }
+
+  .favorite-block h2 {
+    font-size: 1.2rem;
+    max-height: 2.4em;
+  }
+
+  .favorite-button-container {
+    flex-direction: row;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  #button1, #button2 {
+    width: auto;
+    flex: 1;
+    min-width: unset;
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .favorite-trending-block {
+    padding: 2px 8px;
+  }
+
+  .favorite-trending-block p {
+    font-size: 0.8rem;
+  }
+
+  .favorite-block-container {
+    gap: 0px;
+  }
+}
+
+.favorite-button-container button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.favorite-wrapper {
+  background-color: rgba(1, 15, 41, 0.95);
 }

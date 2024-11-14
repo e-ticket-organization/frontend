@@ -24,8 +24,6 @@ export default function SideBar() {
             <button onClick={() => handleNavigation('admin/add/producer')}>Додати продюсера</button>
             <button onClick={() => handleNavigation('admin/add/show')}>Додати виставу</button>
             <button onClick={() => handleNavigation('admin/add/perfomance')}>Додати виступ</button>
-            <button onClick={() => handleNavigation('admin/add/genre')}>Додати жанр вистави</button>
-            <button onClick={() => handleNavigation('admin/view/sales')}>Переглянути статистику продажу</button>
         </div>
         }
       </div>

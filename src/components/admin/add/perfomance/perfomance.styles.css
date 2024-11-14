@@ -101,3 +101,86 @@ select.form-input {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
+.actors-selection {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.selected-actors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 40px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.selected-actor-tag {
+    background-color: #081731;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #1a3366;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.remove-actor {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-actor:hover {
+    color: #ff4444;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+select.form-input option {
+    background-color: #09072b;
+    color: white;
+    padding: 8px;
+}
+
+select.form-input option:hover {
+    background-color: #081731;
+}
+
+.actors-select {
+    height: 40px;
+    background-color: #09072b;
+    color: white;
+    cursor: pointer;
+}
+
+.actors-select option {
+    padding: 10px;
+    background-color: #09072b;
+    color: white;
+}
+
+.actors-select option:checked {
+    background-color: #081731;
+}

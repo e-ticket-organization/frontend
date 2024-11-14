@@ -35,7 +35,8 @@ export default function SeatsGrid({
 }: SeatsGridProps) {
     
     const handleSeatClick = (seatId: number) => {
-        const seat = availableSeats.find(s => s.id === seatId);
+        const seat = availableSeats.find(s => s.id === seatId) || 
+                    selectedSeats.find(s => s.id === seatId);
         if (seat) {
             onSeatSelect(seat);
         }
@@ -59,8 +60,8 @@ export default function SeatsGrid({
         return (
             <button
                 className={`seat ${status}`}
-                onClick={() => status === 'available' && handleSeatClick(seat.id)}
-                disabled={status !== 'available'}
+                onClick={() => (status === 'available' || status === 'selected') && handleSeatClick(seat.id)}
+                disabled={status === 'booked'}
                 key={seat.id}
                 title={`Номер місця: ${displayNumber}`}
             >

@@ -9,7 +9,7 @@ export default function page() {
       <div>
         <Header/>
         <Favorite/>
-        <Recomendation/>
+        {/* <Recomendation/> */}
         <Footer/>
       </div>
     )
