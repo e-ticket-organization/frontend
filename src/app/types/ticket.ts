@@ -38,7 +38,7 @@ export interface ITicket {
     seat: {
         id: number;
         hall_id: number;
-        seat_number: number;
+        number: number;
         row: string;
         created_at: string;
         updated_at: string;

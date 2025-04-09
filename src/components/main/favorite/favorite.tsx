@@ -22,14 +22,21 @@ export default function Favorite() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const performancesData = await getPerfomances();
-        setPerfomances(performancesData);
+        const performancesData = await getPerfomances({ limit: 10, page: 1 });
         
-        const shuffled = [...performancesData].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 6);
-        setRandomPerfomances(selected);
+        if (Array.isArray(performancesData) && performancesData.length > 0) {
+          setPerfomances(performancesData);
+          const randomData = [...performancesData]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+          setRandomPerfomances(randomData);
+        } else {
+          setPerfomances([]);
+          setRandomPerfomances([]);
+        }
       } catch (error) {
-        console.error('Помилка завантаження даних:', error);
+        setPerfomances([]);
+        setRandomPerfomances([]);
       } finally {
         setIsLoading(false);
       }
@@ -66,9 +73,10 @@ export default function Favorite() {
         <div className="embla__container">
           {randomPerfomances.map((performance) => (
             <div key={performance.id} className="embla__slide">
-              <img className='favorite-img' src={performance.image} alt={performance.title} />
               <div className='favorite-wrapper'>
-                <div className='favorite-block-container'>
+                <img className='favorite-img' src={performance.image} alt={performance.title} />
+              </div>
+              <div className='favorite-block-container'>
                   <div className='favorite-trending-block'>
                     <p>Популярне</p>
                   </div>
@@ -78,13 +86,9 @@ export default function Favorite() {
                       <button id='button1' onClick={() => handleBookingClick(performance)}>
                         Придбати
                       </button>
-                      <button id='button2' onClick={() => handleDetailsClick(performance)}>
-                        Детальніше
-                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           ))}
         </div>

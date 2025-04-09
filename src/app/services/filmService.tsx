@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IProducer } from '@/app/types/producer';
@@ -9,57 +8,163 @@ import { IActor } from '../types/actor';
 import { IGenre } from '../types/genre';
 import { ISeat } from '../types/seat';
 import { ITicket } from '../types/ticket';
+import { useContext } from 'react';
+import { AuthContext } from '../context/authContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
+const API_BASE = '/api';
 
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    withCredentials: true, 
-});
-
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+async function customFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE}${normalizedEndpoint}`;
+    
+    console.log('Виконується запит до URL:', url);
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
+    
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        headers.set('Authorization', `Bearer ${token}`);
     }
-    return config;
-});
-
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
+    
+    const config: RequestInit = {
+        ...options,
+        headers,
+        credentials: 'include'
+    };
+    
+    try {
+        const response = await fetch(url, config);
+        
+        if (response.status === 401 && typeof window !== 'undefined') {
             try {
-                await refreshToken();
-                const token = localStorage.getItem('token');
-                error.config.headers.Authorization = `Bearer ${token}`;
-                return api.request(error.config);
+                const newToken = await refreshToken();
+                const newHeaders = new Headers(headers);
+                newHeaders.set('Authorization', `Bearer ${newToken}`);
+                
+                const retryResponse = await fetch(url, {
+                    ...config,
+                    headers: newHeaders
+                });
+                
+                return await retryResponse.json();
             } catch (refreshError) {
                 console.error('Помилка оновлення токена:', refreshError);
+                throw refreshError;
             }
         }
-        return Promise.reject(error);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                errorData = { message: errorText };
+            }
+            
+            console.error('Помилка запиту:', {
+                status: response.status,
+                statusText: response.statusText,
+                data: errorData
+            });
+            
+            throw new Error(errorData.message || `Помилка запиту: ${response.status} ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Повна помилка запиту:', error);
+        throw error;
     }
-);
+}
 
-export const getPerfomances = async (): Promise<IPerfomance[]> => {
-    const response = await api.get<IPerfomance[]>('/performances');
-    return response.data;
+async function fetchWithParams<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+    const queryParams = new URLSearchParams();
+    
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null) {
+            queryParams.append(key, value.toString());
+        }
+    }
+    
+    const queryString = queryParams.toString();
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = queryString ? `${normalizedEndpoint}?${queryString}` : normalizedEndpoint;
+    
+    return customFetch<T>(url);
+}
+
+interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+}
+
+interface GetPerformancesParams {
+    search?: string;
+    limit?: number;
+    page?: number;
+}
+
+export const getPerfomances = async (params: GetPerformancesParams = {}): Promise<IPerfomance[]> => {
+    try {
+        if (!API_BASE) {
+            console.error('API_BASE не визначено. Перевірте налаштування змінних середовища.');
+            return [];
+        }
+
+        const { search = '', limit = 10, page = 1 } = params;
+        const url = '/performances/in-shows';
+        console.log('Виконується запит до:', `${API_BASE}${url}`, { search, limit, page, in_shows: true });
+        
+        const data = await fetchWithParams<PaginatedResponse<IPerfomance>>(url, {
+            search,
+            limit,
+            page,
+            in_shows: true
+        });
+        
+        console.log('Відповідь від сервера:', data);
+        
+        if (data && Array.isArray(data.items)) {
+            return data.items;
+        }
+        
+        console.error('Неочікувана структура відповіді:', data);
+        return [];
+    } catch (error) {
+        console.error('Помилка запиту:', error);
+        return [];
+    }
 };
 
 export const getPerfomancesWithFilters = async (url: string): Promise<IPerfomance[]> => {
-    const response = await api.get<IPerfomance[]>(url);
-    return response.data;
+    try {
+        const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+        console.log('Виконується запит до:', `${API_BASE}${normalizedUrl}`);
+        
+        const data = await customFetch<PaginatedResponse<IPerfomance>>(normalizedUrl);
+        console.log('Відповідь від сервера:', data);
+        
+        if (data && Array.isArray(data.items)) {
+            return data.items;
+        }
+        
+        console.error('Неочікувана структура відповіді:', data);
+        return [];
+    } catch (error) {
+        console.error('Помилка запиту:', error);
+        return [];
+    }
 };
 
 export const getProducers = async (): Promise<IProducer[]> => {
-    const response = await api.get<IProducer[]>('/producers');
-    return response.data;
+    return customFetch<IProducer[]>('/producers');
 };
 
 interface IPerformanceCreate {
@@ -84,25 +189,20 @@ export const addPerfomance = async (performanceData: IPerformanceCreate): Promis
 
         console.log('Дані для відправки:', formattedData);
         
-        const response = await api.post<IPerfomance>('/performances', formattedData);
-        return response.data;
+        return customFetch<IPerfomance>('/performances', {
+            method: 'POST',
+            body: JSON.stringify(formattedData)
+        });
     } catch (error: any) {
-        console.error('Response error:', error.response?.data);
+        console.error('Response error:', error);
         
-        if (error.response?.status === 422) {
-            const validationErrors = error.response.data.errors;
-            const firstError = Object.values(validationErrors)[0];
-            throw new Error(Array.isArray(firstError) ? firstError[0] : firstError);
+        if (error.status === 422) {
+            throw new Error(error.message || 'Помилка валідації');
         }
         
-        throw new Error(error.response?.data?.message || 'Помилка при додаванні вистави');
+        throw new Error(error.message || 'Помилка при додаванні вистави');
     }
 };
-
-interface PaginatedResponse<T> {
-    current_page: number;
-    data: T[];
-}
 
 interface ActorsResponse {
     actors: PaginatedResponse<IActor>;
@@ -118,18 +218,14 @@ interface SimpleResponse<T> {
 
 export const getActors = async (): Promise<IActor[]> => {
     try {
-        const response = await api.get<ActorsResponse | SimpleResponse<IActor> | IActor[]>('/actors');
-        console.log('Повна відповідь від сервера:', response.data);
+        const data = await customFetch<PaginatedResponse<IActor>>('/actors');
+        console.log('Повна відповідь від сервера:', data);
         
-        if (Array.isArray(response.data)) {
-            return response.data;
-        } else if ('actors' in response.data && response.data.actors?.data) {
-            return response.data.actors.data;
-        } else if ('data' in response.data) {
-            return response.data.data;
+        if (data && Array.isArray(data.items)) {
+            return data.items;
         }
         
-        console.error('Неочікувана структура відповіді:', response.data);
+        console.error('Неочікувана структура відповіді:', data);
         return [];
     } catch (error) {
         console.error('Помилка отримання акторів:', error);
@@ -138,13 +234,11 @@ export const getActors = async (): Promise<IActor[]> => {
 };
 
 export const getUsers = async (): Promise<IUser[]> => {
-    const response = await api.get<IUser[]>('/users');
-    return response.data;
+    return customFetch<IUser[]>('/users');
 };
 
 export const getHalls = async (): Promise<IHall[]> => {
-    const response = await api.get<IHall[]>('shows/hall');
-    return response.data;
+    return customFetch<IHall[]>('shows/hall');
 };
 
 export const addShow = async (showData: {
@@ -163,28 +257,33 @@ export const addShow = async (showData: {
 
         console.log('Форматовані дані для відправки:', formattedData);
         
-        const response = await api.post<{show: IShow, message: string}>(
+        const data = await customFetch<{show: IShow, message: string}>(
             '/shows', 
-            formattedData
+            {
+                method: 'POST',
+                body: JSON.stringify(formattedData)
+            }
         );
         
-        console.log('Відповідь від сервера:', response.data);
-        return response.data.show;
-    } catch (error: any) {
-        console.error('Деталі помилки:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        });
+        console.log('Відповідь від сервера:', data);
+        return data.show;
+    } catch (error) {
+        console.error('Деталі помилки:', error);
         throw error;
     }
 };
 
 export const getShows = async (): Promise<IShow[]> => {
     try {
-        const response = await api.get<PaginatedResponse<IShow>>('/shows');
-        console.log('Отримані дані показів:', response.data); 
-        return response.data.data;
+        const data = await customFetch<IShow[]>('/shows');
+        console.log('Отримані дані показів:', data); 
+        
+        if (Array.isArray(data)) {
+            return data;
+        }
+        
+        console.error('Неочікувана структура відповіді:', data);
+        return [];
     } catch (error) {
         console.error('Помилка отримання показів:', error);
         return [];
@@ -194,38 +293,33 @@ export const getShows = async (): Promise<IShow[]> => {
 export const getGenres = async (): Promise<IGenre[]> => {
     try {
         console.log('Починаємо запит жанрів...');
-        const response = await api.get<IGenre[]>('/performances/genres');
-        console.log('Відпь від сервера:', response.data);
-        return response.data;
-    } catch (error: any) {
-        console.error('Деталі помилки:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            config: error.config
-        });
+        console.log('API_BASE при запиті жанрів:', API_BASE);
         
-        if (error.response) {
-            throw new Error(`Помилка сервера: ${error.response.data?.message || 'Невідома помилка'}`);
-        } else if (error.request) {
-            throw new Error('Немає відповіді від сервера');
-        } else {
-            throw new Error(`Помилка запиту: ${error.message}`);
-        }
+        const data = await customFetch<IGenre[]>('/genres');
+        console.log('Відповідь від сервера:', data);
+        return data;
+    } catch (error: any) {
+        console.error('Деталі помилки при отриманні жанрів:', error);
+        return [];
     }
 };
 
 export const addProducer = async (producerData: IProducer): Promise<IProducer> => {
-    const response = await api.post<IProducer>('/producers', producerData);
-    return response.data;
+    return customFetch<IProducer>('/producers', {
+        method: 'POST',
+        body: JSON.stringify(producerData)
+    });
 };
 
 export const addActor = async (actorData: Omit<IActor, 'id'>): Promise<IActor> => {
     try {
-        const response = await api.post<{actor: IActor}>('/actors', actorData);
-        return response.data.actor;
-    } catch (error: any) {
-        console.error('Add actor error:', error.response?.data || error);
+        const data = await customFetch<{actor: IActor}>('/actors', {
+            method: 'POST',
+            body: JSON.stringify(actorData)
+        });
+        return data.actor;
+    } catch (error) {
+        console.error('Add actor error:', error);
         throw error;
     }
 };
@@ -240,8 +334,16 @@ interface ShowWithSeats {
 
 export const getShowsByPerformance = async (performanceId: number): Promise<IShow[]> => {
     try {
-        const response = await api.get<IShow[]>(`/performances/${performanceId}/shows`);
-        return response.data;
+        console.log('Отримання показів для вистави з ID:', performanceId);
+        const data = await customFetch<IShow[]>(`/performances/${performanceId}/shows`);
+        console.log('Відповідь від сервера:', data);
+        
+        if (Array.isArray(data)) {
+            return data;
+        }
+        
+        console.error('Неочікувана структура відповіді:', data);
+        return [];
     } catch (error) {
         console.error('Помилка отримання показів:', error);
         return [];
@@ -250,16 +352,10 @@ export const getShowsByPerformance = async (performanceId: number): Promise<ISho
 
 export const getShowSeats = async (showId: number): Promise<ShowWithSeats> => {
     try {
-        const response = await api.get<ShowWithSeats>(`/shows/${showId}/seats`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-        return response.data;
-    } catch (error: any) {
-        console.error('Помилка отримання місць:', error.response?.data || error);
-        throw new Error(error.response?.data?.message || 'Помилка отримання місць');
+        return customFetch<ShowWithSeats>(`/shows/${showId}/seats`);
+    } catch (error) {
+        console.error('Помилка отримання місць:', error);
+        throw new Error('Помилка отримання місць');
     }
 };
 
@@ -273,20 +369,21 @@ interface BookTicketsRequest {
 
 export const bookTickets = async (bookingData: BookTicketsRequest): Promise<any> => {
     try {
-        const response = await api.post('/tickets/book', {
-            ...bookingData,
-            silent: true
+        return customFetch('/tickets/book', {
+            method: 'POST',
+            body: JSON.stringify({
+                ...bookingData,
+                silent: true
+            })
         });
-        return response.data;
-    } catch (error: any) {
-        console.error('Помилка бронювання:', error.response?.data || error);
-        throw new Error(error.response?.data?.message || 'Помилка при бронюванні квитків');
+    } catch (error) {
+        console.error('Помилка бронювання:', error);
+        throw new Error('Помилка при бронюванні квитків');
     }
 };
 
 export const getUserProfile = async (): Promise<IUser> => {
-    const response = await api.get('/user');
-    return response.data;
+    return customFetch<IUser>('/users/profile');
 };
 
 export const updateUserProfile = async (userId: number, userData: Partial<IUser>): Promise<IUser> => {
@@ -294,7 +391,7 @@ export const updateUserProfile = async (userId: number, userData: Partial<IUser>
         const formattedData = {
             name: userData.name,
             email: userData.email,
-            phone_numbers: userData.phone_numbers,
+            phone_numbers: userData.phoneNumbers,
             age: userData.age ? parseInt(userData.age.toString()) : null,
             ...(userData.password && { 
                 password: userData.password,
@@ -306,20 +403,15 @@ export const updateUserProfile = async (userId: number, userData: Partial<IUser>
             Object.entries(formattedData).filter(([_, value]) => value !== undefined)
         );
 
-        const response = await api.put<{user: IUser, message: string}>(`/users/${userId}`, cleanedData);
+        const data = await customFetch<{user: IUser, message: string}>(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(cleanedData)
+        });
         
-        return response.data.user;
+        return data.user;
     } catch (error: any) {
-        console.error('Повна помилка:', error.response?.data || error);
-        
-        if (error.response?.data?.errors) {
-            const errorMessages = Object.values(error.response.data.errors).flat();
-            throw new Error(errorMessages.join(', '));
-        }
-        if (error.response?.data?.message) {
-            throw new Error(error.response.data.message);
-        }
-        throw new Error('Помилка при оновленні профілю');
+        console.error('Повна помилка:', error);
+        throw new Error(error.message || 'Помилка при оновленні профілю');
     }
 };
 
@@ -329,14 +421,10 @@ interface SearchResponse {
 
 export const searchPerformances = async (query: string, type: 'title' | 'actor'): Promise<IPerfomance[]> => {
     try {
-        const response = await api.get<IPerfomance[]>('/performances', {
-            params: {
-                search: query
-            }
-        });
+        const data = await fetchWithParams<IPerfomance[]>('/performances', { search: query });
         
-        if (response.data) {
-            return response.data.filter(performance => 
+        if (data) {
+            return data.filter(performance => 
                 performance.title.toLowerCase().includes(query.toLowerCase())
             );
         }
@@ -350,22 +438,23 @@ export const searchPerformances = async (query: string, type: 'title' | 'actor')
 
 export const getPerfomanceById = async (id: number): Promise<IPerfomance> => {
     try {
-        const response = await api.get<IPerfomance>(`/performances/${id}`, {
-            params: {
-                include: 'producer,actors,genres'
-            }
+        const data = await fetchWithParams<IPerfomance>(`/performances/${id}`, {
+            include: 'producer,actors,genres'
         });
         
-        if (!response.data.producer) {
-            response.data.producer = {
+        if (!data.producer) {
+            data.producer = {
                 id: 0,
                 first_name: 'Не призначено',
-                last_name: ''
+                last_name: '',
+                phone_number: '',
+                email: '',
+                date_of_birth: ''
             };
         }
         
-        console.log('Отримані дані вистави:', response.data);
-        return response.data;
+        console.log('Отримані дані вистави:', data);
+        return data;
     } catch (error) {
         console.error('Помилка отримання вистави:', error);
         throw error;
@@ -374,15 +463,10 @@ export const getPerfomanceById = async (id: number): Promise<IPerfomance> => {
 
 export const getUserTickets = async (): Promise<ITicket[]> => {
   try {
-    const response = await api.get<ITicket[]>('/tickets/user');
-    return response.data;
-  } catch (error: any) {
-    console.error('Помилка отримання квитків:', error.response?.data || error);
-    throw new Error(
-      error.response?.data?.message || 
-      error.response?.data?.error || 
-      'Помилка отримання квитків'
-    );
+    return customFetch<ITicket[]>('/tickets/user/current');
+  } catch (error) {
+    console.error('Помилка отримання квитків:', error);
+    throw new Error('Помилка отримання квитків');
   }
 };
 
@@ -390,23 +474,15 @@ export const cancelTicketBooking = async (ticketId: number) => {
     try {
         console.log('Початок відміни бронювання для квитка:', ticketId);
         
-        const response = await api.post(`/tickets/${ticketId}/cancel`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
+        const data = await customFetch(`/tickets/${ticketId}/cancel`, {
+            method: 'POST'
         });
         
-        console.log('Відповідь від сервер:', response.data);
-        return response.data;
-    } catch (error: any) {
-        console.error('Помилка відміни бронювання:', error.response?.data || error);
-        
-        const errorMessage = error.response?.data?.message 
-            || error.response?.data?.error 
-            || 'Не вдалося відмінити бронювання. Спробуйте пізніше.';
-            
-        throw new Error(errorMessage);
+        console.log('Відповідь від сервера:', data);
+        return data;
+    } catch (error) {
+        console.error('Помилка відміни бронювання:', error);
+        throw new Error('Не вдалося відмінити бронювання. Спробуйте пізніше.');
     }
 };
 
@@ -422,24 +498,22 @@ interface IPerformanceUpdate {
 export const updatePerformance = async (performanceId: number, updateData: IPerformanceUpdate): Promise<IPerfomance> => {
     try {
         console.log('Відправка даних на сервер:', updateData);
-        const response = await api.put<{ performance: IPerfomance }>(
+        const data = await customFetch<{ performance: IPerfomance }>(
             `/performances/${performanceId}`, 
-            updateData
+            {
+                method: 'PUT',
+                body: JSON.stringify(updateData)
+            }
         );
         
-        if (!response.data) {
+        if (!data) {
             throw new Error('Відповідь сервера не містить даних');
         }
         
-        return response.data.performance;
+        return data.performance;
     } catch (error: any) {
-        console.error('Помилка оновлення вистави:', error.response?.data || error);
-        
-        const errorMessage = error.response?.data?.errors
-            ? Object.values(error.response.data.errors).join(', ')
-            : error.response?.data?.message || 'Помилка при оновленні вистави';
-            
-        throw new Error(errorMessage);
+        console.error('Помилка оновлення вистави:', error);
+        throw new Error(error.message || 'Помилка при оновленні вистави');
     }
 };
 
@@ -454,24 +528,22 @@ interface IActorUpdate {
 export const updateActor = async (actorId: number, updateData: IActorUpdate): Promise<IActor> => {
     try {
         console.log('Відправка даних на сервер:', updateData);
-        const response = await api.put<{ actor: IActor }>(
+        const data = await customFetch<{ actor: IActor }>(
             `/actors/${actorId}`,
-            updateData
+            {
+                method: 'PUT',
+                body: JSON.stringify(updateData)
+            }
         );
         
-        if (!response.data) {
+        if (!data) {
             throw new Error('Відповідь сервера не містить даних');
         }
         
-        return response.data.actor;
+        return data.actor;
     } catch (error: any) {
-        console.error('Помилка оновлення актора:', error.response?.data || error);
-        
-        const errorMessage = error.response?.data?.errors
-            ? Object.values(error.response.data.errors).join(', ')
-            : error.response?.data?.message || 'Помилка при оновленні актора';
-            
-        throw new Error(errorMessage);
+        console.error('Помилка оновлення актора:', error);
+        throw new Error(error.message || 'Помилка при оновленні актора');
     }
 };
 
@@ -486,26 +558,25 @@ interface IProducerUpdate {
 export const updateProducer = async (producerId: number, updateData: IProducerUpdate): Promise<IProducer> => {
     try {
         console.log('Відправка даних на сервер:', updateData);
-        const response = await api.put<IProducer>(
+        const data = await customFetch<IProducer>(
             `/producers/${producerId}`,
-            updateData
+            {
+                method: 'PUT',
+                body: JSON.stringify(updateData)
+            }
         );
         
-        if (!response.data) {
+        if (!data) {
             throw new Error('Відповідь сервера не містить даних');
         }
         
         return {
-            ...response.data,
+            ...data,
             id: producerId
         };
     } catch (error: any) {
-        console.error('Помилка оновлення продюсера:', error.response?.data || error);
-        throw new Error(
-            error.response?.data?.message || 
-            error.response?.data?.error || 
-            'Помилка при оновленні продюсера'
-        );
+        console.error('Помилка оновлення продюсера:', error);
+        throw new Error(error.message || 'Помилка при оновленні продюсера');
     }
 };
 
@@ -519,34 +590,31 @@ interface IShowUpdate {
 export const updateShow = async (showId: number, updateData: IShowUpdate): Promise<IShow> => {
   try {
     console.log('Відправка даних на сервер:', updateData);
-    const response = await api.put<{ show: IShow }>(
+    const data = await customFetch<{ show: IShow }>(
       `/shows/${showId}`,
-      updateData
+      {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      }
     );
     
-    if (!response.data) {
-      throw new Error('В��дповідь сервера не містить даних');
+    if (!data) {
+      throw new Error('Відповідь сервера не містить даних');
     }
     
-    return response.data.show;
+    return data.show;
   } catch (error: any) {
-    console.error('Помилка оновлення показу:', error.response?.data || error);
-    
-    const errorMessage = error.response?.data?.errors
-      ? Object.values(error.response.data.errors).join(', ')
-      : error.response?.data?.message || 'Помилка при оновленні показу';
-      
-    throw new Error(errorMessage);
+    console.error('Помилка оновлення показу:', error);
+    throw new Error(error.message || 'Помилка при оновленні показу');
   }
 };
 
 export const getShowById = async (showId: number): Promise<IShow> => {
   try {
-    const response = await api.get<IShow>(`/shows/${showId}`);
-    return response.data;
-  } catch (error: any) {
+    return customFetch<IShow>(`/shows/${showId}`);
+  } catch (error) {
     console.error('Помилка отримання даних показу:', error);
-    throw new Error(error.response?.data?.message || 'Помилка отримання даних показу');
+    throw new Error('Помилка отримання даних показу');
   }
 };
 
@@ -556,63 +624,72 @@ interface IUserUpdate {
 
 export const updateUser = async (userId: number, updateData: IUserUpdate): Promise<IUser> => {
     try {
-        const response = await api.put<{ user: IUser }>(
+        const data = await customFetch<{ user: IUser }>(
             `/users/${userId}`,
-            updateData
+            {
+                method: 'PUT',
+                body: JSON.stringify(updateData)
+            }
         );
         
-        if (!response.data) {
+        if (!data) {
             throw new Error('Відповідь сервера не містить даних');
         }
         
-        return response.data.user;
+        return data.user;
     } catch (error: any) {
-        console.error('Помилка оновлення користувача:', error.response?.data || error);
-        
-        const errorMessage = error.response?.data?.errors
-            ? Object.values(error.response.data.errors).join(', ')
-            : error.response?.data?.message || 'Помилка при оновленні користувача';
-            
-        throw new Error(errorMessage);
+        console.error('Помилка оновлення користувача:', error);
+        throw new Error(error.message || 'Помилка при оновленні користувача');
     }
 };
 
 export const deletePerformance = async (id: number): Promise<void> => {
     try {
-        await api.delete(`/performances/${id}`);
+        await customFetch(`/performances/${id}`, { method: 'DELETE' });
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Помилка видалення вистави');
+        throw new Error(error.message || 'Помилка видалення вистави');
     }
 };
 
 export const deleteActor = async (id: number): Promise<void> => {
     try {
-        await api.delete(`/actors/${id}`);
+        await customFetch(`/actors/${id}`, { method: 'DELETE' });
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Помилка видалення актора');
+        throw new Error(error.message || 'Помилка видалення актора');
     }
 };
 
 export const deleteProducer = async (id: number): Promise<void> => {
     try {
-        await api.delete(`/producers/${id}`);
+        await customFetch(`/producers/${id}`, { method: 'DELETE' });
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Помилка видалення продюсера');
+        throw new Error(error.message || 'Помилка видалення продюсера');
     }
 };
 
 export const deleteShow = async (id: number): Promise<void> => {
     try {
-        await api.delete(`/shows/${id}`);
+        await customFetch(`/shows/${id}`, { method: 'DELETE' });
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Помилка видалення показу');
+        throw new Error(error.message || 'Помилка видалення показу');
     }
 };
 
 export const deleteUser = async (id: number): Promise<void> => {
     try {
-        await api.delete(`/users/${id}`);
+        await customFetch(`/users/${id}`, { method: 'DELETE' });
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Помилка видалення користувача');
+        throw new Error(error.message || 'Помилка видалення користувача');
+    }
+};
+
+export const getShowDetailsById = async (id: number): Promise<IShow> => {
+    try {
+        const data = await customFetch<IShow>(`/shows/${id}`);
+        console.log('Отримані дані показу:', data);
+        return data;
+    } catch (error) {
+        console.error('Помилка отримання даних показу:', error);
+        throw new Error('Помилка отримання даних показу');
     }
 };

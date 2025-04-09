@@ -62,7 +62,6 @@ export default function SeatsGrid({
                 className={`seat ${status}`}
                 onClick={() => (status === 'available' || status === 'selected') && handleSeatClick(seat.id)}
                 disabled={status === 'booked'}
-                key={seat.id}
                 title={`Номер місця: ${displayNumber}`}
             >
                 {displayNumber}
@@ -72,7 +71,10 @@ export default function SeatsGrid({
 
     const getAllSeatsForSection = (seats: ISeat[], bookedSeats: ISeat[], rowStart: number, rowEnd: number, seatStart: number, seatEnd: number) => {
         const allSeats = [...seats, ...bookedSeats];
-        return allSeats
+        const uniqueSeats = allSeats.filter((seat, index, self) =>
+            index === self.findIndex((s) => s.id === seat.id)
+        );
+        return uniqueSeats
             .filter(seat => 
                 seat.row >= rowStart && 
                 seat.row <= rowEnd && 
@@ -104,36 +106,40 @@ export default function SeatsGrid({
             <div className="seats-grid">
                 <div className="side-seats left">
                     {leftSeats.map((seat, index) => (
-                        renderSeat(index + 1, seat) 
+                        <React.Fragment key={seat.id}>
+                            {renderSeat(index + 1, seat)}
+                        </React.Fragment>
                     ))}
                 </div>
 
                 <div className="center-seats">
                     {centerSeats.map((seat, index) => (
-                        renderSeat(index + 51, seat) 
+                        <React.Fragment key={seat.id}>
+                            {renderSeat(index + 51, seat)}
+                        </React.Fragment>
                     ))}
                 </div>
 
                 <div className="side-seats right">
                     {rightSeats.map((seat, index) => (
-                        renderSeat(index + 26, seat) 
+                        <React.Fragment key={seat.id}>
+                            {renderSeat(index + 26, seat)}
+                        </React.Fragment>
                     ))}
                 </div>
             </div>
 
             <div className="legend">
-                <div className="legend-item">
-                    <div className="legend-color legend-available"></div>
-                    <span>Доступне</span>
-                </div>
-                <div className="legend-item">
-                    <div className="legend-color legend-booked"></div>
-                    <span>Заброньоване</span>
-                </div>
-                <div className="legend-item">
-                    <div className="legend-color legend-selected"></div>
-                    <span>Обрані</span>
-                </div>
+                {[
+                    { color: 'legend-available', text: 'Доступне' },
+                    { color: 'legend-booked', text: 'Заброньоване' },
+                    { color: 'legend-selected', text: 'Обрані' }
+                ].map((item, index) => (
+                    <div key={index} className="legend-item">
+                        <div className={`legend-color ${item.color}`}></div>
+                        <span>{item.text}</span>
+                    </div>
+                ))}
             </div>
             
             <div className="booking-summary">

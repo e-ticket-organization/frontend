@@ -5,7 +5,7 @@ export interface User {
     password: string
     phone_numbers: string
     status: string 
-    age: number
+    date_of_birth: string
     created_at: string
     updated_at: string
 }
@@ -20,4 +20,5 @@ export interface RegisterCredentials extends LoginCredentials {
     email: string
     password: string
     password_confirmation: string
+
 }

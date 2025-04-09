@@ -15,6 +15,42 @@ interface PerformanceWithGenres extends IPerfomance {
     }[];
 }
 
+function PerformanceCard({ performance, handlePerformanceClick, hasUpcomingShows, getMinPrice, getNextShowDate }: { performance: PerformanceWithGenres, handlePerformanceClick: (id: number) => void, hasUpcomingShows: (id: number | undefined) => boolean, getMinPrice: (id: number | undefined) => number | null, getNextShowDate: (id: number | undefined) => string }) {
+    return (
+        <div 
+            key={performance.id} 
+            className="performance-card"
+            onClick={() => handlePerformanceClick(Number(performance.id))}
+        >
+            <img 
+                src={performance.image} 
+                alt={performance.title} 
+            />
+            <h3>{performance.title}</h3>
+            <p>Тривалість: {performance.duration} хв</p>
+            {hasUpcomingShows(performance.id) ? (
+                <>
+                    {getMinPrice(performance.id) && (
+                        <p className="price">Ціна від: {getMinPrice(performance.id)} грн</p>
+                    )}
+                    <p className="next-show">Наступний показ: {getNextShowDate(performance.id)}</p>
+                </>
+            ) : (
+                <p className="no-shows">Немає запланованих показів</p>
+            )}
+            {performance.genres && performance.genres.length > 0 && (
+                <div className="genres">
+                    {performance.genres.map((genre: IGenre) => (
+                        <span key={genre.id} className="genre-tag">
+                            {genre.name}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function PerformanceMain() {
     const [performances, setPerformances] = useState<PerformanceWithGenres[]>([]);
     const [genres, setGenres] = useState<IGenre[]>([]);
@@ -33,12 +69,13 @@ export default function PerformanceMain() {
     const fetchGenres = async () => {
         try {
             const genresData = await getGenres();
-            setGenres(genresData);
+            console.log('Жанри отримані з API:', genresData);
+            setGenres(Array.isArray(genresData) ? genresData : []);
         } catch (error) {
             console.error('Помилка завантаження жанрів:', error);
         }
     };
-
+    
     const fetchShowsForPerformance = async (performanceId: number | undefined) => {
         if (!performanceId) return;
         try {
@@ -102,16 +139,28 @@ export default function PerformanceMain() {
             }
             if (searchTerm) url += `&search=${searchTerm}`;
             if (selectedGenre) url += `&genre_id=${selectedGenre}`;
+    
+            console.log('URL запиту:', url);
+            console.log('API_URL:', process.env.NEXT_PUBLIC_API_URL);
             
             const data = await getPerfomancesWithFilters(url);
-            setPerformances(data);
-            await Promise.all(data.map(perf => fetchShowsForPerformance(perf.id)));
+            console.log('Отримані вистави:', data);
+    
+            if (!Array.isArray(data)) {
+                console.error('Отримані дані не є масивом:', data);
+                setPerformances([]);
+            } else {
+                setPerformances(data);
+                await Promise.all(data.map(perf => fetchShowsForPerformance(perf.id)));
+            }
         } catch (error) {
-            console.error('Помилка завантаження даних:', error);
+            console.error('Помилка завантаження вистав:', error);
+            setPerformances([]);
         } finally {
             setIsLoading(false);
         }
     };
+    
 
     const hasPerformancesWithPrice = (): boolean => {
         return performances.some(performance => {
@@ -164,44 +213,18 @@ export default function PerformanceMain() {
             ) : (
                 <div className="performances-grid">
                     {performances.map((performance) => (
-                        <div 
+                        <PerformanceCard 
                             key={performance.id} 
-                            className="performance-card"
-                            onClick={() => handlePerformanceClick(Number(performance.id))}
-                        >
-                            <img 
-                                src={performance.image} 
-                                alt={performance.title} 
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = '/placeholder-image.jpg';
-                                }}
-                            />
-                            <h3>{performance.title}</h3>
-                            <p>Тривалість: {performance.duration} хв</p>
-                            {hasUpcomingShows(performance.id) ? (
-                                <>
-                                    {getMinPrice(performance.id) && (
-                                        <p className="price">Ціна від: {getMinPrice(performance.id)} грн</p>
-                                    )}
-                                    <p className="next-show">Наступний показ: {getNextShowDate(performance.id)}</p>
-                                </>
-                            ) : (
-                                <p className="no-shows">Немає запланованих показів</p>
-                            )}
-                            {performance.genres && performance.genres.length > 0 && (
-                                <div className="genres">
-                                    {performance.genres.map((genre: IGenre) => (
-                                        <span key={genre.id} className="genre-tag">
-                                            {genre.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                            performance={performance} 
+                            handlePerformanceClick={handlePerformanceClick}
+                            hasUpcomingShows={hasUpcomingShows}
+                            getMinPrice={getMinPrice}
+                            getNextShowDate={getNextShowDate}
+                        />
                     ))}
                 </div>
             )}
         </div>
     );
+
 }

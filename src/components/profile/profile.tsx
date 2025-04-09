@@ -1,19 +1,34 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './profile.styles.css';
 import { getUserProfile, updateUserProfile } from '@/app/services/filmService';
 import { IUser } from '@/app/types/user';
 import { useRouter } from 'next/dist/client/components/navigation';
+import { AuthContext } from '@/app/context/authContext';
+
+
+function calculateAge(dateOfBirth: string): number {
+  const birthDate = new Date(dateOfBirth);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 
 
 export default function Profile() {
+  const { user } = useContext(AuthContext);
   const [userData, setUserData] = useState<IUser>({
     id: 0,
     name: '',
     email: '',
     password: '',
-    phone_numbers: '',
+    phoneNumbers: '',
     age: ''
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -32,20 +47,19 @@ export default function Profile() {
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
-      const response = await getUserProfile();
-      const user = response;
+      const currentUser = await getUserProfile();
       
-      if (!user) {
+      if (!currentUser) {
         throw new Error('Дані користувача не отримано');
       }
-         
+      
       const userData = {
-        id: user.id,
-        name: user.name || '',
-        email: user.email || '',
+        id: currentUser.id,
+        name: currentUser.name || '',
+        email: currentUser.email || '',
         password: '',
-        phone_numbers: user.phone_numbers || '',
-        age: user.age?.toString() || ''
+        phoneNumbers: currentUser.phoneNumbers || '',
+        age: calculateAge(currentUser.dateOfBirth || '')
       };
       
       setUserData(userData);
@@ -71,15 +85,15 @@ export default function Profile() {
       const updateData: Partial<IUser> = {};
       
       console.log('Порівняння phone_numbers:', {
-        current: userData.phone_numbers,
-        original: originalData?.phone_numbers
+        current: userData.phoneNumbers,
+        original: originalData?.phoneNumbers
       });
 
       if (userData.name !== originalData?.name && userData.name.trim()) {
         updateData.name = userData.name;
       }
-      if (userData.phone_numbers !== originalData?.phone_numbers && userData.phone_numbers?.trim()) {
-        updateData.phone_numbers = userData.phone_numbers;
+      if (userData.phoneNumbers !== originalData?.phoneNumbers && userData.phoneNumbers?.trim()) {
+        updateData.phoneNumbers = userData.phoneNumbers;
       }
       if (userData.age !== originalData?.age && userData.age) {
         updateData.age = userData.age;
@@ -185,8 +199,8 @@ export default function Profile() {
           <input
             type="tel"
             id="phone"
-            name="phone_numbers"
-            value={userData.phone_numbers}
+            name="phoneNumbers"
+            value={userData.phoneNumbers}
             onChange={handleChange}
             disabled={isLoading}
           />

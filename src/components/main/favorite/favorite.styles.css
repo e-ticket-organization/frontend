@@ -2,11 +2,16 @@
     position: relative;
     width: 100%;
     margin-bottom: 300px;
+    margin-top: 50px;
 }
 
 .embla {
     overflow: hidden;
-    width: 100%;
+    width: 1292px;
+    height: 505px;
+    margin: 0 auto;
+    border: 2px solid #FFD700;
+    border-radius: 15px;
 }
 
 .embla__container {
@@ -42,17 +47,6 @@
     z-index: 1;
 }
 
-.favorite::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 20%;
-    background: linear-gradient(to bottom, transparent, #010F29);
-    z-index: 2;
-    pointer-events: none;
-}
 
 .favorite-wrapper {
     position: absolute;
@@ -61,8 +55,7 @@
     left: 0;
     transform: translateY(-50%);
     width: 40%;
-    background-color: rgba(1, 15, 41, 0.95);
-    padding: 40px;
+    background-color: #202033;
     pointer-events: auto;
 }
 
@@ -105,10 +98,10 @@
     z-index: 4;
 }
 
-#button1, #button2 {
+#button1 {
     flex: 1;
     min-width: 120px;
-    background-color: #C1272D;
+    background-color: #3A3A4B;
     border: none;
     padding: 12px 32px;
     border-radius: 10px;
@@ -120,37 +113,20 @@
     text-align: center;
     z-index: 5;
     pointer-events: all;
+    border: 1px solid white;
 }
 
 #button1:hover {
-    background-color: #e62932;
+    background-color: #3A3A4B;
+    border-color: white;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(193, 39, 45, 0.3);
+    box-shadow: 0 0 10px 0 rgba(255, 215, 0, 0.5);
     opacity: 1;
 }
 
 #button1:active {
     transform: translateY(0);
 }
-
-#button2 {
-    background-color: transparent;
-    border: 1px solid white;
-    color: white;
-}
-
-#button2:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: #e62932;
-    color: #e62932;
-    transform: translateY(-2px);
-    opacity: 1;
-}
-
-#button2:active {
-    transform: translateY(0);
-}
-
 .favorite-date_info-container {
     display: flex;
     flex-direction: row;
@@ -202,7 +178,7 @@ button:hover {
     width: 100%;
     padding: 1rem;
     margin-top: 1.5rem;
-    background-color: #C1272D;
+    background-color: #5fe629;
     color: white;
     border: none;
     border-radius: 8px;
@@ -212,9 +188,9 @@ button:hover {
 }
 
 .booking-confirm-button:hover {
-    background-color: #e62932;
+    background-color: #5fe629;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(193, 39, 45, 0.3);
+    box-shadow: 0 5px 15px rgba(95, 230, 41, 0.3);
     opacity: 1;
 }
 
@@ -236,9 +212,8 @@ button:hover {
   }
 
   .favorite-wrapper {
-    width: 100%;
-    top: 85%;
-    padding: 20px;
+    width: 540px;
+    top: 340px;
     transform: translateY(-40%);
     z-index: 3;
   }
@@ -296,11 +271,6 @@ button:hover {
     height: 50vh;
   }
 
-  .favorite-wrapper {
-    padding: 15px;
-    top: 80%;
-  }
-
   .favorite-block h2 {
     font-size: 1.2rem;
     max-height: 2.4em;
@@ -342,4 +312,10 @@ button:hover {
 
 .favorite-wrapper {
   background-color: rgba(1, 15, 41, 0.95);
+}
+
+.favorite-img {
+    width: 540px;
+    height: 300px;
+    object-fit: cover;
 }
