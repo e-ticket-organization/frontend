@@ -1,8 +1,7 @@
-import axios from 'axios';
 import { LoginCredentials, RegisterCredentials, User } from '@/app/types/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL;
+const API_BASE = '/api';
+const AUTH_BASE = '/api/auth';
 
 interface LoginResponse {
   token: string;
@@ -35,84 +34,117 @@ interface RegisterResponse {
     message: string;
 }
 
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  withCredentials: true, 
-});
-
-const api_auth = axios.create({
-  baseURL: AUTH_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
+async function customFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
+  
+  const headers = new Headers(options.headers);
+  
+  headers.set('Content-Type', 'application/json');
+  headers.set('Accept', 'application/json');
+  
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
-  return config;
-});
+  
+  const config: RequestInit = {
+    ...options,
+    headers,
+    credentials: 'include'
+  };
+  
+  console.log('Відправка запиту до:', url, config);
+  
+  const response = await fetch(url, config);
+  
+  if (response.status === 401) {
+    try {
+      const newToken = await refreshToken();
+      
+      const newHeaders = new Headers(headers);
+      newHeaders.set('Authorization', `Bearer ${newToken}`);
+      
+      return fetch(url, {
+        ...config,
+        headers: newHeaders
+      }).then(res => res.json());
+    } catch (error) {
+      const user = getUser();
+      if (user?.status === 'admin') {
+        window.location.href = '/admin/login';
+      } else {
+        window.location.href = '/';
+      }
+      throw error;
+    }
+  }
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Помилка запиту');
+  }
+  
+  return response.json();
+}
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    const response = await api_auth.post('login', credentials);
-    const { token, user } = response.data;
+    const data = await customFetch(`${AUTH_BASE}/login`, {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    
+    const { token, user } = data;
     
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Помилка авторизації');
-    }
-    throw error;
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка авторизації');
   }
 };
 
 export const admin_login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    const response = await api_auth.post('admin/login', credentials);
-    const { token, user } = response.data;
+    const data = await customFetch(`${AUTH_BASE}/admin/login`, {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    
+    const { token, user } = data;
     
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Помилка авторизації');
-    }
-    throw error;
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка авторизації');
   }
 };
 
 export const register = async (credentials: RegisterCredentials): Promise<LoginResponse> => {
   try {
-    const response = await api_auth.post('register', credentials);
-    const { token, user } = response.data;
+    const data = await customFetch(`${AUTH_BASE}/register`, {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    
+    const { token, user } = data;
     
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Помилка реєстрації');
-    }
-    throw error;
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка реєстрації');
   }
 };
 
 export const logout = async (): Promise<void> => {
   try {
-    await api_auth.post('logout');
+    await customFetch(`${AUTH_BASE}/logout`, {
+      method: 'POST'
+    });
   } finally {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -130,22 +162,32 @@ export const getUser = (): User | null => {
 
 export const fetchUserProfile = async (): Promise<User> => {
   try {
-    const response = await api.get('user');
-    const user = response.data;
+    const user = await customFetch(`${API_BASE}/user`);
     localStorage.setItem('user', JSON.stringify(user));
     return user;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Помилка отримання профілю');
-    }
-    throw error;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка отримання профілю');
   }
 };
 
 export const refreshToken = async (): Promise<string> => {
   try {
-    const response = await api_auth.post<RefreshResponse>('refresh');
-    const { token } = response.data;
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
+    
+    const response = await fetch(`${AUTH_BASE}/refresh`, {
+      method: 'POST',
+      headers,
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Не вдалося оновити токен');
+    }
+    
+    const data = await response.json();
+    const { token } = data;
     localStorage.setItem('token', token);
     return token;
   } catch (error) {
@@ -155,66 +197,19 @@ export const refreshToken = async (): Promise<string> => {
   }
 };
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const token = await refreshToken();
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-api_auth.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const token = await refreshToken();
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api_auth(originalRequest);
-      } catch (refreshError) {
-        const user = getUser();
-        if (user?.status === 'admin') {
-          window.location.href = '/admin/login';
-        } else {
-          window.location.href = '/';
-        }
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
 export const registerUser = async (registerData: RegisterData): Promise<RegisterResponse> => {
-    try {
-        const response = await axios.post<RegisterResponse>(`${API_URL}/auth/register`, registerData, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        });
-
-        // Зберігаємо токен в localStorage
-        localStorage.setItem('token', response.data.token);
-
-        console.log('Реєстрація успішна:', response.data.message);
-        return response.data;
-    } catch (error: any) {
-        console.error('Помилка реєстрації:', error.response?.data || error);
-        throw new Error(error.response?.data?.message || 'Помилка при реєстрації');
-    }
+  try {
+    const data = await customFetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      body: JSON.stringify(registerData)
+    });
+    
+    localStorage.setItem('token', data.token);
+    
+    console.log('Реєстрація успішна:', data.message);
+    return data;
+  } catch (error: any) {
+    console.error('Помилка реєстрації:', error);
+    throw new Error(error.message || 'Помилка при реєстрації');
+  }
 };

@@ -5,7 +5,7 @@ export interface User {
     password: string
     phone_numbers: string
     status: string 
-    age: number
+    date_of_birth: string
     created_at: string
     updated_at: string
 }

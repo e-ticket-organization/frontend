@@ -2,7 +2,9 @@
 
 import React, { createContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, RegisterCredentials } from '@/app/types/auth';
-import axios from 'axios';
+
+const API_BASE = '/api';
+const AUTH_BASE = '/api/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +13,8 @@ interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
   admin_login: (credentials: LoginCredentials) => Promise<void>;
+  getCurrentUser: () => Promise<User | null>;
+  updateUserData: (updatedUser: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -20,6 +24,8 @@ export const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   logout: async () => {},
   admin_login: async () => {},
+  getCurrentUser: async () => null,
+  updateUserData: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,16 +41,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async () => {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
-      console.log('Fetching user profile from:', url);
-      const response = await fetch(url, {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE}/users/profile`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch user profile');
+        throw new Error('Не вдалося отримати профіль користувача');
       }
 
       const userData = await response.json();
@@ -57,16 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await fetch(`https://backend-3ih2.onrender.com/api/auth/login`, {
+    console.log('Відправка запиту авторизації на:', `${AUTH_BASE}/login`);
+    
+    const response = await fetch(`${AUTH_BASE}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     if (!response.ok) {
-      throw new Error('Невірний email або пароль');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Невірний email або пароль');
     }
 
     const data = await response.json();
@@ -75,20 +88,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (credentials: RegisterCredentials) => {
-    if (!process.env.NEXT_PUBLIC_AUTH_URL) {
-      throw new Error('AUTH_URL не визначено. Перевірте налаштування змінних середовища.');
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}register`, {
+    console.log('Відправка запиту реєстрації на:', `${AUTH_BASE}/register`);
+    
+    const response = await fetch(`${AUTH_BASE}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     if (!response.ok) {
-      throw new Error('Помилка реєстрації');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Помилка реєстрації');
     }
 
     const data = await response.json();
@@ -100,13 +114,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}logout`, {
+        console.log('Відправка запиту виходу на:', `${AUTH_BASE}/logout`);
+        
+        const response = await fetch(`${AUTH_BASE}/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           },
+          credentials: 'include'
         });
         
         if (!response.ok) {
@@ -123,17 +140,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const admin_login = async (credentials: LoginCredentials) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}login/admin`, {
+    console.log('Відправка запиту авторизації адміна на:', `${AUTH_BASE}/admin/login`);
+    
+    const response = await fetch(`${AUTH_BASE}/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     if (!response.ok) {
-      throw new Error('Невірні облікові дані адміністратора');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Невірні облікові дані адміністратора');
     }
 
     const data = await response.json();
@@ -141,16 +162,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchUserProfile();
   };
 
-  const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_AUTH_URL,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
+  // Публічний метод для отримання поточного користувача з кешуванням
+  const getCurrentUser = async (): Promise<User | null> => {
+    // Якщо користувач вже завантажений, повертаємо його
+    if (user) {
+      return user;
     }
-  });
+    
+    // Інакше завантажуємо профіль
+    try {
+      await fetchUserProfile();
+      return user;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  const updateUserData = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, admin_login }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      login, 
+      register, 
+      logout, 
+      admin_login,
+      getCurrentUser,
+      updateUserData
+    }}>
       {children}
     </AuthContext.Provider>
   );

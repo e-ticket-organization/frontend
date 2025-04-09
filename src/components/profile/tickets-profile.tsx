@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getUserTickets, getUserProfile, cancelTicketBooking } from '@/app/services/filmService';
+import { getUserTickets, getUserProfile, cancelTicketBooking, getPerfomances, getShows } from '@/app/services/filmService';
 import { ITicket } from '@/app/types/ticket';
 import { IUser } from '@/app/types/user';
 import './tickets-profile.styles.css';
+import { IShow } from '@/app/types/show';
 
 export default function TicketsProfile() {
   const [tickets, setTickets] = useState<ITicket[]>([]);
@@ -12,9 +13,11 @@ export default function TicketsProfile() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<IUser | null>(null);
   const [cancellingTicketId, setCancellingTicketId] = useState<number | null>(null);
+  const [performance, setPerformance] = useState<IShow[]>([]);
 
   useEffect(() => {
     fetchUserAndTickets();
+    fetchPerformance();
   }, []);
 
   const fetchUserAndTickets = async () => {
@@ -25,7 +28,13 @@ export default function TicketsProfile() {
       
       if (userData.id) {
         const ticketsData = await getUserTickets();
-        console.log('Структура квитка:', JSON.stringify(ticketsData[0], null, 2));
+        
+        if (ticketsData.length > 0) {
+          console.log('Структура квитка:', JSON.stringify(ticketsData[0], null, 2));
+          console.log('Структура seat:', ticketsData[0].seat);
+          console.log('Властивості seat:', Object.keys(ticketsData[0].seat));
+        }
+        
         setTickets(ticketsData);
       }
     } catch (err: any) {
@@ -34,6 +43,11 @@ export default function TicketsProfile() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchPerformance = async () => {
+    const performance = await getShows();
+    setPerformance(performance);
   };
 
   const handleCancelBooking = async (ticketId: number) => {
@@ -81,7 +95,10 @@ export default function TicketsProfile() {
           return (
             <div key={ticket.id} className={`ticket-card ${isActive ? 'active' : 'past'}`}>
               <div className="ticket-header">
-                <h3>{ticket.show.performance.title}</h3>
+                <h3>
+                  {performance.find(p => p.id === ticket.show.performance_id)?.performance?.title || 
+                   `Вистава ID: ${ticket.show.performance_id}`}
+                </h3>
                 <span className={`status ${isActive ? 'status-active' : 'status-past'}`}>
                   {isActive ? 'Активний' : 'Минулий'}
                 </span>
@@ -93,14 +110,34 @@ export default function TicketsProfile() {
                     <span className="value">{formatDate(ticket.show.datetime)}</span>
                 </div>
                 
-                {ticket.seat && (
-                    <div className="ticket-detail">
-                    <span className="label">Місце:</span>
-                    <span className="value">
-                        Ряд {ticket.seat.row}, Місце {Number(ticket.seat.seat_number)}
-                    </span>
-                    </div>
-                )}
+                <div className="ticket-detail">
+                  <span className="label">Місце:</span>
+                  <span className="value">
+                    {(() => {
+                      if (ticket.seat) {
+                        const seatNumber = ticket.seat.number;
+                        if (seatNumber) {
+                          return `Ряд ${ticket.seat.row}, Місце ${seatNumber}`;
+                        }
+                        
+                        console.log('Дані місця:', ticket.seat);
+                      }
+                      
+                      const ticketParts = ticket.ticket_number.split('-');
+                      if (ticketParts.length === 2) {
+                        const seatInfo = ticketParts[1];
+                        const row = seatInfo.match(/R(\d+)/)?.[1];
+                        const seat = seatInfo.match(/S(\d+)/)?.[1];
+                        
+                        if (row && seat) {
+                          return `Ряд ${row}, Місце ${seat}`;
+                        }
+                      }
+                      
+                      return 'Інформація про місце недоступна';
+                    })()}
+                  </span>
+                </div>
                 
                 {ticket.show.hall && (
                   <div className="ticket-detail">
