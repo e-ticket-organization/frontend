@@ -13,6 +13,28 @@ interface RefreshResponse {
   token: string;
 }
 
+interface RegisterData {
+    name: string;
+    email: string;
+    phoneNumbers: string;
+    age: number;
+    password: string;
+    password_confirmation: string;
+}
+
+interface RegisterResponse {
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        status: string;
+        phoneNumbers: string;
+        age: number;
+    };
+    token: string;
+    message: string;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -176,3 +198,23 @@ api_auth.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const registerUser = async (registerData: RegisterData): Promise<RegisterResponse> => {
+    try {
+        const response = await axios.post<RegisterResponse>(`${API_URL}/auth/register`, registerData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        // Зберігаємо токен в localStorage
+        localStorage.setItem('token', response.data.token);
+
+        console.log('Реєстрація успішна:', response.data.message);
+        return response.data;
+    } catch (error: any) {
+        console.error('Помилка реєстрації:', error.response?.data || error);
+        throw new Error(error.response?.data?.message || 'Помилка при реєстрації');
+    }
+};

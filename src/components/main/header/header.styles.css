@@ -2,13 +2,13 @@
     display: flex;
     justify-content: space-between !important;
     align-items: center;
-    max-width: 95%;
-    margin: 1% auto;
     width: 100%;
-    position: absolute;
-    background-color: transparent ;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #140E28, #2F1D67);
     z-index: 10000;
-    left: 2%;
 }
 
 .container li{
@@ -16,12 +16,12 @@
     font-family: var(--font-family1);
 }
 
-ol{
+ol {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
-    background-color: transparent
+    background-color: transparent;
 }
 
 ol li {
@@ -63,6 +63,10 @@ svg:hover{
     cursor: pointer;
     transition: 0.3s;
     opacity: 0.5;
+}
+
+#logo {
+    margin-right: 0;
 }
 
 #logo:hover{

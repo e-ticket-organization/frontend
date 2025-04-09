@@ -7,20 +7,38 @@ export interface IPerfomance {
     title: string;
     duration: number;
     image: string;
+    producerId: number;
+    created_at: string | null;
+    updated_at: string | null;
     producer: {
         id: number;
         first_name: string;
         last_name: string;
+        phone_number: string;
+        email: string;
+        date_of_birth: string;
     };
-    actors: {
+    genres: Array<{
+        id: number;
+        name: string;
+    }>;
+    actors: Array<{
         id: number;
         first_name: string;
         last_name: string;
-    }[];
-    genres: {
+        date_of_birth: string;
+        passport: string | null;
+        phone_number: string;
+        created_at: string | null;
+        updated_at: string | null;
+    }>;
+    shows: Array<{
         id: number;
-        name: string;
-    }[];
-    created_at?: string;
-    updated_at?: string;
+        performance_id: number;
+        datetime: string;
+        price: string;
+        hall_id: number;
+        date: string | null;
+    }>;
+    description: string;
 }

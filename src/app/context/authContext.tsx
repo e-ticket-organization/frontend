@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, RegisterCredentials } from '@/app/types/auth';
+import axios from 'axios';
 
 interface AuthContextType {
   user: User | null;
@@ -34,26 +35,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user`, {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
+      console.log('Fetching user profile from:', url);
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setIsAuthenticated(true);
-      } else {
-        logout();
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
       }
+
+      const userData = await response.json();
+      setUser(userData);
+      setIsAuthenticated(true);
     } catch (error) {
+      console.error('Error fetching user profile:', error);
       logout();
     }
   };
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}login`, {
+    const response = await fetch(`https://backend-3ih2.onrender.com/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,6 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (credentials: RegisterCredentials) => {
+    if (!process.env.NEXT_PUBLIC_AUTH_URL) {
+      throw new Error('AUTH_URL не визначено. Перевірте налаштування змінних середовища.');
+    }
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}register`, {
       method: 'POST',
       headers: {
@@ -132,6 +140,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('token', data.token);
     await fetchUserProfile();
   };
+
+  const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_AUTH_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  });
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, admin_login }}>

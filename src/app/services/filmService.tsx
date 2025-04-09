@@ -19,13 +19,15 @@ const api = axios.create({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
-    withCredentials: true, 
+    withCredentials: true
 });
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
     return config;
 });
@@ -33,28 +35,105 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
             try {
                 await refreshToken();
                 const token = localStorage.getItem('token');
-                error.config.headers.Authorization = `Bearer ${token}`;
-                return api.request(error.config);
+                if (token) {
+                    error.config.headers.Authorization = `Bearer ${token}`;
+                    return api.request(error.config);
+                }
             } catch (refreshError) {
                 console.error('Помилка оновлення токена:', refreshError);
             }
+        }
+        if (error.message === 'Network Error') {
+            console.error('Помилка мережі. Перевірте підключення до сервера.');
         }
         return Promise.reject(error);
     }
 );
 
-export const getPerfomances = async (): Promise<IPerfomance[]> => {
-    const response = await api.get<IPerfomance[]>('/performances');
-    return response.data;
+interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+}
+
+interface GetPerformancesParams {
+    search?: string;
+    limit?: number;
+    page?: number;
+}
+
+export const getPerfomances = async (params: GetPerformancesParams = {}): Promise<IPerfomance[]> => {
+    try {
+        if (!API_URL) {
+            console.error('API_URL не визначено. Перевірте налаштування змінних середовища.');
+            return [];
+        }
+
+        const { search = '', limit = 10, page = 1 } = params;
+        const url = '/performances/in-shows';
+        console.log('Виконується запит до:', `${API_URL}${url}`, { search, limit, page, in_shows: true });
+        
+        const response = await api.get<PaginatedResponse<IPerfomance>>(url, {
+            params: {
+                search,
+                limit,
+                page,
+                in_shows: true
+            },
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('Відповідь від сервера:', response.data);
+        
+        if (response.data && Array.isArray(response.data.items)) {
+            return response.data.items;
+        }
+        
+        console.error('Неочікувана структура відповіді:', response.data);
+        return [];
+    } catch (error: any) {
+        console.error('Помилка запиту:', {
+            url: `${API_URL}/performances/in-shows`,
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            headers: error.config?.headers,
+            config: error.config
+        });
+        return [];
+    }
 };
 
 export const getPerfomancesWithFilters = async (url: string): Promise<IPerfomance[]> => {
-    const response = await api.get<IPerfomance[]>(url);
-    return response.data;
+    try {
+        console.log('Виконується запит до:', `${API_URL}${url}`);
+        const response = await api.get<PaginatedResponse<IPerfomance>>(url);
+        console.log('Відповідь від сервера:', response.data);
+        
+        if (response.data && Array.isArray(response.data.items)) {
+            return response.data.items;
+        }
+        
+        console.error('Неочікувана структура відповіді:', response.data);
+        return [];
+    } catch (error: any) {
+        console.error('Помилка запиту:', {
+            url: `${API_URL}${url}`,
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+        return [];
+    }
 };
 
 export const getProducers = async (): Promise<IProducer[]> => {
@@ -99,11 +178,6 @@ export const addPerfomance = async (performanceData: IPerformanceCreate): Promis
     }
 };
 
-interface PaginatedResponse<T> {
-    current_page: number;
-    data: T[];
-}
-
 interface ActorsResponse {
     actors: PaginatedResponse<IActor>;
     filters: {
@@ -118,15 +192,11 @@ interface SimpleResponse<T> {
 
 export const getActors = async (): Promise<IActor[]> => {
     try {
-        const response = await api.get<ActorsResponse | SimpleResponse<IActor> | IActor[]>('/actors');
+        const response = await api.get<PaginatedResponse<IActor>>('/actors');
         console.log('Повна відповідь від сервера:', response.data);
         
-        if (Array.isArray(response.data)) {
-            return response.data;
-        } else if ('actors' in response.data && response.data.actors?.data) {
-            return response.data.actors.data;
-        } else if ('data' in response.data) {
-            return response.data.data;
+        if (response.data && Array.isArray(response.data.items)) {
+            return response.data.items;
         }
         
         console.error('Неочікувана структура відповіді:', response.data);
@@ -182,9 +252,15 @@ export const addShow = async (showData: {
 
 export const getShows = async (): Promise<IShow[]> => {
     try {
-        const response = await api.get<PaginatedResponse<IShow>>('/shows');
+        const response = await api.get<IShow[]>('/shows');
         console.log('Отримані дані показів:', response.data); 
-        return response.data.data;
+        
+        if (Array.isArray(response.data)) {
+            return response.data;
+        }
+        
+        console.error('Неочікувана структура відповіді:', response.data);
+        return [];
     } catch (error) {
         console.error('Помилка отримання показів:', error);
         return [];
@@ -194,8 +270,8 @@ export const getShows = async (): Promise<IShow[]> => {
 export const getGenres = async (): Promise<IGenre[]> => {
     try {
         console.log('Починаємо запит жанрів...');
-        const response = await api.get<IGenre[]>('/performances/genres');
-        console.log('Відпь від сервера:', response.data);
+        const response = await api.get<IGenre[]>('/genres');
+        console.log('Відповідь від сервера:', response.data);
         return response.data;
     } catch (error: any) {
         console.error('Деталі помилки:', {
@@ -240,10 +316,24 @@ interface ShowWithSeats {
 
 export const getShowsByPerformance = async (performanceId: number): Promise<IShow[]> => {
     try {
+        console.log('Отримання показів для вистави з ID:', performanceId);
         const response = await api.get<IShow[]>(`/performances/${performanceId}/shows`);
-        return response.data;
-    } catch (error) {
-        console.error('Помилка отримання показів:', error);
+        console.log('Відповідь від сервера:', response.data);
+        
+        if (Array.isArray(response.data)) {
+            return response.data;
+        }
+        
+        console.error('Неочікувана структура відповіді:', response.data);
+        return [];
+    } catch (error: any) {
+        console.error('Помилка отримання показів:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: error.config,
+            url: `${API_URL}/performances/${performanceId}/shows`
+        });
         return [];
     }
 };
@@ -360,7 +450,10 @@ export const getPerfomanceById = async (id: number): Promise<IPerfomance> => {
             response.data.producer = {
                 id: 0,
                 first_name: 'Не призначено',
-                last_name: ''
+                last_name: '',
+                phone_number: '',
+                email: '',
+                date_of_birth: ''
             };
         }
         
@@ -525,7 +618,7 @@ export const updateShow = async (showId: number, updateData: IShowUpdate): Promi
     );
     
     if (!response.data) {
-      throw new Error('В��дповідь сервера не містить даних');
+      throw new Error('Відповідь сервера не містить даних');
     }
     
     return response.data.show;
@@ -614,5 +707,16 @@ export const deleteUser = async (id: number): Promise<void> => {
         await api.delete(`/users/${id}`);
     } catch (error: any) {
         throw new Error(error.response?.data?.message || 'Помилка видалення користувача');
+    }
+};
+
+export const getShowDetailsById = async (id: number): Promise<IShow> => {
+    try {
+        const response = await api.get<IShow>(`/shows/${id}`);
+        console.log('Отримані дані показу:', response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error('Помилка отримання даних показу:', error);
+        throw new Error(error.response?.data?.message || 'Помилка отримання даних показу');
     }
 };

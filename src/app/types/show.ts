@@ -1,17 +1,13 @@
+import { IPerfomance } from './perfomance';
+import { IHall } from './hall';
+
 export interface IShow {
     id: number;
     performance_id: number;
     datetime: string;
+    price: string;
     hall_id: number;
-    price: string | number;
-    performance?: {
-        id: number;
-        title: string;
-        duration: number;
-        image: string;
-    };
-    hall?: {
-        id: number;
-        hall_number: number;
-    };
+    date: string | null;
+    performance?: IPerfomance;
+    hall?: IHall;
 }
