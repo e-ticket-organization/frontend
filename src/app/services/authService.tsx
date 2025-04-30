@@ -213,3 +213,29 @@ export const registerUser = async (registerData: RegisterData): Promise<Register
     throw new Error(error.message || 'Помилка при реєстрації');
   }
 };
+
+export const requestPasswordReset = async (email: string): Promise<{ message: string }> => {
+  try {
+    const data = await customFetch(`${AUTH_BASE}/request-password-reset`, {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+    
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка при відправленні запиту на відновлення паролю');
+  }
+};
+
+export const resetPassword = async (token: string, password: string, passwordConfirmation: string): Promise<{ message: string }> => {
+  try {
+    const data = await customFetch(`${AUTH_BASE}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ token, password, passwordConfirmation })
+    });
+    
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Помилка при зміні паролю');
+  }
+};
