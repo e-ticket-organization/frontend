@@ -1,9 +1,29 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { requestPasswordReset, resetPassword } from '@/app/services/authService';
 import './restore-pass.styles.css';
+
+function RestorePassWithToken({ 
+  onTokenFound 
+}: { 
+  onTokenFound: (token: string) => void 
+}) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    if (searchParams) {
+      const tokenParam = searchParams.get('token');
+      
+      if (tokenParam) {
+        onTokenFound(tokenParam);
+      }
+    }
+  }, [searchParams, onTokenFound]);
+  
+  return null;
+}
 
 export default function RestorePass() {
     const [email, setEmail] = useState('');
@@ -13,20 +33,12 @@ export default function RestorePass() {
     const [message, setMessage] = useState({ text: '', type: '' });
     const [token, setToken] = useState('');
     const router = useRouter();
-    const searchParams = useSearchParams();
-
     const [step, setStep] = useState<'request' | 'reset' | 'success'>('request');
 
-    useEffect(() => {
-        if (searchParams) {
-            const tokenParam = searchParams.get('token');
-            
-            if (tokenParam) {
-                setToken(tokenParam);
-                setStep('reset');
-            }
-        }
-    }, [searchParams]);
+    const handleTokenFound = (foundToken: string) => {
+        setToken(foundToken);
+        setStep('reset');
+    };
 
     const handleRequestReset = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,6 +102,10 @@ export default function RestorePass() {
 
     return (
         <div className="restore-container">
+            <Suspense fallback={null}>
+                <RestorePassWithToken onTokenFound={handleTokenFound} />
+            </Suspense>
+
             <div className="restore-content">
                 <button className="close-button" onClick={handleClose}>&times;</button>
                 
