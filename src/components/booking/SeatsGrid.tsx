@@ -33,7 +33,7 @@ export default function SeatsGrid({
     setBookedSeats,
     isLoading
 }: SeatsGridProps) {
-    
+
     const handleSeatClick = (seatId: number) => {
         const seat = availableSeats.find(s => s.id === seatId) || 
                     selectedSeats.find(s => s.id === seatId);
@@ -41,17 +41,12 @@ export default function SeatsGrid({
             onSeatSelect(seat);
         }
     };
-
     const getSeatStatus = (seatId: number) => {
-        if (bookedSeats.some(seat => seat.id === seatId)) {
-            return 'booked';
-        } else if (selectedSeats.some(seat => seat.id === seatId)) {
-            return 'selected';
-        } else if (availableSeats.some(seat => seat.id === seatId)) {
-            return 'available';
-        } else {
-            return 'unavailable';
+        const ticket = bookedSeats.find(ticket => ticket.seat_id === seatId);// наслідування 
+        if (ticket) {
+            return ticket.status === 'sold' ? 'booked' : 'available';
         }
+        return 'available'; // Якщо квитка немає, вважаємо місце доступним
     };
 
     const renderSeat = (displayNumber: number, seat: ISeat) => {
@@ -59,8 +54,8 @@ export default function SeatsGrid({
         
         return (
             <button
-                className={`seat ${status}`}
-                onClick={() => (status === 'available' || status === 'selected') && handleSeatClick(seat.id)}
+                className={`seat ${status} ${selectedSeats.some(s => s.id === seat.id) ? 'selected' : ''}`}
+                onClick={() => (status === 'available' || selectedSeats.some(s => s.id === seat.id)) && handleSeatClick(seat.id)}
                 disabled={status === 'booked'}
                 title={`Номер місця: ${displayNumber}`}
             >
@@ -70,18 +65,25 @@ export default function SeatsGrid({
     };
 
     const getAllSeatsForSection = (seats: ISeat[], bookedSeats: ISeat[], rowStart: number, rowEnd: number, seatStart: number, seatEnd: number) => {
+        if (!Array.isArray(seats) || !Array.isArray(bookedSeats)) {
+            console.error("seats or bookedSeats is not an array");
+            return [];
+        }
+
         const allSeats = [...seats, ...bookedSeats];
         const uniqueSeats = allSeats.filter((seat, index, self) =>
             index === self.findIndex((s) => s.id === seat.id)
         );
+
         return uniqueSeats
             .filter(seat => 
                 seat.row >= rowStart && 
                 seat.row <= rowEnd && 
-                seat.seat_number >= seatStart && 
-                seat.seat_number <= seatEnd
+                seat.number >= seatStart &&
+                seat.number <= seatEnd
             )
-            .sort((a, b) => (a.row - b.row) || (a.seat_number - b.seat_number));
+            .sort((a, b) => (a.row - b.row) || (a.number - b.number))
+        ;
     };
 
     const leftSeats = getAllSeatsForSection(availableSeats, bookedSeats, 1, 5, 1, 5);

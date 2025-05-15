@@ -32,12 +32,13 @@ export default function Panel() {
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
 
   useEffect(() => {
-
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        console.log('Запит до API для отримання акторів');
         if (activeTab === 'Actors') {
           const actorsData = await getActors();
+          console.log('Отримані актори:', actorsData);
           setActors(actorsData);
         } else if (activeTab === 'Events') {
           const performancesData = await getPerfomances();
@@ -45,6 +46,7 @@ export default function Panel() {
         } else if (activeTab === 'Producers') {
           const producersData = await getProducers();
           setProducers(producersData);
+          console.log('Отримані продюсери:', producersData);
         } else if (activeTab === 'Users') {
           const usersData = await getUsers();
           setUsers(usersData);
@@ -53,7 +55,7 @@ export default function Panel() {
           setShows(showsData);
         }
       } catch (error) {
-        console.error('Помилка завантаення даних:', error);
+        console.error('Помилка завантаження даних:', error);
       } finally {
         setIsLoading(false);
       }

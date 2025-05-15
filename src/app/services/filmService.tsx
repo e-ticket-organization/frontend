@@ -18,12 +18,12 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
     const url = `${API_BASE}${normalizedEndpoint}`;
     
     console.log('Виконується запит до URL:', url);
-    
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
-    headers.set('Accept', 'application/json');
+    headers.set('Accept', '*/*');
+
     
     if (token) {
         headers.set('Authorization', `Bearer ${token}`);
@@ -32,7 +32,8 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
     const config: RequestInit = {
         ...options,
         headers,
-        credentials: 'include'
+        credentials: 'include',
+        // mode: 'no-cors',
     };
     
     try {
@@ -164,7 +165,11 @@ export const getPerfomancesWithFilters = async (url: string): Promise<IPerfomanc
 };
 
 export const getProducers = async (): Promise<IProducer[]> => {
-    return customFetch<IProducer[]>('/producers');
+    const data = await customFetch<PaginatedResponse<IProducer>>('/producers');
+    if (data && Array.isArray(data.items)) {
+        return data.items;
+    }
+    return [];
 };
 
 interface IPerformanceCreate {
@@ -293,9 +298,9 @@ export const getShows = async (): Promise<IShow[]> => {
 export const getGenres = async (): Promise<IGenre[]> => {
     try {
         console.log('Починаємо запит жанрів...');
-        console.log('API_BASE при запиті жанрів:', API_BASE);
+        const url = 'genres';
         
-        const data = await customFetch<IGenre[]>('/genres');
+        const data = await customFetch<IGenre[]>(url);
         console.log('Відповідь від сервера:', data);
         return data;
     } catch (error: any) {

@@ -1,8 +1,19 @@
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #2F1D67;
+  margin: 0;
+  padding: 0;
+  color: #e1dff5;
+}
+
 .favorite {
     position: relative;
     width: 100%;
     margin-bottom: 300px;
-    margin-top: 50px;
+    margin-top: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .embla {
@@ -10,8 +21,8 @@
     width: 1292px;
     height: 505px;
     margin: 0 auto;
-    border: 2px solid #FFD700;
-    border-radius: 15px;
+    border: 1px solid #FFD700;
+    border-radius: 18px;
 }
 
 .embla__container {
@@ -19,6 +30,10 @@
 }
 
 .embla__slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
     flex: 0 0 100%;
     min-width: 0;
     position: relative;
@@ -49,12 +64,11 @@
 
 
 .favorite-wrapper {
-    position: absolute;
+    flex: 1;
+    position: relative;
     z-index: 3;
     top: 76%;
-    left: 0;
     transform: translateY(-50%);
-    width: 40%;
     background-color: #202033;
     pointer-events: auto;
 }
@@ -63,7 +77,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .favorite-block {
@@ -315,7 +329,76 @@ button:hover {
 }
 
 .favorite-img {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 540px;
     height: 300px;
     object-fit: cover;
+}
+
+.card {
+  display: flex;
+  background-color: #140E28;
+  border-radius: 16px;
+  padding: 20px 58px;
+  gap: 30px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid #5f4c99;
+  width: 1292px;
+  max-width: 100%;
+  height: 505px;
+}
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.image-container img {
+  width: 540px;
+  height: 445px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.content {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 600px;
+  height: 100%;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  color: #d0cdee;
+}
+
+.button {
+  background-color: #35295c;
+  border: 2px solid #9d8cfc;
+  border-radius: 10px;
+  padding: 12px 28px;
+  color: white;
+  font-size: 16px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #47377a;
 }

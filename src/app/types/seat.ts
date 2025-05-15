@@ -1,4 +1,5 @@
 export interface ISeat {
+    status: string;
     id: number;
     number: number;
     row: number;

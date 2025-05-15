@@ -1,5 +1,6 @@
 import { IPerfomance } from './perfomance';
 import { IHall } from './hall';
+import { ISeat } from './seat';
 
 export interface IShow {
     id: number;
@@ -10,4 +11,5 @@ export interface IShow {
     date: string | null;
     performance?: IPerfomance;
     hall?: IHall;
+    seats: ISeat[];
 }

@@ -73,22 +73,22 @@ export default function Favorite() {
         <div className="embla__container">
           {randomPerfomances.map((performance) => (
             <div key={performance.id} className="embla__slide">
-              <div className='favorite-wrapper'>
-                <img className='favorite-img' src={performance.image} alt={performance.title} />
-              </div>
-              <div className='favorite-block-container'>
-                  <div className='favorite-trending-block'>
-                    <p>Популярне</p>
-                  </div>
-                  <div className='favorite-block'>
-                    <h2>{performance.title}</h2>
-                    <div className='favorite-button-container'>
-                      <button id='button1' onClick={() => handleBookingClick(performance)}>
-                        Придбати
-                      </button>
-                    </div>
-                  </div>
+              <div className="card">
+                <div className="image-container">
+                  <img className='new-form-img' src={performance.image} alt={performance.title} />
                 </div>
+                <div className="content">
+                  <div className="title">{performance.title}</div>
+                  {performance.description && (
+                    <div className="description">
+                      {performance.description}
+                    </div>
+                  )}
+                  <button className="button" onClick={() => handleBookingClick(performance)}>
+                    Придбати
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

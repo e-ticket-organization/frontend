@@ -15,7 +15,14 @@ interface PerformanceWithGenres extends IPerfomance {
     }[];
 }
 
-function PerformanceCard({ performance, handlePerformanceClick, hasUpcomingShows, getMinPrice, getNextShowDate }: { performance: PerformanceWithGenres, handlePerformanceClick: (id: number) => void, hasUpcomingShows: (id: number | undefined) => boolean, getMinPrice: (id: number | undefined) => number | null, getNextShowDate: (id: number | undefined) => string }) {
+function PerformanceCard({ performance, handlePerformanceClick, hasUpcomingShows, getMinPrice, getNextShowDate, showDates }: { 
+    performance: PerformanceWithGenres, 
+    handlePerformanceClick: (id: number) => void, 
+    hasUpcomingShows: (id: number | undefined) => boolean, 
+    getMinPrice: (id: number | undefined) => number | null, 
+    getNextShowDate: (id: number | undefined) => string,
+    showDates: string[]
+}) {
     return (
         <div 
             key={performance.id} 
@@ -47,6 +54,14 @@ function PerformanceCard({ performance, handlePerformanceClick, hasUpcomingShows
                     ))}
                 </div>
             )}
+            {showDates.length > 0 && (
+                <div className="show-dates">
+                    <h4>Дати показів:</h4>
+                    {showDates.map((date, index) => (
+                        <p key={index}>{new Date(date).toLocaleString('uk-UA')}</p>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -68,7 +83,18 @@ export default function PerformanceMain() {
 
     const fetchGenres = async () => {
         try {
-            const genresData = await getGenres();
+            const response = await fetch('https://backend-3ih2.onrender.com/api/genres', {
+                method: 'GET',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const genresData = await response.json();
             console.log('Жанри отримані з API:', genresData);
             setGenres(Array.isArray(genresData) ? genresData : []);
         } catch (error) {
@@ -127,31 +153,19 @@ export default function PerformanceMain() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            let url = '/performances?';
-            if (sortBy === 'price_asc') {
-                url += 'sort_price=asc';
-            } else if (sortBy === 'price_desc') {
-                url += 'sort_price=desc';
-            } else if (sortBy === 'date_asc') {
-                url += 'sort_date=asc';
-            } else if (sortBy === 'date_desc') {
-                url += 'sort_date=desc';
-            }
-            if (searchTerm) url += `&search=${searchTerm}`;
-            if (selectedGenre) url += `&genre_id=${selectedGenre}`;
-    
+            const url = '/performances?';
+            
             console.log('URL запиту:', url);
-            console.log('API_URL:', process.env.NEXT_PUBLIC_API_URL);
             
             const data = await getPerfomancesWithFilters(url);
             console.log('Отримані вистави:', data);
-    
-            if (!Array.isArray(data)) {
-                console.error('Отримані дані не є масивом:', data);
-                setPerformances([]);
-            } else {
+
+            if (data && Array.isArray(data)) {
                 setPerformances(data);
                 await Promise.all(data.map(perf => fetchShowsForPerformance(perf.id)));
+            } else {
+                console.error('Неочікувана структура відповіді:', data);
+                setPerformances([]);
             }
         } catch (error) {
             console.error('Помилка завантаження вистав:', error);
@@ -172,6 +186,12 @@ export default function PerformanceMain() {
     const handlePerformanceClick = (performanceId: number) => {
         router.push(`/performances/${performanceId}`);
     };
+
+    const filteredPerformances = performances.filter(performance => {
+        const matchesGenre = selectedGenre ? performance.genres.some(genre => genre.id === Number(selectedGenre)) : true;
+        const matchesSearchTerm = performance.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesGenre && matchesSearchTerm;
+    });
 
     return (
         <div className='performance-main'>
@@ -212,7 +232,7 @@ export default function PerformanceMain() {
                 </div>
             ) : (
                 <div className="performances-grid">
-                    {performances.map((performance) => (
+                    {filteredPerformances.map((performance) => (
                         <PerformanceCard 
                             key={performance.id} 
                             performance={performance} 
@@ -220,6 +240,7 @@ export default function PerformanceMain() {
                             hasUpcomingShows={hasUpcomingShows}
                             getMinPrice={getMinPrice}
                             getNextShowDate={getNextShowDate}
+                            showDates={shows[performance.id]?.map(show => show.datetime) || []}
                         />
                     ))}
                 </div>

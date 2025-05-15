@@ -57,69 +57,71 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
     <section className='hero'>
       <div className="hero__container">
         <div className="hero__content">
-          <img 
-            className='hero-img' 
-            src={performance.image} 
-            alt={performance.title} 
-          />
-          <div className='hero-wrapper'>
-            <div className='hero-block-container'>
-              <h2>{performance.title}</h2>
-              <div className='hero-block'>
-                <p className='hero-block-text'>Тривалість: {performance.duration} хв</p>
-                
-                {performance.producer && (
-                  <p className='hero-block-text'>
-                    Режисер: {performance.producer.first_name} {performance.producer.last_name}
-                  </p>
-                )}
+          <div className="hero-flex">
+            <img 
+              className='hero-img' 
+              src={performance.image} 
+              alt={performance.title} 
+            />
+            <div className='hero-wrapper'>
+              <div className='hero-block-container'>
+                <h2>{performance.title}</h2>
+                <div className='hero-block'>
+                  <p className='hero-block-text'>Тривалість: {performance.duration} хв</p>
+                  
+                  {performance.producer && (
+                    <p className='hero-block-text'>
+                      Режисер: {performance.producer.first_name} {performance.producer.last_name}
+                    </p>
+                  )}
 
-                {performance.actors && performance.actors.length > 0 && (
-                  <div className='actors-section'>
-                    <p className='hero-block-text'>Актори:</p>
-                    <div className='actors-list'>
-                      {performance.actors.map(actor => (
-                        <span key={actor.id} className="actor-tag">
-                          {actor.first_name} {actor.last_name}
-                        </span>
+                  {performance.actors && performance.actors.length > 0 && (
+                    <div className='actors-section'>
+                      <p className='hero-block-text'>Актори:</p>
+                      <div className='actors-list'>
+                        {performance.actors.map(actor => (
+                          <span key={actor.id} className="actor-tag">
+                            {actor.first_name} {actor.last_name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="next-show">
+                    {shows.length > 0 ? 
+                      `Наступний показ: ${new Date(shows[0].datetime).toLocaleString('uk-UA')}` : 
+                      'На жаль, наразі немає запланованих показів'}
+                  </p>
+                  {performance.genres && performance.genres.length > 0 && (
+                    <div className="genres">
+                      {performance.genres.map((genre: IGenre) => (
+                        <p className='hero-block-text' key={genre.id}>
+                          Жанр:
+                          <span className="genre-tag">
+                             {genre.name}
+                          </span>
+                        </p>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                <p className="next-show">
-                  {shows.length > 0 ? 
-                    `Наступний показ: ${new Date(shows[0].datetime).toLocaleString('uk-UA')}` : 
-                    'На жаль, наразі немає запланованих показів'}
-                </p>
-                {performance.genres && performance.genres.length > 0 && (
-                  <div className="genres">
-                    {performance.genres.map((genre: IGenre) => (
-                      <p className='hero-block-text'>
-                        Жанр:
-                        <span key={genre.id} className="genre-tag">
-                           {genre.name}
-                        </span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {shows.length > 0 ? (
-                  <button 
-                    id='hero-button1' 
-                    onClick={handleBookingClick}
-                  >
-                    Придбати квитки
-                  </button>
-                ) : (
-                  <button 
-                    id='hero-button1' 
-                    disabled
-                    title="Наразі немає запланованих показів"
-                  >
-                    Квитки недоступні
-                  </button>
-                )}
+                  )}
+                  {shows.length > 0 ? (
+                    <button 
+                      id='hero-button1' 
+                      onClick={handleBookingClick}
+                    >
+                      Придбати квитки
+                    </button>
+                  ) : (
+                    <button 
+                      id='hero-button1' 
+                      disabled
+                      title="Наразі немає запланованих показів"
+                    >
+                      Квитки недоступні
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

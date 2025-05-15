@@ -87,43 +87,35 @@ export default function PerformanceRelises() {
         });
     };
 
-    const isRecentlyAdded = (performance: PerformanceWithGenres): boolean => {
+    const isSpecificDate = (performance: PerformanceWithGenres): boolean => {
+        const specificDate = new Date('2025-04-26T07:06:06.000Z');
         if (!performance.created_at) return false;
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         const createdDate = new Date(performance.created_at);
-        return createdDate > oneWeekAgo;
+        return createdDate.getTime() === specificDate.getTime();
     };
 
+   // ... existing code ...
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            let url = '/performances?';
-            const params = [];
+        const searchQuery = searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : '';
+        const url = `https://backend-3ih2.onrender.com/api/performances?limit=40&page=1${searchQuery}`;
 
-            if (sortBy === 'price_asc') {
-                params.push('sort_price=asc');
-            } else if (sortBy === 'price_desc') {
-                params.push('sort_price=desc');
-            } else if (sortBy === 'date_asc') {
-                params.push('sort_date=asc');
-            } else if (sortBy === 'date_desc') {
-                params.push('sort_date=desc');
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json'
             }
+        });
 
-            if (searchTerm) {
-                params.push(`search=${searchTerm}`);
-            }
-            if (selectedGenre) {
-                params.push(`genre_id=${selectedGenre}`);
-            }
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
 
-            url += params.join('&');
-            
-            const data = await getPerfomancesWithFilters(url);
-            const recentPerformances = data.filter(isRecentlyAdded);
-            setPerformances(recentPerformances);
-            await Promise.all(recentPerformances.map(perf => fetchShowsForPerformance(perf.id)));
+        const data = await response.json();
+        
+        setPerformances(data.items);
+        await Promise.all(data.items.map((perf: PerformanceWithGenres) => fetchShowsForPerformance(perf.id)));
         } catch (error) {
             console.error('Помилка завантаження даних:', error);
         } finally {
@@ -131,10 +123,59 @@ export default function PerformanceRelises() {
         }
     };
 
-    const hasPerformancesWithPrice = (): boolean => {
-        return performances.some(performance => {
-            const performanceShows = shows[performance.id || 0] || [];
-            return performanceShows.some(show => Number(show.price) > 0);
+const getFilteredAndSortedPerformances = () => {
+    let filtered = [...performances];
+
+    // Фільтрація за останній місяць
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    filtered = filtered.filter(performance => {
+        if (!performance.created_at) return false; // Перевірка на null
+        const createdDate = new Date(performance.created_at);
+        return createdDate >= oneMonthAgo; // Вистава створена за останній місяць
+    });
+
+    // Фільтрація за жанром
+    if (selectedGenre) {
+        filtered = filtered.filter(performance => 
+            performance.genres.some(genre => genre.id.toString() === selectedGenre)
+        );
+    }
+
+    // Сортування
+    if (sortBy === 'date_asc') {
+        filtered.sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateA - dateB;
+        });
+    } else if (sortBy === 'date_desc') {
+        filtered.sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA;
+        });
+    } else if (sortBy === 'price_asc') {
+        filtered.sort((a, b) => {
+            const priceA = getMinPrice(a.id) || Infinity;
+            const priceB = getMinPrice(b.id) || Infinity;
+            return priceA - priceB;
+        });
+    } else if (sortBy === 'price_desc') {
+        filtered.sort((a, b) => {
+            const priceA = getMinPrice(a.id) || 0;
+            const priceB = getMinPrice(b.id) || 0;
+            return priceB - priceA;
+        });
+    }
+
+    return filtered;
+};
+
+const hasPerformancesWithPrice = (): boolean => {
+    return performances.some((performance: PerformanceWithGenres) => {
+        const performanceShows = shows[performance.id] || [];
+        return performanceShows.some((show: IShow) => Number(show.price) > 0);
         });
     };
 
@@ -156,7 +197,7 @@ export default function PerformanceRelises() {
                     onChange={(e) => setSelectedGenre(e.target.value)}
                 >
                     <option value="">Всі жанри</option>
-                    {genres.map(genre => (
+                {genres.map((genre: IGenre) => (
                         <option key={genre.id} value={genre.id}>
                             {genre.name}
                         </option>
@@ -181,7 +222,7 @@ export default function PerformanceRelises() {
                 </div>
             ) : performances.length > 0 ? (
                 <div className="performances-grid">
-                    {performances.map((performance) => (
+                {performances.map((performance: PerformanceWithGenres) => (
                         <div 
                             key={performance.id} 
                             className="performance-card"
@@ -192,7 +233,11 @@ export default function PerformanceRelises() {
                                 alt={performance.title} 
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = '/placeholder-image.jpg';
+                                target.style.display = 'none';
+                                const errorText = document.createElement('p');
+                                errorText.innerText = 'Невдалося знайти';
+                                errorText.className = 'error-text';
+                                target.parentNode?.appendChild(errorText);
                                 }}
                             />
                             <h3>{performance.title}</h3>
@@ -221,7 +266,7 @@ export default function PerformanceRelises() {
                 </div>
             ) : (
                 <div className="no-performances">
-                    <p>Немає нових вистав за останній тиждень</p>
+                <p>Немає нових вистав за останній місяць</p>
                 </div>
             )}
         </div>

@@ -65,9 +65,12 @@ export default function BookingModal({
             setSelectedShow(show);
             
             const seatsData = await getShowSeats(show.id);
-            
-            setAvailableSeats(seatsData.available_seats);
-            setBookedSeats(seatsData.booked_seats);
+
+            const availableSeats = seatsData.seats.filter((seat: { id: number; is_booked: boolean }) => !seat.is_booked);
+            const bookedSeats = seatsData.seats.filter((seat: { id: number; is_booked: boolean }) => seat.is_booked);
+
+            setAvailableSeats(availableSeats);
+            setBookedSeats(bookedSeats);
             setStep('seats');
         } catch (err: any) {
             setError(err.message || 'Помилка при виборі показу');
