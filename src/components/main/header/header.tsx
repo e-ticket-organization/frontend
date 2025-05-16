@@ -1,18 +1,32 @@
 'use client';
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import './header.styles.css';
 import AuthPopup from '@/components/main/header/auth-popup/auth-popup';
 import Search from '@/components/main/header/search/search';
 import { AuthContext } from '@/app/context/authContext';
-import { logout as logoutService } from '@/app/services/authService';
 import ProfilePopup from './profile-popup/profile-popup';
+import { checkAndRefreshToken } from '@/app/services/authService';
 
 export default function Header() {
   const { isAuthenticated, logout } = useContext(AuthContext);
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+
+  useEffect(() => {
+    const validateToken = async () => {
+      try {
+        if (isAuthenticated) {
+          await checkAndRefreshToken();
+        }
+      } catch (error) {
+        console.error('Помилка перевірки токена:', error);
+      }
+    };
+
+    validateToken();
+  }, [isAuthenticated]);
 
   const handleCloseAuthPopup = () => {
     setIsAuthPopupOpen(false);
@@ -30,8 +44,6 @@ export default function Header() {
     if (isAuthenticated) {
       try {
         await logout();
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
       } catch (error) {
         console.error('Помилка при виході:', error);
       }

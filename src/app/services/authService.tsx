@@ -5,11 +5,15 @@ const AUTH_BASE = '/api/auth';
 
 interface LoginResponse {
   token: string;
+  refreshToken: string;
   user: User;
+  message: string;
+  is_admin: boolean;
 }
 
 interface RefreshResponse {
   token: string;
+  refreshToken: string;
 }
 
 interface RegisterData {
@@ -31,8 +35,52 @@ interface RegisterResponse {
         age: number;
     };
     token: string;
+    refreshToken: string;
     message: string;
 }
+
+// Декодування JWT токена
+export const parseJwt = (token: string) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
+// Перевірка закінчення строку дії токена
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    const decodedToken = parseJwt(token);
+    if (!decodedToken || !decodedToken.exp) return true;
+    
+    // Отримуємо час закінчення дії токена в мс
+    const expirationTime = decodedToken.exp * 1000;
+    // Поточний час
+    const currentTime = Date.now();
+    
+    return currentTime >= expirationTime;
+  } catch (error) {
+    console.error('Помилка перевірки токена:', error);
+    return true;
+  }
+};
+
+// Отримання залишкового часу дії токена в мілісекундах
+export const getTokenRemainingTime = (token: string): number => {
+  try {
+    const decodedToken = parseJwt(token);
+    if (!decodedToken || !decodedToken.exp) return 0;
+    
+    const expirationTime = decodedToken.exp * 1000;
+    const currentTime = Date.now();
+    
+    return Math.max(0, expirationTime - currentTime);
+  } catch (error) {
+    console.error('Помилка отримання часу дії токена:', error);
+    return 0;
+  }
+};
 
 async function customFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
@@ -43,7 +91,19 @@ async function customFetch(url: string, options: RequestInit = {}) {
   headers.set('Accept', 'application/json');
   
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    // Перевіряємо, чи токен дійсний
+    if (isTokenExpired(token)) {
+      try {
+        const { token: newToken } = await refreshToken();
+        headers.set('Authorization', `Bearer ${newToken}`);
+      } catch (error) {
+        // Якщо не вдалося оновити токен, перенаправляємо на сторінку входу
+        redirectToLogin();
+        throw new Error('Сесія закінчилася. Будь ласка, увійдіть знову.');
+      }
+    } else {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
   
   const config: RequestInit = {
@@ -58,7 +118,7 @@ async function customFetch(url: string, options: RequestInit = {}) {
   
   if (response.status === 401) {
     try {
-      const newToken = await refreshToken();
+      const { token: newToken } = await refreshToken();
       
       const newHeaders = new Headers(headers);
       newHeaders.set('Authorization', `Bearer ${newToken}`);
@@ -68,12 +128,7 @@ async function customFetch(url: string, options: RequestInit = {}) {
         headers: newHeaders
       }).then(res => res.json());
     } catch (error) {
-      const user = getUser();
-      if (user?.status === 'admin') {
-        window.location.href = '/admin/login';
-      } else {
-        window.location.href = '/';
-      }
+      redirectToLogin();
       throw error;
     }
   }
@@ -86,6 +141,24 @@ async function customFetch(url: string, options: RequestInit = {}) {
   return response.json();
 }
 
+// Функція для перенаправлення на відповідну сторінку входу
+const redirectToLogin = () => {
+  const user = getUser();
+  
+  // Очищаємо дані авторизації
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  
+  if (typeof window !== 'undefined') {
+    if (user?.status === 'admin') {
+      window.location.href = '/admin/login';
+    } else {
+      window.location.href = '/auth/login';
+    }
+  }
+};
+
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
     const data = await customFetch(`${AUTH_BASE}/login`, {
@@ -93,9 +166,10 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
       body: JSON.stringify(credentials)
     });
     
-    const { token, user } = data;
+    const { token, refreshToken, user } = data;
     
     localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     
     return data;
@@ -111,9 +185,10 @@ export const admin_login = async (credentials: LoginCredentials): Promise<LoginR
       body: JSON.stringify(credentials)
     });
     
-    const { token, user } = data;
+    const { token, refreshToken, user } = data;
     
     localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     
     return data;
@@ -129,9 +204,10 @@ export const register = async (credentials: RegisterCredentials): Promise<LoginR
       body: JSON.stringify(credentials)
     });
     
-    const { token, user } = data;
+    const { token, refreshToken, user } = data;
     
     localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     
     return data;
@@ -147,12 +223,17 @@ export const logout = async (): Promise<void> => {
     });
   } finally {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
   }
 };
 
 export const getToken = (): string | null => {
   return localStorage.getItem('token');
+};
+
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken');
 };
 
 export const getUser = (): User | null => {
@@ -170,16 +251,23 @@ export const fetchUserProfile = async (): Promise<User> => {
   }
 };
 
-export const refreshToken = async (): Promise<string> => {
+export const refreshToken = async (): Promise<RefreshResponse> => {
   try {
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
     headers.set('Accept', 'application/json');
     
+    const currentRefreshToken = localStorage.getItem('refreshToken');
+    
+    if (!currentRefreshToken) {
+      throw new Error('Відсутній refresh token');
+    }
+    
     const response = await fetch(`${AUTH_BASE}/refresh`, {
       method: 'POST',
       headers,
-      credentials: 'include'
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken: currentRefreshToken })
     });
     
     if (!response.ok) {
@@ -187,13 +275,44 @@ export const refreshToken = async (): Promise<string> => {
     }
     
     const data = await response.json();
-    const { token } = data;
+    const { token, refreshToken: newRefreshToken } = data;
+    
+    // Зберігаємо нові токени
     localStorage.setItem('token', token);
-    return token;
+    localStorage.setItem('refreshToken', newRefreshToken || currentRefreshToken);
+    
+    console.log('Токен успішно оновлено');
+    
+    return { 
+      token, 
+      refreshToken: newRefreshToken || currentRefreshToken 
+    };
   } catch (error) {
+    console.error('Помилка оновлення токену:', error);
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     throw error;
+  }
+};
+
+export const checkAndRefreshToken = async (): Promise<string | null> => {
+  try {
+    const currentToken = localStorage.getItem('token');
+    
+    if (!currentToken) return null;
+    
+    if (isTokenExpired(currentToken) || getTokenRemainingTime(currentToken) < 60 * 60 * 1000) {
+      console.log('Токен закінчується або вже закінчився, оновлюємо...');
+      const { token: newToken } = await refreshToken();
+      return newToken;
+    }
+    
+    return currentToken;
+  } catch (error) {
+    console.error('Помилка при перевірці та оновленні токена:', error);
+    redirectToLogin();
+    return null;
   }
 };
 
@@ -205,6 +324,7 @@ export const registerUser = async (registerData: RegisterData): Promise<Register
     });
     
     localStorage.setItem('token', data.token);
+    localStorage.setItem('refreshToken', data.refreshToken);
     
     console.log('Реєстрація успішна:', data.message);
     return data;

@@ -7,6 +7,9 @@ import { ISeat } from '@/app/types/seat';
 import { IShow } from '@/app/types/show';
 import { bookTickets, getShowSeats, getShowsByPerformance } from '@/app/services/filmService';
 import { IPerfomance } from '@/app/types/perfomance';
+import { StripePaymentForm } from '../payment/stripePaymentForm';
+import '../payment/stripePaymentForm.styles.css';
+import './booking-modal.styles.css';
 
 interface BookingModalProps {
     isOpen: boolean;
@@ -26,7 +29,9 @@ export default function BookingModal({
     const [bookedSeats, setBookedSeats] = useState<ISeat[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'dates' | 'seats'>('dates');
+    const [step, setStep] = useState<'dates' | 'seats' | 'payment'>('dates');
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
 
     useEffect(() => {
         const fetchShows = async () => {
@@ -55,6 +60,7 @@ export default function BookingModal({
             setBookedSeats([]);
             setError(null);
             setStep('dates');
+            setPaymentSuccess(false);
         }
     }, [isOpen, selectedPerformance]);
 
@@ -65,14 +71,64 @@ export default function BookingModal({
             setSelectedShow(show);
             
             const seatsData = await getShowSeats(show.id);
+            console.log('Отримані дані місць:', seatsData);
 
-            const availableSeats = seatsData.seats.filter((seat: { id: number; is_booked: boolean }) => !seat.is_booked);
-            const bookedSeats = seatsData.seats.filter((seat: { id: number; is_booked: boolean }) => seat.is_booked);
-
-            setAvailableSeats(availableSeats);
-            setBookedSeats(bookedSeats);
+            const rawData = seatsData as unknown as Record<string, any>;
+            
+            if (rawData && typeof rawData === 'object' && 'seats' in rawData && Array.isArray(rawData.seats)) {
+                console.log('Обробка даних з поля seats');
+                const seatArray = rawData.seats as Array<Record<string, any>>;
+                
+                const transformedSeats = seatArray.map(seat => ({
+                    id: seat.id,
+                    seat_id: seat.id,
+                    row: seat.row,
+                    number: seat.number,
+                    status: seat.is_booked ? 'sold' : 'available',
+                    is_booked: seat.is_booked,
+                    created_at: seat.created_at || '',
+                    updated_at: seat.updated_at || ''
+                }));
+                
+                console.log('Всі місця після трансформації:', transformedSeats);
+                
+                const availableSeats = transformedSeats.filter(seat => !seat.is_booked);
+                const bookedSeats = transformedSeats.filter(seat => seat.is_booked);
+                
+                console.log('Доступні місця після фільтрації:', availableSeats.length);
+                console.log('Заброньовані місця після фільтрації:', bookedSeats.length);
+                
+                setAvailableSeats(availableSeats);
+                setBookedSeats(bookedSeats);
+            } else if (seatsData.available_seats && seatsData.booked_seats) {
+                console.log('Обробка розділених даних з available_seats і booked_seats');
+                console.log('Доступні місця:', seatsData.available_seats);
+                console.log('Заброньовані місця:', seatsData.booked_seats);
+                
+                const available = seatsData.available_seats.map(seat => ({
+                    ...seat,
+                    seat_id: seat.id,
+                    status: 'available',
+                    is_booked: false
+                }));
+                
+                const booked = seatsData.booked_seats.map(seat => ({
+                    ...seat,
+                    seat_id: seat.id,
+                    status: 'sold',
+                    is_booked: true
+                }));
+                
+                setAvailableSeats(available);
+                setBookedSeats(booked);
+            } else {
+                console.error('Неочікуваний формат даних:', seatsData);
+                throw new Error('Неправильний формат даних місць');
+            }
+            
             setStep('seats');
         } catch (err: any) {
+            console.error('Помилка при обробці місць:', err);
             setError(err.message || 'Помилка при виборі показу');
         } finally {
             setIsLoading(false);
@@ -87,7 +143,22 @@ export default function BookingModal({
         }
     };
 
-    const handleBooking = async () => {
+    const handleProceedToPayment = () => {
+        if (!selectedShow || selectedSeats.length === 0) {
+            setError('Виберіть місця для бронювання');
+            return;
+        }
+
+        const amount = selectedSeats.length * Number(selectedShow.price || 0);
+        setTotalAmount(amount);
+        setStep('payment');
+    };
+
+    const handleCancelPayment = () => {
+        setStep('seats');
+    };
+
+    const handleBooking = async (paymentIntentId?: string) => {
         if (!selectedShow || selectedSeats.length === 0) {
             setError('Виберіть місця для бронювання');
             return;
@@ -96,21 +167,25 @@ export default function BookingModal({
         try {
             setIsLoading(true);
             
-            const bookingData = {
-                tickets: selectedSeats.map(seat => ({
-                    show_id: selectedShow.id,
-                    seat_id: seat.id
-                })),
-                silent: true
-            };
-
-            await bookTickets(bookingData);
+            const bookedWithStatus = selectedSeats.map(seat => ({
+                ...seat,
+                seat_id: seat.id,
+                status: 'sold',
+                is_booked: true
+            }));
             
-            setBookedSeats(prev => [...prev, ...selectedSeats]);
+            setBookedSeats(prev => [...prev, ...bookedWithStatus]);
             setAvailableSeats(prev => 
                 prev.filter(seat => !selectedSeats.some(selected => selected.id === seat.id))
             );
             setSelectedSeats([]);
+            setPaymentSuccess(true);
+            
+            setTimeout(() => {
+                setStep('seats');
+                setPaymentSuccess(false);
+            }, 3000);
+            
             console.log('Бронювання успішне');
         } catch (error: any) {
             console.error('Помилка бронювання:', error);
@@ -127,25 +202,50 @@ export default function BookingModal({
         setAvailableSeats([]);
         setBookedSeats([]);
         setError(null);
+        setPaymentSuccess(false);
         onClose();
     };
 
-    return (
-        <Modal isOpen={isOpen} onClose={handleCloseModal}>
-            {error ? (
-                <div className="error">
-                    <p>{error}</p>
-                    <button onClick={() => setError(null)}>Спробувати знову</button>
+    const renderModalContent = () => {
+        if (isLoading) {
+            return (
+                <div className="loader-container">
+                    <div className="loader"></div>
                 </div>
-            ) : (
-                step === 'dates' ? (
+            );
+        }
+        
+        if (error) {
+            return (
+                <div className="error-message">
+                    <p>{error}</p>
+                    <button className="btn-primary" onClick={() => setError(null)}>Спробувати знову</button>
+                </div>
+            );
+        }
+        
+        if (paymentSuccess) {
+            return (
+                <div className="success-payment">
+                    <div className="success-icon">✓</div>
+                    <h3>Оплата успішна!</h3>
+                    <p>Квитки успішно заброньовано. Дякуємо за покупку!</p>
+                </div>
+            );
+        }
+        
+        switch (step) {
+            case 'dates':
+                return (
                     <ShowDateSelector
                         shows={shows}
                         onShowSelect={handleShowSelect}
                         selectedPerformance={selectedPerformance}
                         isLoading={isLoading}
                     />
-                ) : (
+                );
+            case 'seats':
+                return (
                     <SeatsGrid
                         availableSeats={availableSeats}
                         bookedSeats={bookedSeats}
@@ -153,14 +253,48 @@ export default function BookingModal({
                         onSeatSelect={handleSeatSelect}
                         price={Number(selectedShow?.price) || 0}
                         selectedShow={selectedShow}
-                        handleBooking={handleBooking}
+                        handleBooking={handleProceedToPayment}
                         onClose={handleCloseModal}
                         setAvailableSeats={setAvailableSeats}
                         setBookedSeats={setBookedSeats}
                         isLoading={isLoading}
                     />
-                )
-            )}
+                );
+            case 'payment':
+                if (!selectedShow) {
+                    return <div className="error-message">Не вибрано сеанс</div>;
+                }
+                return (
+                    <StripePaymentForm 
+                        amount={totalAmount}
+                        onSuccess={handleBooking}
+                        onCancel={handleCancelPayment}
+                        bookingData={{
+                            tickets: selectedSeats.map(seat => ({
+                                show_id: selectedShow.id,
+                                seat_id: seat.id
+                            })),
+                            silent: true,
+                            paymentData: {
+                                currency: "uah",
+                                metadata: {
+                                    source: "web-app",
+                                    seatCount: String(selectedSeats.length),
+                                    showId: String(selectedShow.id)
+                                },
+                                description: "Оплата квитків на виставу"
+                            }
+                        }}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={handleCloseModal}>
+            {renderModalContent()}
         </Modal>
     );
 };

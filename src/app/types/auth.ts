@@ -8,6 +8,11 @@ export interface User {
     date_of_birth: string
     created_at: string
     updated_at: string
+    dateOfBirth?: string | null
+    phoneNumbers?: string | null
+    stripeCustomerId?: string | null
+    emailVerifiedAt?: string | null
+    rememberToken?: string | null
 }
 
 export interface LoginCredentials {
@@ -20,5 +25,33 @@ export interface RegisterCredentials extends LoginCredentials {
     email: string
     password: string
     password_confirmation: string
+    phoneNumbers?: string
+    age?: number
+}
 
+export interface AuthState {
+    user: User | null
+    token: string | null
+    refreshToken: string | null
+    isLoading: boolean
+    error: string | null
+    isAuthenticated: boolean
+    isAdmin: boolean
+}
+
+export interface AuthContextType {
+    user: User | null
+    token: string | null
+    refreshToken: string | null
+    isLoading?: boolean
+    error?: string | null
+    isAuthenticated: boolean
+    isAdmin: boolean
+    login: (credentials: LoginCredentials) => Promise<void>
+    register: (credentials: RegisterCredentials) => Promise<void>
+    logout: () => Promise<void>
+    refreshAuthToken: () => Promise<string | null>
+    updateUserData?: (updatedUser: User) => void
+    getCurrentUser?: () => Promise<User | null>
+    admin_login?: (credentials: LoginCredentials) => Promise<void>
 }

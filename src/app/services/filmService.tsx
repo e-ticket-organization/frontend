@@ -2,7 +2,7 @@ import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IProducer } from '@/app/types/producer';
 import { IHall } from '@/app/types/hall';
-import { getUser, refreshToken } from './authService';
+import { getUser, refreshToken, isTokenExpired, checkAndRefreshToken } from './authService';
 import { IUser } from '../types/user';
 import { IActor } from '../types/actor';
 import { IGenre } from '../types/genre';
@@ -18,7 +18,9 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
     const url = `${API_BASE}${normalizedEndpoint}`;
     
     console.log('Виконується запит до URL:', url);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    // Перевіряємо і, при необхідності, оновлюємо токен перед запитом
+    const token = await checkAndRefreshToken();
     
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
@@ -41,7 +43,7 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
         
         if (response.status === 401 && typeof window !== 'undefined') {
             try {
-                const newToken = await refreshToken();
+                const { token: newToken } = await refreshToken();
                 const newHeaders = new Headers(headers);
                 newHeaders.set('Authorization', `Bearer ${newToken}`);
                 
@@ -50,9 +52,34 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
                     headers: newHeaders
                 });
                 
+                if (!retryResponse.ok) {
+                    const errorText = await retryResponse.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText };
+                    }
+                    throw new Error(errorData.message || `Помилка запиту: ${retryResponse.status} ${retryResponse.statusText}`);
+                }
+                
                 return await retryResponse.json();
             } catch (refreshError) {
                 console.error('Помилка оновлення токена:', refreshError);
+                
+                if (typeof window !== 'undefined') {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    
+                    const user = getUser();
+                    if (user?.status === 'admin') {
+                        window.location.href = '/admin/login';
+                    } else {
+                        window.location.href = '/auth/login';
+                    }
+                }
+                
                 throw refreshError;
             }
         }
@@ -370,16 +397,36 @@ interface BookTicketsRequest {
         seat_id: number;
     }[];
     discount_id?: number;
+    paymentData: {
+        currency: string;
+        metadata: {
+            source: string;
+        };
+        description: string;
+    };
 }
 
 export const bookTickets = async (bookingData: BookTicketsRequest): Promise<any> => {
     try {
+        const defaultPaymentData = {
+            currency: "uah",
+            metadata: {
+                source: "web-app"
+            },
+            description: "Оплата квитків на виставу"
+        };
+
+        const formattedData = {
+            ...bookingData,
+            paymentData: bookingData.paymentData || defaultPaymentData,
+            silent: true
+        };
+
+        console.log('Відправка даних для бронювання:', formattedData);
+        
         return customFetch('/tickets/book', {
             method: 'POST',
-            body: JSON.stringify({
-                ...bookingData,
-                silent: true
-            })
+            body: JSON.stringify(formattedData)
         });
     } catch (error) {
         console.error('Помилка бронювання:', error);
