@@ -304,13 +304,6 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
               hidePostalCode: true,
             }}
           />
-          <div className="test-info">
-            {process.env.NODE_ENV !== 'production' && (
-              <small style={{ color: '#aab7c4', marginTop: '5px' }}>
-                Тестова карта: 4242 4242 4242 4242, будь-яка дата в майбутньому, будь-який CVC
-              </small>
-            )}
-          </div>
         </div>
       </div>
       
