@@ -20,7 +20,7 @@ interface RegisterData {
     name: string;
     email: string;
     phoneNumbers: string;
-    age: number;
+    dateOfBirth: string;
     password: string;
     password_confirmation: string;
 }
@@ -32,7 +32,7 @@ interface RegisterResponse {
         email: string;
         status: string;
         phoneNumbers: string;
-        age: number;
+        dateOfBirth: string;
     };
     token: string;
     refreshToken: string;
@@ -91,7 +91,7 @@ async function customFetch(url: string, options: RequestInit = {}) {
   headers.set('Accept', 'application/json');
   
   if (token) {
-    // Перевіряємо, чи токен дійсний
+    // Перевіряємо, чи токен дійсно закінчився (а не просто близький до закінчення)
     if (isTokenExpired(token)) {
       try {
         const { token: newToken } = await refreshToken();
@@ -302,7 +302,7 @@ export const checkAndRefreshToken = async (): Promise<string | null> => {
     
     if (!currentToken) return null;
     
-    if (isTokenExpired(currentToken) || getTokenRemainingTime(currentToken) < 60 * 60 * 1000) {
+    if (isTokenExpired(currentToken) || getTokenRemainingTime(currentToken) < 5 * 60 * 1000) {
       console.log('Токен закінчується або вже закінчився, оновлюємо...');
       const { token: newToken } = await refreshToken();
       return newToken;

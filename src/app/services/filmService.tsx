@@ -2,14 +2,12 @@ import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IProducer } from '@/app/types/producer';
 import { IHall } from '@/app/types/hall';
-import { getUser, refreshToken, isTokenExpired, checkAndRefreshToken } from './authService';
+import { getUser, refreshToken } from './authService';
 import { IUser } from '../types/user';
 import { IActor } from '../types/actor';
 import { IGenre } from '../types/genre';
 import { ISeat } from '../types/seat';
 import { ITicket } from '../types/ticket';
-import { useContext } from 'react';
-import { AuthContext } from '../context/authContext';
 
 const API_BASE = '/api';
 
@@ -19,8 +17,7 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
     
     console.log('Виконується запит до URL:', url);
     
-    // Перевіряємо і, при необхідності, оновлюємо токен перед запитом
-    const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    const token = localStorage.getItem('token');
     
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
@@ -236,18 +233,6 @@ export const addPerfomance = async (performanceData: IPerformanceCreate): Promis
     }
 };
 
-interface ActorsResponse {
-    actors: PaginatedResponse<IActor>;
-    filters: {
-        search: string | null;
-        trashed: string | null;
-    };
-}
-
-interface SimpleResponse<T> {
-    data: T[];
-}
-
 export const getActors = async (page = 1, limit = 10): Promise<IActor[]> => {
     try {
         const response = await fetch(`https://backend-3ih2.onrender.com/api/actors?page=${page}&limit=${limit}`, {
@@ -257,7 +242,6 @@ export const getActors = async (page = 1, limit = 10): Promise<IActor[]> => {
         });
         if (!response.ok) throw new Error('Не вдалося отримати акторів');
         const data = await response.json();
-        // Якщо відповідь містить масив у data.actors або data.items
         return data.actors || data.items || [];
     } catch (error) {
         console.error('Помилка отримання акторів:', error);
@@ -452,13 +436,13 @@ export const getUserProfile = async (): Promise<IUser> => {
     return customFetch<IUser>('/users/profile');
 };
 
-export const updateUserProfile = async (userId: number, userData: Partial<IUser>): Promise<IUser> => {
+export const updateUserProfile = async (userData: Partial<IUser>): Promise<IUser> => {
     try {
         const formattedData = {
             name: userData.name,
             email: userData.email,
             phone_numbers: userData.phoneNumbers,
-            age: userData.age ? parseInt(userData.age.toString()) : null,
+            dateOfBirth: userData.dateOfBirth,
             ...(userData.password && { 
                 password: userData.password,
                 password_confirmation: userData.password 
@@ -469,8 +453,10 @@ export const updateUserProfile = async (userId: number, userData: Partial<IUser>
             Object.entries(formattedData).filter(([_, value]) => value !== undefined)
         );
 
-        const data = await customFetch<{user: IUser, message: string}>(`/users/${userId}`, {
-            method: 'PUT',
+        console.log('Відправка даних на сервер:', cleanedData);
+
+        const data = await customFetch<{user: IUser, message: string}>(`/users/profile`, {
+            method: 'PATCH',
             body: JSON.stringify(cleanedData)
         });
         
@@ -480,10 +466,6 @@ export const updateUserProfile = async (userId: number, userData: Partial<IUser>
         throw new Error(error.message || 'Помилка при оновленні профілю');
     }
 };
-
-interface SearchResponse {
-    data: IPerfomance[];
-}
 
 export const searchPerformances = async (query: string, type: 'title' | 'actor'): Promise<IPerfomance[]> => {
     try {

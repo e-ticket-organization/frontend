@@ -1,25 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useContext } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { uk } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
 import './profile.styles.css';
 import { getUserProfile, updateUserProfile } from '@/app/services/filmService';
 import { IUser } from '@/app/types/user';
 import { useRouter } from 'next/dist/client/components/navigation';
 import { AuthContext } from '@/app/context/authContext';
 
-
-function calculateAge(dateOfBirth: string): number {
-  const birthDate = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-
+// Реєструємо українську локаль
+registerLocale('uk', uk);
 
 export default function Profile() {
   const { user } = useContext(AuthContext);
@@ -29,21 +21,24 @@ export default function Profile() {
     email: '',
     password: '',
     phoneNumbers: '',
-    age: ''
+    dateOfBirth: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [originalData, setOriginalData] = useState<IUser | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchUserData();
   }, []);
+  
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
     router.push(path);
   }; 
+  
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
@@ -59,8 +54,13 @@ export default function Profile() {
         email: currentUser.email || '',
         password: '',
         phoneNumbers: currentUser.phoneNumbers || '',
-        age: calculateAge(currentUser.dateOfBirth || '')
+        dateOfBirth: currentUser.dateOfBirth || ''
       };
+      
+      // Конвертуємо дату з рядка в об'єкт Date для DatePicker
+      if (currentUser.dateOfBirth) {
+        setSelectedDate(new Date(currentUser.dateOfBirth));
+      }
       
       setUserData(userData);
       setOriginalData(userData);
@@ -76,6 +76,16 @@ export default function Profile() {
     }
   };
 
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    // Конвертуємо дату в формат YYYY-MM-DD для API
+    const dateString = date ? date.toISOString().split('T')[0] : '';
+    setUserData({
+      ...userData,
+      dateOfBirth: dateString
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -84,7 +94,7 @@ export default function Profile() {
       
       const updateData: Partial<IUser> = {};
       
-      console.log('Порівняння phone_numbers:', {
+      console.log('Порівняння phoneNumbers:', {
         current: userData.phoneNumbers,
         original: originalData?.phoneNumbers
       });
@@ -95,8 +105,8 @@ export default function Profile() {
       if (userData.phoneNumbers !== originalData?.phoneNumbers && userData.phoneNumbers?.trim()) {
         updateData.phoneNumbers = userData.phoneNumbers;
       }
-      if (userData.age !== originalData?.age && userData.age) {
-        updateData.age = userData.age;
+      if (userData.dateOfBirth !== originalData?.dateOfBirth && userData.dateOfBirth?.trim()) {
+        updateData.dateOfBirth = userData.dateOfBirth;
       }
       if (userData.email !== originalData?.email && userData.email.trim()) {
         updateData.email = userData.email;
@@ -114,7 +124,7 @@ export default function Profile() {
         return;
       }
 
-      const updatedUser = await updateUserProfile(userData.id, updateData);
+      const updatedUser = await updateUserProfile(updateData);
       
       const newUserData = {
         ...userData,
@@ -124,7 +134,7 @@ export default function Profile() {
       
       setUserData(newUserData);
       setOriginalData(newUserData);
-      handleNavigation('/')
+      handleNavigation('/');
       setSuccessMessage('Дані успішно оновлено');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
@@ -200,21 +210,32 @@ export default function Profile() {
             type="tel"
             id="phone"
             name="phoneNumbers"
-            value={userData.phoneNumbers}
+            value={userData.phoneNumbers || ''}
             onChange={handleChange}
             disabled={isLoading}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="age">Вік</label>
-          <input
-            type="number"
-            id="age"
-            name="age"
-            value={userData.age}
-            onChange={handleChange}
+          <label htmlFor="dateOfBirth">Дата народження</label>
+          <DatePicker
+            selected={selectedDate}
+            onChange={handleDateChange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="Оберіть дату народження"
+            showYearDropdown
+            showMonthDropdown
+            dropdownMode="select"
+            yearDropdownItemNumber={100}
+            scrollableYearDropdown
+            maxDate={new Date()}
+            minDate={new Date(1900, 0, 1)}
+            className="date-picker-input"
             disabled={isLoading}
+            locale="uk"
+            showPopperArrow={false}
+            popperClassName="custom-datepicker-popper"
+            calendarClassName="custom-datepicker-calendar"
           />
         </div>
 

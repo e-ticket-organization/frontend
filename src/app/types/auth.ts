@@ -26,7 +26,7 @@ export interface RegisterCredentials extends LoginCredentials {
     password: string
     password_confirmation: string
     phoneNumbers?: string
-    age?: number
+    dateOfBirth?: string
 }
 
 export interface AuthState {

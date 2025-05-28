@@ -7,7 +7,7 @@ import { refreshToken as refreshTokenService } from '../services/authService';
 const API_BASE = '/api';
 const AUTH_BASE = '/api/auth';
 
-const TOKEN_REFRESH_THRESHOLD = 60 * 60 * 1000;
+const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 хвилин
 
 interface AuthContextType {
   user: User | null;
@@ -56,8 +56,19 @@ const shouldRefreshToken = (token: string | null): boolean => {
     
     const expirationTime = decodedToken.exp * 1000;
     const currentTime = Date.now();
+    const timeUntilExpiration = expirationTime - currentTime;
     
-    return expirationTime - currentTime < TOKEN_REFRESH_THRESHOLD;
+    console.log(`Перевірка токена: до закінчення ${Math.round(timeUntilExpiration / 1000 / 60)} хвилин`);
+    
+    const needsRefresh = timeUntilExpiration > 0 && timeUntilExpiration < TOKEN_REFRESH_THRESHOLD;
+    
+    if (needsRefresh) {
+      console.log('Токен потребує оновлення');
+    } else {
+      console.log('Токен ще не потребує оновлення');
+    }
+    
+    return needsRefresh;
   } catch (error) {
     console.error('Помилка при перевірці токена:', error);
     return false;
@@ -81,6 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setToken(newToken);
       setRefreshToken(newRefreshToken);
+      
+      setupTokenRefreshTimer(newToken);
       
       return newToken;
     } catch (error) {
@@ -107,12 +120,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const timeUntilRefresh = Math.max(0, expirationTime - currentTime - TOKEN_REFRESH_THRESHOLD);
       
       if (timeUntilRefresh > 0) {
-        console.log(`Токен буде оновлено через ${timeUntilRefresh / 5} секунд`);
+        console.log(`Токен буде оновлено через ${Math.round(timeUntilRefresh / 1000 / 60)} хвилин`);
         refreshTimerRef.current = setTimeout(() => {
           refreshAuthToken();
         }, timeUntilRefresh);
       } else {
-        refreshAuthToken();
+        if (shouldRefreshToken(currentToken)) {
+          refreshAuthToken();
+        }
       }
     } catch (error) {
       console.error('Помилка при налаштуванні таймера оновлення токена:', error);
@@ -124,15 +139,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedRefreshToken = localStorage.getItem('refreshToken');
     
     if (storedToken) {
+      console.log('Знайдено збережений токен при завантаженні');
       setToken(storedToken);
       setRefreshToken(storedRefreshToken);
       fetchUserProfile();
       
       if (shouldRefreshToken(storedToken)) {
+        console.log('Токен потребує оновлення при завантаженні');
         refreshAuthToken();
       } else {
+        console.log('Токен ще дійсний, налаштовуємо таймер');
         setupTokenRefreshTimer(storedToken);
       }
+    } else {
+      console.log('Збережений токен не знайдено');
     }
     
     return () => {
@@ -141,12 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (token) {
-      setupTokenRefreshTimer(token);
-    }
-  }, [token]);
 
   const fetchUserProfile = async () => {
     try {
@@ -199,6 +213,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRefreshToken(data.refreshToken);
     setIsAdmin(data.is_admin || false);
     await fetchUserProfile();
+    
+    setupTokenRefreshTimer(data.token);
   };
 
   const register = async (credentials: RegisterCredentials) => {
@@ -225,6 +241,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(data.token);
     setRefreshToken(data.refreshToken);
     await fetchUserProfile();
+    
+    setupTokenRefreshTimer(data.token);
   };
 
   const logout = async () => {
@@ -295,6 +313,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('refreshToken', data.refreshToken);
       setRefreshToken(data.refreshToken);
     }
+    
+    setupTokenRefreshTimer(data.token);
   };
 
   // Публічний метод для отримання поточного користувача з кешуванням

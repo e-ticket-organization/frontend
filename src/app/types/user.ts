@@ -3,8 +3,12 @@ export interface IUser {
     name: string;
     email: string;
     password?: string;
-    phoneNumbers?: string;
-    dateOfBirth?: string;
-    age?: string | number;
+    phoneNumbers?: string | null;
+    dateOfBirth?: string | null;
     status?: string;
+    emailVerifiedAt?: string | null;
+    rememberToken?: string | null;
+    stripeCustomerId?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
