@@ -1,0 +1,111 @@
+.profile-page {
+  min-height: 100vh;
+  background-color: #010F29;
+  padding: 40px 20px;
+  color: #ffffff;
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-container h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #ffffff;
+  font-size: 28px;
+}
+
+.profile-info {
+  margin-bottom: 40px;
+}
+
+.info-group {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.info-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #c0c0c0;
+  font-size: 14px;
+}
+
+.info-group span {
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.tickets-section {
+  margin-top: 30px;
+}
+
+.tickets-section h2 {
+  margin-bottom: 20px;
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.tickets-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.ticket-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+  transition: transform 0.2s ease;
+}
+
+.ticket-card:hover {
+  transform: translateY(-2px);
+}
+
+.ticket-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ticket-number {
+  font-size: 16px;
+  color: #486CCB;
+}
+
+.ticket-price {
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.ticket-status {
+  font-size: 14px;
+  color: #FF4400;
+}
+
+.no-tickets {
+  text-align: center;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #c0c0c0;
+}
+
+@media (max-width: 600px) {
+  .profile-container {
+    padding: 20px;
+  }
+
+  .tickets-list {
+    grid-template-columns: 1fr;
+  }
+} 

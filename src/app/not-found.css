@@ -1,0 +1,66 @@
+/* Сторінка помилки 500/404 */
+
+.notfound-bg {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a174d 0%, #6c3cc7 100%);
+  padding: 1rem;
+}
+
+.notfound-container {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.notfound-title {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #e11d48;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.notfound-subtitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #22223b;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.notfound-text {
+  font-size: 1.15rem;
+  color: #4b5563;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.notfound-btn {
+  width: 100%;
+  padding: 0.85rem 0;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(60,60,120,0.15);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.notfound-btn:hover, .notfound-btn:focus {
+  background: linear-gradient(90deg, #1d4ed8 0%, #6d28d9 100%);
+  transform: scale(1.04);
+  outline: none;
+} 

@@ -8,7 +8,7 @@ export default function SideBar() {
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
-    router.push(path);
+    router.push(`/${path}`);
   };
 
   return (

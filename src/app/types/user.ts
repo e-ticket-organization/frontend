@@ -6,4 +6,5 @@ export interface IUser {
     phoneNumbers?: string;
     dateOfBirth?: string;
     age?: string | number;
+    status?: string;
 }

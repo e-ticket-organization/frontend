@@ -20,7 +20,7 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
     console.log('Виконується запит до URL:', url);
     
     // Перевіряємо і, при необхідності, оновлюємо токен перед запитом
-    const token = await checkAndRefreshToken();
+    const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
     
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
@@ -248,17 +248,17 @@ interface SimpleResponse<T> {
     data: T[];
 }
 
-export const getActors = async (): Promise<IActor[]> => {
+export const getActors = async (page = 1, limit = 10): Promise<IActor[]> => {
     try {
-        const data = await customFetch<PaginatedResponse<IActor>>('/actors');
-        console.log('Повна відповідь від сервера:', data);
-        
-        if (data && Array.isArray(data.items)) {
-            return data.items;
-        }
-        
-        console.error('Неочікувана структура відповіді:', data);
-        return [];
+        const response = await fetch(`https://backend-3ih2.onrender.com/api/actors?page=${page}&limit=${limit}`, {
+            headers: {
+                'accept': 'application/json'
+            }
+        });
+        if (!response.ok) throw new Error('Не вдалося отримати акторів');
+        const data = await response.json();
+        // Якщо відповідь містить масив у data.actors або data.items
+        return data.actors || data.items || [];
     } catch (error) {
         console.error('Помилка отримання акторів:', error);
         return [];
@@ -266,7 +266,21 @@ export const getActors = async (): Promise<IActor[]> => {
 };
 
 export const getUsers = async (): Promise<IUser[]> => {
-    return customFetch<IUser[]>('/users');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://backend-3ih2.onrender.com/api/users', {
+            headers: {
+                'accept': '*/*',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) throw new Error('Не вдалося отримати користувачів');
+        const data = await response.json();
+        return data.users || data.items || data || [];
+    } catch (error) {
+        console.error('Помилка отримання користувачів:', error);
+        return [];
+    }
 };
 
 export const getHalls = async (): Promise<IHall[]> => {

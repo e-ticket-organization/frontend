@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import './performance-individual.styles.css';
 import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IGenre } from '@/app/types/genre';
@@ -54,78 +53,80 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
   }
 
   return (
-    <section className='hero'>
-      <div className="hero__container">
-        <div className="hero__content">
-          <div className="hero-flex">
-            <img 
-              className='hero-img' 
-              src={performance.image} 
-              alt={performance.title} 
-            />
-            <div className='hero-wrapper'>
-              <div className='hero-block-container'>
-                <h2>{performance.title}</h2>
-                <div className='hero-block'>
-                  <p className='hero-block-text'>Тривалість: {performance.duration} хв</p>
-                  
-                  {performance.producer && (
-                    <p className='hero-block-text'>
-                      Режисер: {performance.producer.first_name} {performance.producer.last_name}
-                    </p>
-                  )}
-
-                  {performance.actors && performance.actors.length > 0 && (
-                    <div className='actors-section'>
-                      <p className='hero-block-text'>Актори:</p>
-                      <div className='actors-list'>
-                        {performance.actors.map(actor => (
-                          <span key={actor.id} className="actor-tag">
-                            {actor.first_name} {actor.last_name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="next-show">
-                    {shows.length > 0 ? 
-                      `Наступний показ: ${new Date(shows[0].datetime).toLocaleString('uk-UA')}` : 
-                      'На жаль, наразі немає запланованих показів'}
-                  </p>
-                  {performance.genres && performance.genres.length > 0 && (
-                    <div className="genres">
-                      {performance.genres.map((genre: IGenre) => (
-                        <p className='hero-block-text' key={genre.id}>
-                          Жанр:
-                          <span className="genre-tag">
-                             {genre.name}
-                          </span>
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  {shows.length > 0 ? (
-                    <button 
-                      id='hero-button1' 
-                      onClick={handleBookingClick}
-                    >
-                      Придбати квитки
-                    </button>
-                  ) : (
-                    <button 
-                      id='hero-button1' 
-                      disabled
-                      title="Наразі немає запланованих показів"
-                    >
-                      Квитки недоступні
-                    </button>
-                  )}
-                </div>
-              </div>
+    <div className="performance-content">
+      <img 
+        className="performance-image" 
+        src={performance.image} 
+        alt={performance.title} 
+      />
+      
+      <h1 className="performance-title">{performance.title}</h1>
+      
+      <div className="performance-info">
+        <div className="performance-info-item">
+          <span className="performance-info-label">Тривалість</span>
+          <span className="performance-info-value">{performance.duration} хв</span>
+        </div>
+        
+        {performance.producer && (
+          <div className="performance-info-item">
+            <span className="performance-info-label">Режисер</span>
+            <span className="performance-info-value">
+              {performance.producer.first_name} {performance.producer.last_name}
+            </span>
+          </div>
+        )}
+        
+        {performance.actors && performance.actors.length > 0 && (
+          <div className="performance-info-item">
+            <span className="performance-info-label">Актори</span>
+            <div className="performance-info-value">
+              {performance.actors.map(actor => (
+                <span key={actor.id} className="actor-tag">
+                  {actor.first_name} {actor.last_name}
+                </span>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+        
+        {performance.genres && performance.genres.length > 0 && (
+          <div className="performance-info-item">
+            <span className="performance-info-label">Жанри</span>
+            <div className="performance-info-value">
+              {performance.genres.map((genre: IGenre) => (
+                <span key={genre.id} className="genre-tag">
+                  {genre.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="performance-description">
+        <p className="next-show">
+          {shows.length > 0 ? 
+            `Наступний показ: ${new Date(shows[0].datetime).toLocaleString('uk-UA')}` : 
+            'На жаль, наразі немає запланованих показів'}
+        </p>
+        
+        {shows.length > 0 ? (
+          <button 
+            className="booking-button" 
+            onClick={handleBookingClick}
+          >
+            Придбати квитки
+          </button>
+        ) : (
+          <button 
+            className="booking-button" 
+            disabled
+            title="Наразі немає запланованих показів"
+          >
+            Квитки недоступні
+          </button>
+        )}
       </div>
 
       {shows.length > 0 && (
@@ -135,6 +136,6 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
           selectedPerformance={performance}
         />
       )}
-    </section>
+    </div>
   );
 }

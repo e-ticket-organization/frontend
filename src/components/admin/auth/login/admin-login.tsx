@@ -30,10 +30,9 @@ const AdminLogin = () => {
     setIsLoading(true);
     try {
       await admin_login(credentials);
-      window.location.href = '/admin';
-    } catch (error) {
-      console.error('Помилка при вході:', error);
-      setError('Невірний електронний лист або пароль.');
+      router.push('/admin');
+    } catch (error: any) {
+      setError(error.message || 'Невірний електронний лист або пароль.');
     } finally {
       setIsLoading(false);
     }

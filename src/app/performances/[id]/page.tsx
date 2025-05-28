@@ -7,6 +7,7 @@ import PerformanceIndividual from '@/components/performance/performance-individu
 import { useParams } from 'next/navigation';
 import Footer from '@/components/footer/footer';
 import Header from '@/components/main/header/header';
+import './performance-page.css';
 
 export default function PerformancePage() {
   const params = useParams();
@@ -47,7 +48,11 @@ export default function PerformancePage() {
   return (
     <>
       <Header />
-      <PerformanceIndividual performance={performance} />
+      <div className="performance-page-container">
+        <div className="performance-content-box">
+          <PerformanceIndividual performance={performance} />
+        </div>
+      </div>
       <Footer />
     </>
   );

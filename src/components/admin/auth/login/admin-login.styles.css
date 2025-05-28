@@ -2,80 +2,120 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    background-color: #010F29;
+    /* Градієнтний фон для всієї сторінки */
+    background: linear-gradient(135deg, #1a174d 0%, #6c3cc7 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh; /* Використовуємо min-height для коректного відображення на коротких сторінках */
+    color: #e0e7ff; /* Світлий колір тексту за замовчуванням */
 }
 
 .admin-login-container {
-    background-color: #010F29;
+    /* Стиль "скляної" картки */
+    background: rgba(255, 255, 255, 0.1); /* Напівпрозорий білий фон */
+    border-radius: 1.5rem; /* Більш закруглені кути */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* Тінь */
+    backdrop-filter: blur(10px); /* Ефект розмиття */
+    -webkit-backdrop-filter: blur(10px); /* Для сумісності */
+    border: 1px solid rgba(255, 255, 255, 0.18); /* Легка рамка */
+
     padding: 40px 50px;
-    border-radius: 10px;
     width: 100%;
-    max-width: 400px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    color: #ffffff;
+    max-width: 450px; /* Збільшив трохи максимальну ширину */
+    text-align: center; /* Центрування вмісту */
 }
 
 .admin-login-container h2 {
-    text-align: center;
     margin-bottom: 30px;
     color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Збільшив відступ */
+    text-align: left; /* Вирівнювання міток ліворуч */
 }
 
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #ffffff;
+    color: #e0e7ff;
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #ffffff;
-    color: #010F29;
-    font-size: 16px;
+    padding: 12px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Легка рамка */
+    border-radius: 8px; /* Закруглені кути інпутів */
+    background-color: rgba(255, 255, 255, 0.08); /* Напівпрозорий фон */
+    color: #ffffff; /* Світлий текст */
+    font-size: 1rem;
     box-sizing: border-box;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6c3cc7; /* Колір рамки при фокусі */
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-group input::placeholder {
+    color: #a0aec0; /* Колір плейсхолдера */
 }
 
 .submit-button {
     width: 100%;
     padding: 14px;
-    background-color: #486CCB;
+    /* Градієнт для кнопки */
+    background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
     color: #ffffff;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px; /* Закруглені кути кнопки */
     cursor: pointer;
-    font-size: 18px;
-    transition: background-color 0.3s ease;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); /* Тінь кнопки */
+    margin-top: 15px;
 }
 
-.submit-button:hover {
-    background-color: #FF4400;
+.submit-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #1d4ed8 0%, #6d28d9 100%);
+    transform: translateY(-2px); /* Ефект підняття при ховері */
+}
+
+.submit-button:disabled {
+    background: #4a5568; /* Сірий колір для відключеної кнопки */
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .error-message {
-    color: #FF4400;
-    margin-bottom: 15px;
+    color: #f56565; /* Червоний колір для помилки */
+    margin-bottom: 20px;
     text-align: center;
+    font-size: 0.95rem;
+    background-color: rgba(255,0,0,0.1);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,0,0,0.2);
 }
 
+/* Стилі для спінера */
 .loading-spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #ffffff;
+    border-top: 4px solid #6c3cc7; /* Колір спінера */
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 30px; /* Збільшив розмір */
+    height: 30px; /* Збільшив розмір */
     animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
+    margin: 20px auto; /* Центрування та відступи */
 }
 
 @keyframes spin {
@@ -85,14 +125,21 @@ body {
 }
 
 
-@media (max-width: 480px) {
+/* Адаптивність */
+@media (max-width: 500px) {
     .admin-login-container {
-        padding: 20px 30px;
-        width: 90%;
+        padding: 30px 30px;
+        margin: 0 15px; /* Відступи по краях на мобільних */
     }
 
+    .admin-login-container h2 {
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+    }
+
+    .form-group input,
     .submit-button {
-        font-size: 16px;
-        padding: 10px;
+        font-size: 1rem;
+        padding: 12px;
     }
 }

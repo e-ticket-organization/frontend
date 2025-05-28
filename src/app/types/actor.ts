@@ -5,6 +5,10 @@ export interface IActor {
     phone_number?: string;
     date_of_birth?: string;
     passport?: string;
+    created_at: string | null;
+    updated_at: string | null;
+    performances: any[];
+    full_name: string;
   }
   
   export interface IActorCreate {
