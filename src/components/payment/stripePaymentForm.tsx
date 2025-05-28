@@ -76,6 +76,7 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardComplete, setCardComplete] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const errorObserverRef = useRef<MutationObserver | null>(null);
   
@@ -182,10 +183,14 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
         
         const result = await bookTickets(updatedBookingData);
         console.log('Результат тестового бронювання:', result);
-        onSuccess(updatedBookingData.paymentData.paymentIntentId);
+        setSuccessMessage('Квитки успішно заброньовано!');
+        setTimeout(() => {
+          onSuccess(updatedBookingData.paymentData.paymentIntentId);
+        }, 2000);
         return true;
       } catch (bookError) {
         console.error('Помилка при тестовому бронюванні:', bookError);
+        setError('Помилка при бронюванні квитків. Спробуйте ще раз.');
         return false;
       }
     }
@@ -198,6 +203,7 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
     
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
     
     hideAllStripeErrors();
     
@@ -214,6 +220,7 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
       
       // Отримуємо намір оплати з бекенда
       const response = await fetchPaymentIntent(amount);
+      console.log('Payment intent створено:', response);
       
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) throw new Error('Елемент карти не знайдено');
@@ -235,13 +242,16 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
       
       if (error) {
         console.log('Помилка оплати:', error.message);
+        setError(`Помилка оплати: ${error.message}`);
         
         if (process.env.NODE_ENV !== 'production') {
+          console.log('Fallback до тестової оплати...');
           await handleTestPayment();
         }
-      } else if (paymentIntent.status === 'succeeded') {
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         console.log('Оплата успішна, ID платежу:', paymentIntent.id);
         
+        // Тепер викликаємо бронювання після успішної оплати
         if (bookingData) {
           try {
             const updatedBookingData = {
@@ -251,18 +261,36 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
                 paymentIntentId: paymentIntent.id
               }
             };
-            await bookTickets(updatedBookingData);
-          } catch (bookError) {
-            console.error('Помилка при бронюванні:', bookError);
+            
+            console.log('Викликаємо бронювання після успішної оплати...');
+            const bookingResult = await bookTickets(updatedBookingData);
+            console.log('Результат бронювання:', bookingResult);
+            
+            setSuccessMessage('Оплата пройшла успішно! Квитки заброньовано!');
+            
+            // Показуємо повідомлення про успіх протягом 2 секунд, потім викликаємо onSuccess
+            setTimeout(() => {
+              onSuccess(paymentIntent.id);
+            }, 2000);
+            
+          } catch (bookError: any) {
+            console.error('Помилка при бронюванні після успішної оплати:', bookError);
+            setError('Оплата пройшла успішно, але виникла помилка при бронюванні. Зверніться до підтримки.');
           }
+        } else {
+          // Якщо немає даних для бронювання, просто показуємо успіх оплати
+          setSuccessMessage('Оплата пройшла успішно!');
+          setTimeout(() => {
+            onSuccess(paymentIntent.id);
+          }, 2000);
         }
-        
-        onSuccess(paymentIntent.id);
       }
     } catch (err: any) {
       console.error('Помилка під час оплати:', err.message);
+      setError(`Помилка під час оплати: ${err.message}`);
       
       if (process.env.NODE_ENV !== 'production') {
+        console.log('Fallback до тестової оплати через помилку...');
         await handleTestPayment();
       }
     } finally {
@@ -279,6 +307,33 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
     <form ref={formRef} onSubmit={handleSubmit} className="payment-form">
       <h3>Оплата квитків</h3>
       <p>Сума до сплати: <strong>{amount} грн</strong></p>
+      
+      {error && (
+        <div className="error-message" style={{ 
+          color: '#ff6b6b', 
+          background: 'rgba(255, 107, 107, 0.1)', 
+          padding: '10px', 
+          borderRadius: '5px', 
+          marginBottom: '15px' 
+        }}>
+          {error}
+        </div>
+      )}
+      
+      {successMessage && (
+        <div className="success-message" style={{ 
+          color: '#51cf66', 
+          background: 'rgba(81, 207, 102, 0.1)', 
+          padding: '10px', 
+          borderRadius: '5px', 
+          marginBottom: '15px',
+          textAlign: 'center',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }}>
+          {successMessage}
+        </div>
+      )}
       
       <div className="card-info">
         <h4>Введіть дані картки</h4>

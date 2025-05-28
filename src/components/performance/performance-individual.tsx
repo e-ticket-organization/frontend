@@ -5,7 +5,9 @@ import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IGenre } from '@/app/types/genre';
 import BookingModal from '@/components/booking/BookingModal';
-import { getShowsByPerformance } from '@/app/services/filmService';
+import { getShows } from '@/app/services/filmService';
+import { getToken } from '@/app/services/authService';
+import './performance-individual.styles.css';
 
 interface PerformanceIndividualProps {
   performance: IPerfomance;
@@ -15,14 +17,20 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shows, setShows] = useState<IShow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAuthError, setShowAuthError] = useState(false);
 
   useEffect(() => {
     const fetchShows = async () => {
       try {
         if (performance.id) {
-          const showsData = await getShowsByPerformance(Number(performance.id));
-          const futureShows = showsData.filter(show => new Date(show.datetime) > new Date());
-          setShows(futureShows.sort((a, b) => 
+          // Отримуємо всі покази та фільтруємо по performance_id та майбутній даті
+          const allShows = await getShows();
+          const performanceShows = allShows.filter(show => 
+            show.performance_id === Number(performance.id) && 
+            new Date(show.datetime) > new Date()
+          );
+          
+          setShows(performanceShows.sort((a, b) => 
             new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
           ));
         }
@@ -37,11 +45,20 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
   }, [performance.id]);
 
   const handleBookingClick = () => {
+    const token = getToken();
+    if (!token) {
+      setShowAuthError(true);
+      return;
+    }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleCloseAuthError = () => {
+    setShowAuthError(false);
   };
 
   if (isLoading) {
@@ -135,6 +152,36 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
           onClose={handleCloseModal}
           selectedPerformance={performance}
         />
+      )}
+
+      {/* Попап помилки авторизації */}
+      {showAuthError && (
+        <div className="auth-error-overlay">
+          <div className="auth-error-modal">
+            <h3>Необхідна авторизація</h3>
+            <p>Для бронювання квитків потрібно увійти в систему або зареєструватися.</p>
+            <div className="auth-error-buttons">
+              <button 
+                className="auth-button login-button" 
+                onClick={() => window.location.href = '/login'}
+              >
+                Увійти
+              </button>
+              <button 
+                className="auth-button register-button" 
+                onClick={() => window.location.href = '/register'}
+              >
+                Зареєструватися
+              </button>
+              <button 
+                className="auth-button cancel-button" 
+                onClick={handleCloseAuthError}
+              >
+                Скасувати
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

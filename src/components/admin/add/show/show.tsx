@@ -8,7 +8,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { IPerfomance } from '@/app/types/perfomance';
 import { IHall } from '@/app/types/hall';
 import { useRouter } from 'next/navigation';
-import { getToken } from '@/app/services/authService';
+import { getToken, refreshToken } from '@/app/services/authService';
 import { IShow } from '@/app/types/show';
 
 export default function Show() {
@@ -23,8 +23,7 @@ export default function Show() {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      router.push('/login');
-      return;
+      refreshToken();
     }
 
     const fetchData = async () => {
@@ -104,7 +103,7 @@ export default function Show() {
     <section className='add-show-container'>
         <button className='back-button'>
             <Link href="/admin">
-                <FontAwesomeIcon icon={faArrowLeft} /> Повернутися
+                <FontAwesomeIcon icon={faArrowLeft as any} /> Повернутися
             </Link>
         </button>
         <form className='show-form' onSubmit={handleSubmit}>

@@ -6,7 +6,7 @@ import { IGenre } from '@/app/types/genre';
 import { IShow } from '@/app/types/show';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
-import { getPerfomances, getPerfomancesWithFilters, getGenres, getShowsByPerformance } from '@/app/services/filmService';
+import { getPerfomances, getPerfomancesWithFilters, getGenres, getShows } from '@/app/services/filmService';
 
 interface PerformanceWithGenres extends IPerfomance {
     genres: {
@@ -102,16 +102,22 @@ export default function PerformanceMain() {
         }
     };
     
-    const fetchShowsForPerformance = async (performanceId: number | undefined) => {
-        if (!performanceId) return;
+    const fetchAllShows = async () => {
         try {
-            const showsData = await getShowsByPerformance(performanceId);
-            setShows(prev => ({
-                ...prev,
-                [performanceId]: showsData
-            }));
+            const allShows = await getShows();
+            console.log('Отримані всі покази:', allShows);
+            
+            const groupedShows: Record<number, IShow[]> = {};
+            allShows.forEach(show => {
+                if (!groupedShows[show.performance_id]) {
+                    groupedShows[show.performance_id] = [];
+                }
+                groupedShows[show.performance_id].push(show);
+            });
+            
+            setShows(groupedShows);
         } catch (error) {
-            console.error(`Помилка завантаження показів для вистави ${performanceId}:`, error);
+            console.error('Помилка завантаження показів:', error);
         }
     };
 
@@ -150,6 +156,16 @@ export default function PerformanceMain() {
         });
     };
 
+    // Функція для отримання тільки майбутніх дат показів
+    const getFutureShowDates = (performanceId: number | undefined): string[] => {
+        if (!performanceId) return [];
+        const performanceShows = shows[performanceId] || [];
+        return performanceShows
+            .filter(show => new Date(show.datetime) > new Date())
+            .map(show => show.datetime)
+            .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    };
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -162,7 +178,7 @@ export default function PerformanceMain() {
 
             if (data && Array.isArray(data)) {
                 setPerformances(data);
-                await Promise.all(data.map(perf => fetchShowsForPerformance(perf.id)));
+                await fetchAllShows();
             } else {
                 console.error('Неочікувана структура відповіді:', data);
                 setPerformances([]);
@@ -190,7 +206,8 @@ export default function PerformanceMain() {
     const filteredPerformances = performances.filter(performance => {
         const matchesGenre = selectedGenre ? performance.genres.some(genre => genre.id === Number(selectedGenre)) : true;
         const matchesSearchTerm = performance.title.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesGenre && matchesSearchTerm;
+        const hasFutureShows = hasUpcomingShows(performance.id);
+        return matchesGenre && matchesSearchTerm && hasFutureShows;
     });
 
     return (
@@ -240,7 +257,7 @@ export default function PerformanceMain() {
                             hasUpcomingShows={hasUpcomingShows}
                             getMinPrice={getMinPrice}
                             getNextShowDate={getNextShowDate}
-                            showDates={shows[performance.id]?.map(show => show.datetime) || []}
+                            showDates={getFutureShowDates(performance.id)}
                         />
                     ))}
                 </div>

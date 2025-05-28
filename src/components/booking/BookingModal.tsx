@@ -5,7 +5,7 @@ import ShowDateSelector from './ShowDateSelector';
 import Spinner from '../ui/Spinner';
 import { ISeat } from '@/app/types/seat';
 import { IShow } from '@/app/types/show';
-import { bookTickets, getShowSeats, getShowsByPerformance } from '@/app/services/filmService';
+import { bookTickets, getShowSeats, getShows } from '@/app/services/filmService';
 import { IPerfomance } from '@/app/types/perfomance';
 import { StripePaymentForm } from '../payment/stripePaymentForm';
 import '../payment/stripePaymentForm.styles.css';
@@ -39,9 +39,18 @@ export default function BookingModal({
             
             try {
                 setIsLoading(true);
-                const showsData = await getShowsByPerformance(selectedPerformance.id);
-                console.log('Завантажені покази:', showsData);
-                setShows(showsData);
+                // Отримуємо всі покази та фільтруємо по performance_id та майбутній даті
+                const allShows = await getShows();
+                console.log('Завантажені всі покази:', allShows);
+                
+                // Фільтруємо покази для конкретної вистави та тільки майбутні
+                const performanceShows = allShows.filter(show => 
+                    show.performance_id === selectedPerformance.id && 
+                    new Date(show.datetime) > new Date()
+                );
+                console.log('Майбутні покази для вистави після фільтрації:', performanceShows);
+                
+                setShows(performanceShows);
                 setStep('dates');
             } catch (err: any) {
                 setError(err.message || 'Помилка при завантаженні показів');
@@ -167,6 +176,8 @@ export default function BookingModal({
         try {
             setIsLoading(true);
             
+            console.log('Бронювання завершено успішно з payment intent:', paymentIntentId);
+            
             const bookedWithStatus = selectedSeats.map(seat => ({
                 ...seat,
                 seat_id: seat.id,
@@ -186,10 +197,9 @@ export default function BookingModal({
                 setPaymentSuccess(false);
             }, 3000);
             
-            console.log('Бронювання успішне');
         } catch (error: any) {
-            console.error('Помилка бронювання:', error);
-            setError(error.message || 'Помилка при бронюванні квитків');
+            console.error('Помилка обробки бронювання:', error);
+            setError(error.message || 'Помилка при обробці бронювання');
         } finally {
             setIsLoading(false);
         }

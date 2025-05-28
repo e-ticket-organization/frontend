@@ -143,20 +143,18 @@ async function customFetch(url: string, options: RequestInit = {}) {
 
 // Функція для перенаправлення на відповідну сторінку входу
 const redirectToLogin = () => {
-  const user = getUser();
-  
-  // Очищаємо дані авторизації
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('user');
-  
-  if (typeof window !== 'undefined') {
-    if (user?.status === 'admin') {
-      window.location.href = '/admin/login';
-    } else {
-      window.location.href = '/auth/login';
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        
+        const user = getUser();
+        if (user?.status === 'admin') {
+            window.location.href = '/admin/login';
+        } else {
+            window.location.href = '/';
+        }
     }
-  }
 };
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {

@@ -73,7 +73,7 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
                     if (user?.status === 'admin') {
                         window.location.href = '/admin/login';
                     } else {
-                        window.location.href = '/auth/login';
+                        window.location.href = '/';
                     }
                 }
                 

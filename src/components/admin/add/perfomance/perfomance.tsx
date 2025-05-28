@@ -129,7 +129,7 @@ export default function Perfomance() {
     <section className='add-perfomance-container'>
       <button className='back-button'>
         <Link href="/admin">
-          <FontAwesomeIcon icon={faArrowLeft} /> Повернутися
+          <FontAwesomeIcon icon={faArrowLeft as any} /> Повернутися
         </Link>
       </button>
       <form className='perfomance-form' onSubmit={handleSubmit}>

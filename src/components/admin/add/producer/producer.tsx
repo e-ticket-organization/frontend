@@ -107,7 +107,7 @@ export default function Producers() {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      router.push('/login');
+      router.push('/admin/login');
       return;
     }
   }, [router]);
@@ -116,7 +116,7 @@ export default function Producers() {
     <section className='add-actor-container'>
       <button className='back-button'>
         <Link href="/admin">
-          <FontAwesomeIcon icon={faArrowLeft} /> Повернутися
+          <FontAwesomeIcon icon={faArrowLeft as any} /> Повернутися
         </Link>
       </button>
 

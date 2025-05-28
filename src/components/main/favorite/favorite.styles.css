@@ -402,3 +402,92 @@ button:hover {
 .button:hover {
   background-color: #47377a;
 }
+
+/* Стилі для попапу помилки авторизації */
+.auth-error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(1, 15, 41, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000001;
+  backdrop-filter: blur(8px);
+}
+
+.auth-error-modal {
+  background-color: #010F29;
+  padding: 40px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid #C1272D;
+}
+
+.auth-error-modal h3 {
+  color: #C1272D;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.auth-error-modal p {
+  color: #ffffff;
+  font-size: 1rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.auth-error-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.auth-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.login-button {
+  background-color: #C1272D;
+  color: white;
+}
+
+.login-button:hover {
+  background-color: #e62932;
+  transform: translateY(-2px);
+}
+
+.register-button {
+  background-color: #486CCB;
+  color: white;
+}
+
+.register-button:hover {
+  background-color: #5a7dd4;
+  transform: translateY(-2px);
+}
+
+.cancel-button {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+.cancel-button:hover {
+  background-color: #ffffff;
+  color: #010F29;
+  transform: translateY(-2px);
+}

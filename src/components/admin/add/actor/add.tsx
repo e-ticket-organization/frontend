@@ -4,14 +4,13 @@ import './add.styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { IActor } from '@/app/types/actor';
+import { IActor, IActorCreate } from '@/app/types/actor';
 import { addActor } from '@/app/services/filmService';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
 
 export default function Add() {
-  const [actor, setActor] = useState<IActor>({
-    id: 0,
+  const [actor, setActor] = useState<IActorCreate>({
     first_name: '',
     last_name: '',
     date_of_birth: '',
@@ -93,12 +92,16 @@ export default function Add() {
         return;
       }
 
-      const actorData = {
+      const actorData: Omit<IActor, 'id'> = {
         first_name: actor.first_name.trim(),
         last_name: actor.last_name.trim(),
         phone_number: actor.phone_number.trim(),
         passport: actor.passport.trim(),
         date_of_birth: formatDateForBackend(actor.date_of_birth),
+        created_at: null,
+        updated_at: null,
+        performances: [],
+        full_name: `${actor.first_name.trim()} ${actor.last_name.trim()}`
       };
       
       await addActor(actorData);
@@ -126,7 +129,7 @@ export default function Add() {
     <section className='add-actor-container'>
       <button className='back-button'>
         <Link href="/admin">
-          <FontAwesomeIcon icon={faArrowLeft} /> Повернутися
+          <FontAwesomeIcon icon={faArrowLeft as any} /> Повернутися
         </Link>
       </button>
 

@@ -69,7 +69,7 @@ export default function Profile() {
       setError('Помилка при завантаженні даних користувача');
       console.error('Помилка завантаження:', err);
       if (err?.response?.status === 401) {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     } finally {
       setIsLoading(false);

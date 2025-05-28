@@ -8,6 +8,7 @@ import { getPerfomances } from '@/app/services/filmService';
 import { IPerfomance } from '@/app/types/perfomance';
 import BookingModal from '@/components/booking/BookingModal';
 import { useRouter } from 'next/navigation';
+import { getToken } from '@/app/services/authService';
 
 export default function Favorite() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function Favorite() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPerformance, setSelectedPerformance] = useState<IPerfomance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAuthError, setShowAuthError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +48,11 @@ export default function Favorite() {
   }, []);
 
   const handleBookingClick = (performance: IPerfomance) => {
+    const token = getToken();
+    if (!token) {
+      setShowAuthError(true);
+      return;
+    }
     setSelectedPerformance(performance);
     setIsModalOpen(true);
   };
@@ -53,6 +60,10 @@ export default function Favorite() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedPerformance(null);
+  };
+
+  const handleCloseAuthError = () => {
+    setShowAuthError(false);
   };
 
   const handleDetailsClick = (performance: IPerfomance) => {
@@ -99,6 +110,36 @@ export default function Favorite() {
         onClose={handleCloseModal}
         selectedPerformance={selectedPerformance}
       />
+
+      {/* Попап помилки авторизації */}
+      {showAuthError && (
+        <div className="auth-error-overlay">
+          <div className="auth-error-modal">
+            <h3>Необхідна авторизація</h3>
+            <p>Для бронювання квитків потрібно увійти в систему або зареєструватися.</p>
+            <div className="auth-error-buttons">
+              <button 
+                className="auth-button login-button" 
+                onClick={() => window.location.href = '/login'}
+              >
+                Увійти
+              </button>
+              <button 
+                className="auth-button register-button" 
+                onClick={() => window.location.href = '/register'}
+              >
+                Зареєструватися
+              </button>
+              <button 
+                className="auth-button cancel-button" 
+                onClick={handleCloseAuthError}
+              >
+                Скасувати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

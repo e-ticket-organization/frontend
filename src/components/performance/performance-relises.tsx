@@ -6,7 +6,7 @@ import { IGenre } from '@/app/types/genre';
 import { IShow } from '@/app/types/show';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
-import { getPerfomances, getPerfomancesWithFilters, getGenres, getShowsByPerformance } from '@/app/services/filmService';
+import { getPerfomances, getPerfomancesWithFilters, getGenres, getShows } from '@/app/services/filmService';
 
 interface PerformanceWithGenres extends IPerfomance {
     genres: {
@@ -39,16 +39,22 @@ export default function PerformanceRelises() {
         }
     };
 
-    const fetchShowsForPerformance = async (performanceId: number | undefined) => {
-        if (!performanceId) return;
+    const fetchAllShows = async () => {
         try {
-            const showsData = await getShowsByPerformance(performanceId);
-            setShows(prev => ({
-                ...prev,
-                [performanceId]: showsData
-            }));
+            const allShows = await getShows();
+            console.log('Отримані всі покази:', allShows);
+            
+            const groupedShows: Record<number, IShow[]> = {};
+            allShows.forEach(show => {
+                if (!groupedShows[show.performance_id]) {
+                    groupedShows[show.performance_id] = [];
+                }
+                groupedShows[show.performance_id].push(show);
+            });
+            
+            setShows(groupedShows);
         } catch (error) {
-            console.error(`Помилка завантаження показів для вистави ${performanceId}:`, error);
+            console.error('Помилка завантаження показів:', error);
         }
     };
 
@@ -94,7 +100,6 @@ export default function PerformanceRelises() {
         return createdDate.getTime() === specificDate.getTime();
     };
 
-   // ... existing code ...
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -115,7 +120,7 @@ export default function PerformanceRelises() {
         const data = await response.json();
         
         setPerformances(data.items);
-        await Promise.all(data.items.map((perf: PerformanceWithGenres) => fetchShowsForPerformance(perf.id)));
+        await fetchAllShows();
         } catch (error) {
             console.error('Помилка завантаження даних:', error);
         } finally {
@@ -134,6 +139,9 @@ const getFilteredAndSortedPerformances = () => {
         const createdDate = new Date(performance.created_at);
         return createdDate >= oneMonthAgo; // Вистава створена за останній місяць
     });
+
+    // Фільтрація за наявністю майбутніх показів
+    filtered = filtered.filter(performance => hasUpcomingShows(performance.id));
 
     // Фільтрація за жанром
     if (selectedGenre) {
@@ -222,7 +230,7 @@ const hasPerformancesWithPrice = (): boolean => {
                 </div>
             ) : performances.length > 0 ? (
                 <div className="performances-grid">
-                {performances.map((performance: PerformanceWithGenres) => (
+                {getFilteredAndSortedPerformances().map((performance: PerformanceWithGenres) => (
                         <div 
                             key={performance.id} 
                             className="performance-card"
@@ -266,7 +274,7 @@ const hasPerformancesWithPrice = (): boolean => {
                 </div>
             ) : (
                 <div className="no-performances">
-                <p>Немає нових вистав за останній місяць</p>
+                <p>Немає нових вистав за останній місяць з майбутніми показами</p>
                 </div>
             )}
         </div>
