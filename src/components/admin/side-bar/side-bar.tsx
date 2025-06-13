@@ -20,6 +20,7 @@ export default function SideBar() {
         </button>
         {isOpen && 
         <div className="menu-content">
+            <button onClick={() => handleNavigation('admin/analytics')}>Аналітика</button>
             <button onClick={() => handleNavigation('admin/add/actor')}>Додати актора</button>
             <button onClick={() => handleNavigation('admin/add/producer')}>Додати продюсера</button>
             <button onClick={() => handleNavigation('admin/add/show')}>Додати виставу</button>

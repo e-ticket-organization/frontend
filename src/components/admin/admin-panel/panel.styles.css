@@ -814,4 +814,189 @@
         height: 16px;
     }
 }
+
+/* Analytics Tab */
+.analytics-tab {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  height: auto;
+  overflow: visible;
+}
+
+.analytics-tab .analytics-container {
+  width: 100%;
+  padding: 20px;
+  background: transparent;
+  min-height: auto;
+  margin: 0;
+}
+
+.analytics-tab .analytics-header h1 {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.analytics-tab .analytics-tabs button {
+  background: #05132b;
+  color: white;
+  border: 1px solid #0a1d3d;
+}
+
+.analytics-tab .analytics-tabs button:hover {
+  background: #0a1d3d;
+}
+
+.analytics-tab .analytics-tabs button.active {
+  background: #081731;
+  color: white;
+}
+
+.analytics-tab .summary-card {
+  background: #09214a;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-tab .summary-card h3 {
+  color: #b0c4de;
+}
+
+.analytics-tab .summary-card .card-value {
+  color: white;
+}
+
+.analytics-tab .chart-container {
+  background: #09214a;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-tab .chart-container h3 {
+  color: white;
+}
+
+.analytics-tab .performance-item {
+  background: #0a1d3d;
+  color: white;
+}
+
+.analytics-tab .performance-info h4 {
+  color: white;
+}
+
+.analytics-tab .performance-info p {
+  color: #b0c4de;
+}
+
+.analytics-tab .weekday-item {
+  color: white;
+}
+
+.analytics-tab .weekday-name {
+  color: #b0c4de;
+}
+
+.analytics-tab .weekday-value {
+  color: white;
+}
+
+.analytics-tab .period-card {
+  background: #09214a;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-tab .period-card h4 {
+  color: white;
+}
+
+.analytics-tab .period-card p {
+  color: #b0c4de;
+}
+
+.analytics-tab .halls-analytics {
+  background: #09214a;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-tab .halls-analytics h3 {
+  color: white;
+}
+
+.analytics-tab .hall-item {
+  background: #0a1d3d;
+  color: white;
+}
+
+.analytics-tab .hall-number {
+  color: white;
+}
+
+.analytics-tab .hall-stats {
+  color: #b0c4de;
+}
+
+.analytics-tab .newsletter-content {
+  background: #09214a;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-tab .newsletter-content h3 {
+  color: white;
+}
+
+.analytics-tab .newsletter-card {
+  background: #0a1d3d;
+  color: white;
+}
+
+.analytics-tab .newsletter-card h4 {
+  color: #b0c4de;
+}
+
+.analytics-tab .newsletter-value {
+  color: #3b82f6;
+}
+
+.analytics-tab .analytics-loader {
+  color: white;
+}
+
+.analytics-tab .analytics-error {
+  background: #2d1b1b;
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+/* Override card icons for dark theme */
+.analytics-tab .card-icon.revenue {
+  background: rgba(22, 163, 74, 0.2);
+  color: #16a34a;
+}
+
+.analytics-tab .card-icon.tickets {
+  background: rgba(37, 99, 235, 0.2);
+  color: #2563eb;
+}
+
+.analytics-tab .card-icon.occupancy {
+  background: rgba(217, 119, 6, 0.2);
+  color: #d97706;
+}
+
+.analytics-tab .card-icon.avg-price {
+  background: rgba(147, 51, 234, 0.2);
+  color: #9333ea;
+}
+
+.analytics-tab .empty-state {
+  color: #b0c4de;
+  font-style: italic;
+}
   
