@@ -290,6 +290,92 @@
   cursor: not-allowed;
 }
 
+/* Стилі для налаштувань розсилки */
+.newsletter-group {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 25px;
+  margin-top: 25px;
+}
+
+.newsletter-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.newsletter-label {
+  font-size: 16px !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  margin-bottom: 5px !important;
+}
+
+.newsletter-description {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-label {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-label:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toggle-input:checked + .toggle-label {
+  background-color: #486CCB;
+}
+
+.toggle-input:checked + .toggle-label:hover {
+  background-color: #5a7dd4;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-input:checked + .toggle-label .toggle-slider {
+  transform: translateX(26px);
+}
+
+.toggle-input:disabled + .toggle-label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-input:disabled + .toggle-label:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .main-profile-container {
   display: flex;
   gap: 30px;

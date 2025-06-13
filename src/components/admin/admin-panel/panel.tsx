@@ -221,220 +221,355 @@ export default function Panel() {
         </button>
       </div>
 
-      <div className='tab-labels'>
-        {activeTab === 'Events' && (
-          <>
-            <p>Фотографія</p>
-            <div className='divider'></div>
-            <p>Назва</p>
-            <div className='divider'></div>
-            <p>Тривалість</p>
-          </>
-        )}
-        {activeTab === 'Shows' && (
-          <>
-            <p>Вистава</p>
-            <div className='divider'></div>
-            <p>Дата та час</p>
-            <div className='divider'></div>
-            <p>Зал</p>
-            <div className='divider'></div>
-            <p>Ціна</p>
-          </>
-        )}
-        {activeTab === 'Actors' && (
-          <>
-            <p>Ім'я</p>
-            <div className='divider'></div>
-            <p>Дата народження</p>
-            <div className='divider'></div>
-            <p>Код паспорта</p>
-            <div className='divider'></div>
-            <p>Номер телефону</p>
-          </>
-        )}
-        {activeTab === 'Producers' && (
-          <>
-            <p>Ім'я</p>
-            <div className='divider'></div>
-            <p>Дата народження</p>
-            <div className='divider'></div>
-            <p>Емейл</p>
-            <div className='divider'></div>
-            <p>Номер телефону</p>
-          </>
-        )}
-        {activeTab === 'Users' && (
-          <>
-          </>
-        )}
-      </div>
-
+      {/* Performances Tab */}
       {activeTab === 'Events' && (
-        <div className='elements-list'>
+        <div className="elements-list">
           {isLoading ? (
-            renderLoader()
-          ) : Array.isArray(performances) && performances.length > 0 ? (
-            performances.map((performance) => (
-              <div key={performance.id} className='element-events'>
-                <img src={performance.image} alt={performance.title} />
-                <p>{performance.title}</p>
-                <p>{performance.duration} хв</p>
-                <button 
-                  onClick={() => handleEditPerformance(performance)} 
-                  className='edit-performance-button'
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                  </svg>
-                </button>
-              </div>
-            ))
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
           ) : (
-            <p>Немає доступних вистав</p>
-          )}
-        </div>
-      )}
-      {activeTab === 'Shows' && (
-        <div className='elements-list'>
-          {isLoading ? (
-            renderLoader()
-          ) : Array.isArray(shows) && shows.length > 0 ? (
-            shows.map((show) => (
-              <div key={show.id} className='element-shows'>
-                <p>{show.performance?.title || 'Завантаження...'}</p>
-                <p>{new Date(show.datetime).toLocaleString('uk-UA')}</p>
-                <p>Зал {show.hall?.hall_number || 'Завантаження...'}</p>
-                <p>{show.price} грн</p>
-                <button 
-                  onClick={() => handleEditShow(show)}
-                  className='edit-show-button'
-                  style={{background: "none", border: "none"}}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                  </svg>
-                </button>
-              </div>
-            ))
-          ) : (
-            <p>Немає доступних показів</p>
-          )}
-        </div>
-      )}
-      {activeTab === 'Actors' && (
-        <div className='actors-list'>
-          {isLoading ? (
-            renderLoader()
-          ) : Array.isArray(actors) && actors.length > 0 ? (
-            actors.map((actor) => (
-              <div key={actor.id} className='actor-item'>
-                <p>{`${actor.first_name} ${actor.last_name}`}</p>
-                <p>{actor.date_of_birth ? new Date(actor.date_of_birth).toLocaleDateString('uk-UA') : ''}</p>
-                <p>{actor.passport}</p>
-                <p>{actor.phone_number}</p>
-                <button 
-                  onClick={() => handleEditActor(actor)} 
-                  className='edit-actor-button'
-                  style={{background: "none", border: "none"}}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                  </svg>
-                </button>
-              </div>
-            ))
-          ) : (
-            <p>Немає доступних акторів</p>
-          )}
-        </div>
-      )}
-      {activeTab === 'Producers' && (
-        <div className='elements-list'>
-          {isLoading ? (
-            renderLoader()
-          ) : Array.isArray(producers) && producers.length > 0 ? (
-            producers.map((producer) => (
-              <div key={producer.id} className='element-producers'>
-                <p>{`${producer.first_name} ${producer.last_name}`}</p>
-                <p>{producer.date_of_birth}</p>
-                <p>{producer.email}</p>
-                <p>{producer.phone_number}</p>
-                <button 
-                  onClick={() => handleEditProducer(producer)}
-                  className='edit-producer-button'
-                  style={{background: "none", border: "none"}}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                  </svg>
-                </button>
-              </div>
-            ))
-          ) : (
-            <p>Немає доступних продюсерів</p>
-          )}
-        </div>
-      )}
-      {activeTab === 'Users' && (
-        <div className="elements-list" style={{ padding: 0 }}>
-          <h2 style={{ color: '#fff', marginBottom: 16, textAlign: 'center' }}>Список користувачів</h2>
-          <div style={{
-            overflowX: 'auto',
-            borderRadius: '16px',
-            background: '#1a2341',
-            boxShadow: '0 4px 24px 0 rgba(0,0,0,0.15)',
-            padding: 0
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-              <thead>
-                <tr style={{ background: '#22305b' }}>
-                  <th style={{ color: '#fff', padding: '14px 8px', fontWeight: 600, borderTopLeftRadius: 16 }}>ID</th>
-                  <th style={{ color: '#fff', padding: '14px 8px', fontWeight: 600 }}>Ім'я</th>
-                  <th style={{ color: '#fff', padding: '14px 8px', fontWeight: 600 }}>Email</th>
-                  <th style={{ color: '#fff', padding: '14px 8px', fontWeight: 600 }}>Статус</th>
-                  <th style={{ color: '#fff', padding: '14px 8px', fontWeight: 600, borderTopRightRadius: 16 }}>Телефон</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#fff' }}>
-                      Завантаження...
-                    </td>
-                  </tr>
-                ) : users.length > 0 ? (
-                  users.map((user, idx) => (
-                    <tr
-                      key={user.id}
-                      style={{
-                        background: idx % 2 === 0 ? '#22305b' : '#1a2341',
-                        transition: 'background 0.2s',
-                        cursor: 'pointer'
-                      }}
-                      onMouseOver={e => (e.currentTarget.style.background = '#2d3c6a')}
-                      onMouseOut={e => (e.currentTarget.style.background = idx % 2 === 0 ? '#22305b' : '#1a2341')}
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <td style={{ color: '#fff', padding: '12px 8px', borderBottom: '1px solid #2d3c6a' }}>{user.id}</td>
-                      <td style={{ color: '#fff', padding: '12px 8px', borderBottom: '1px solid #2d3c6a' }}>{user.name}</td>
-                      <td style={{ color: '#fff', padding: '12px 8px', borderBottom: '1px solid #2d3c6a' }}>{user.email}</td>
-                      <td style={{ color: '#fff', padding: '12px 8px', borderBottom: '1px solid #2d3c6a' }}>{user.status || '—'}</td>
-                      <td style={{ color: '#fff', padding: '12px 8px', borderBottom: '1px solid #2d3c6a' }}>{user.phoneNumbers || '—'}</td>
+            <>
+              <div className="table-container">
+                <h2 className="table-header">Список вистав</h2>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="id-column">ID</th>
+                      <th className="image-column">Фото</th>
+                      <th className="name-column">Назва</th>
+                      <th className="duration-column">Тривалість</th>
+                      <th className="actions-column">Дії</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#fff' }}>
-                      Немає доступних користувачів
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {performances.length > 0 ? (
+                      performances.map((performance) => (
+                        <tr key={performance.id}>
+                          <td className="id-column">{performance.id}</td>
+                                                     <td className="image-column">
+                             {performance.image ? (
+                               <img 
+                                 src={performance.image} 
+                                 alt={performance.title}
+                               />
+                             ) : (
+                               <div className="image-placeholder">
+                                 <svg viewBox="0 0 24 24" width="24" height="24" fill="#b0c4de">
+                                   <path d="M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2zM8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z"/>
+                                 </svg>
+                               </div>
+                             )}
+                           </td>
+                          <td className="name-column" title={performance.title}>
+                            {performance.title}
+                          </td>
+                          <td className="duration-column">
+                            {performance.duration} хв
+                          </td>
+                          <td className="actions-column">
+                            <button
+                              className="edit-btn"
+                              onClick={() => {
+                                setSelectedPerformance(performance);
+                              }}
+                              title="Редагувати виставу"
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="empty-state">
+                          Немає вистав для відображення
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
+
+      {/* Shows Tab */}
+      {activeTab === 'Shows' && (
+        <div className="elements-list">
+          {isLoading ? (
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <>
+              <div className="table-container">
+                <h2 className="table-header">Список показів</h2>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="id-column">ID</th>
+                      <th className="name-column">Вистава</th>
+                      <th className="date-column">Дата і час</th>
+                      <th className="price-column">Ціна</th>
+                      <th className="hall-column">Зал</th>
+                      <th className="actions-column">Дії</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shows.length > 0 ? (
+                      shows.map((show) => (
+                        <tr key={show.id}>
+                          <td className="id-column">{show.id}</td>
+                          <td className="name-column" title={show.performance?.title || 'Невідома вистава'}>
+                            {show.performance?.title || 'Невідома вистава'}
+                          </td>
+                          <td className="date-column">
+                            {new Date(show.datetime).toLocaleString('uk-UA', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                          <td className="price-column">{show.price} грн</td>
+                                                      <td className="hall-column">
+                              Зал {show.hall?.hall_number || 'Не вказано'}
+                            </td>
+                          <td className="actions-column">
+                            <button
+                              className="edit-btn"
+                              onClick={() => {
+                                setSelectedShow(show);
+                              }}
+                              title="Редагувати показ"
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="empty-state">
+                          Немає показів для відображення
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Actors Tab */}
+      {activeTab === 'Actors' && (
+        <div className="elements-list">
+          {isLoading ? (
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <>
+              <div className="table-container">
+                <h2 className="table-header">Список акторів</h2>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="id-column">ID</th>
+                      <th className="image-column">Фото</th>
+                      <th className="name-column">Ім'я</th>
+                      <th className="actions-column">Дії</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {actors.length > 0 ? (
+                      actors.map((actor) => (
+                        <tr key={actor.id}>
+                          <td className="id-column">{actor.id}</td>
+                                                     <td className="image-column">
+                             <div className="image-placeholder">
+                               <svg viewBox="0 0 24 24" width="24" height="24" fill="#b0c4de">
+                                 <path d="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z"/>
+                               </svg>
+                             </div>
+                           </td>
+                           <td className="name-column" title={actor.full_name}>
+                             {actor.full_name}
+                           </td>
+                          <td className="actions-column">
+                            <button
+                              className="edit-btn"
+                              onClick={() => {
+                                setSelectedActor(actor);
+                              }}
+                              title="Редагувати актора"
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="empty-state">
+                          Немає акторів для відображення
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Producers Tab */}
+      {activeTab === 'Producers' && (
+        <div className="elements-list">
+          {isLoading ? (
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <>
+              <div className="table-container">
+                <h2 className="table-header">Список продюсерів</h2>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="id-column">ID</th>
+                      <th className="image-column">Фото</th>
+                      <th className="name-column">Ім'я</th>
+                      <th className="actions-column">Дії</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {producers.length > 0 ? (
+                      producers.map((producer) => (
+                        <tr key={producer.id}>
+                          <td className="id-column">{producer.id}</td>
+                                                     <td className="image-column">
+                             <div className="image-placeholder">
+                               <svg viewBox="0 0 24 24" width="24" height="24" fill="#b0c4de">
+                                 <path d="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z"/>
+                               </svg>
+                             </div>
+                           </td>
+                           <td className="name-column" title={`${producer.first_name} ${producer.last_name}`}>
+                             {`${producer.first_name} ${producer.last_name}`}
+                           </td>
+                          <td className="actions-column">
+                            <button
+                              className="edit-btn"
+                              onClick={() => {
+                                setSelectedProducer(producer);
+                              }}
+                              title="Редагувати продюсера"
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="empty-state">
+                          Немає продюсерів для відображення
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Users Tab */}
+      {activeTab === 'Users' && (
+        <div className="elements-list">
+          {isLoading ? (
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <>
+              <div className="table-container">
+                <h2 className="table-header">Список користувачів</h2>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th className="id-column">ID</th>
+                      <th className="name-column">Ім'я</th>
+                      <th className="email-column">Email</th>
+                      <th className="phone-column">Телефон</th>
+                      <th className="passport-column">Паспорт</th>
+                      <th className="actions-column">Дії</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <tr key={user.id}>
+                          <td className="id-column">{user.id}</td>
+                          <td className="name-column" title={user.name}>
+                            {user.name}
+                          </td>
+                          <td className="email-column" title={user.email}>
+                            {user.email}
+                          </td>
+                                                     <td className="phone-column" title={user.phoneNumbers || undefined}>
+                             {user.phoneNumbers || <span className="placeholder-text">Не вказано</span>}
+                           </td>
+                           <td className="passport-column" title="Паспорт">
+                             <span className="placeholder-text">Не вказано</span>
+                           </td>
+                          <td className="actions-column">
+                            <button
+                              className="edit-btn"
+                              onClick={() => {
+                                setSelectedUser(user);
+                              }}
+                              title="Редагувати користувача"
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="empty-state">
+                          Немає користувачів для відображення
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Модальні вікна для редагування */}
       {selectedPerformance && (
         <EditPerformance
           performance={selectedPerformance}

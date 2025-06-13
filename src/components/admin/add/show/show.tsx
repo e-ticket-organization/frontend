@@ -9,16 +9,13 @@ import { IPerfomance } from '@/app/types/perfomance';
 import { IHall } from '@/app/types/hall';
 import { useRouter } from 'next/navigation';
 import { getToken, refreshToken } from '@/app/services/authService';
-import { IShow } from '@/app/types/show';
+import { IShowCreate } from '@/app/types/show';
 
 export default function Show() {
-
 
   const [performances, setPerformances] = useState<IPerfomance[]>([]);
   const [halls, setHalls] = useState<IHall[]>([]);
   const router = useRouter();
-
-
 
   useEffect(() => {
     const token = getToken();
@@ -36,11 +33,10 @@ export default function Show() {
   }, [router]);
 
   const [show, setShow] = useState({
-    id: 0,
-    time: new Date().toISOString().slice(0, 16),
+    datetime: new Date().toISOString().slice(0, 16),
     price: '',
-    hall: '',
-    perfomance: ''
+    hall_id: '',
+    performance_id: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -52,29 +48,35 @@ export default function Show() {
     e.preventDefault();
     try {
       // Валідація даних
-      if (!show.time || !show.price || !show.hall || !show.perfomance) {
+      if (!show.datetime || !show.price || !show.hall_id || !show.performance_id) {
         alert('Будь ласка, заповніть всі поля');
         return;
       }
 
-      // Перевірка дати
-      const showDate = new Date(show.time);
-      if (showDate < new Date()) {
-        alert('Дата показу не може бути в минулому');
+      const showDateTime = new Date(show.datetime);
+      
+      if (showDateTime < new Date()) {
+        alert('Дата та час показу не можуть бути в минулому');
         return;
       }
 
       // Конвертуємо всі значення в правильні типи
-      const showData = {
-        performance_id: Number(show.perfomance),
-        datetime: showDate.toISOString(),
-        hall_id: Number(show.hall),
-        price: Number(show.price) // Явно конвертуємо в число
+      const showData: IShowCreate = {
+        performance_id: Number(show.performance_id),
+        datetime: showDateTime,
+        date: new Date(showDateTime.toDateString()), // Витягуємо дату з datetime
+        hall_id: Number(show.hall_id),
+        price: Number(show.price)
       };
 
       // Додаткова перевірка на валідність чисел
       if (isNaN(showData.price) || isNaN(showData.hall_id) || isNaN(showData.performance_id)) {
         alert('Некоректні числові значення');
+        return;
+      }
+
+      if (showData.price <= 0) {
+        alert('Ціна повинна бути більше 0');
         return;
       }
 
@@ -97,8 +99,6 @@ export default function Show() {
     }
   };
 
-  
-
   return (
     <section className='add-show-container'>
         <button className='back-button'>
@@ -107,35 +107,42 @@ export default function Show() {
             </Link>
         </button>
         <form className='show-form' onSubmit={handleSubmit}>
+            <label className='form-label'>Дата та час показу:</label>
             <input 
                 className='form-input' 
                 placeholder='Оберіть дату та час' 
                 type="datetime-local" 
-                name="time" 
-                value={show.time}
+                name="datetime" 
+                value={show.datetime}
                 onChange={handleChange} 
                 required 
             />
+            
+            <label className='form-label'>Ціна (грн):</label>
             <input 
                 className='form-input' 
                 placeholder='Введіть ціну' 
                 type="number" 
+                step="0.01"
+                min="0.01"
                 name="price" 
                 value={show.price} 
                 onChange={handleChange} 
                 required 
             />
+            
             <label className='form-label'>Зал:</label>
-            <select className='form-select' name="hall" value={show.hall} onChange={handleChange} required>
+            <select className='form-select' name="hall_id" value={show.hall_id} onChange={handleChange} required>
                 <option value="">Оберіть зал</option>
                 {halls.map((hall) => (
                     <option key={hall.id} value={hall.id}>
-                        {hall.hall_number}
+                        Зал {hall.hall_number}
                     </option>
                 ))}
             </select>
+            
             <label className='form-label'>Вистава:</label>
-            <select className='form-select' name="perfomance" value={show.perfomance} onChange={handleChange} required>
+            <select className='form-select' name="performance_id" value={show.performance_id} onChange={handleChange} required>
                 <option value="">Оберіть виставу</option>
                 {performances.map((performance) => (
                     <option key={performance.id} value={performance.id}>
@@ -143,6 +150,7 @@ export default function Show() {
                     </option>
                 ))}
             </select>
+            
             <button className='submit-button' type="submit">Додати показ</button>
         </form>
     </section>

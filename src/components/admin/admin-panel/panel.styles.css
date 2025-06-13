@@ -3,7 +3,6 @@
     margin: 3% auto;
     height: 80vh;
     background-color: #081731;
-    display: flex;
     flex-direction: column;
     gap: 15px;
     border-radius: 10px;
@@ -118,7 +117,6 @@
 
 .tab-labels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     align-items: center;
     width: 95%;
     margin: 10px auto;
@@ -127,23 +125,164 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+.tab-labels.actors-labels {
+    grid-template-columns: 1fr 1fr 1fr 0.5fr 100px;
+}
+
+.tab-labels.performances-labels {
+    grid-template-columns: 1.4fr 1.5fr 0.6fr 100px;
+}
+
+.tab-labels.producers-labels {
+    grid-template-columns: 1.2fr 1fr 1fr 0.5fr 100px;
+}
+
+.tab-labels.shows-labels {
+    grid-template-columns: 1fr 40% 1fr 1fr 100px;
+}
+
+.tab-labels.users-labels {
+    grid-template-columns: 65% 1fr 100px;
+}
+
+.tab-labels p {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.tab-labels .actions-header {
+    text-align: center;
+}
+
+.element-item {
+    display: grid;
+    align-items: center;
+    width: 95%;
+    margin: 0 auto 5px auto;
+    border-radius: 10px;
+    background-color: #09214a;
+    min-height: 60px;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.element-item:hover {
+    background-color: #0a2555;
+    transform: translateX(2px);
+}
+
+.element-item.actor-item {
+    grid-template-columns: 1fr 1fr 1fr 0.5fr 100px;
+}
+
+.element-item.performance-item {
+    grid-template-columns: 1.4fr 1.5fr 0.6fr 100px;
+}
+
+.element-item.producer-item {
+    grid-template-columns: 1.2fr 1fr 1fr 0.5fr 100px;
+}
+
+.element-item.show-item {
+    grid-template-columns: 1.3fr 1.5fr 1.4fr 0.6fr 100px;
+}
+
+.element-item.user-item {
+    grid-template-columns: 65% 1fr 100px;
+}
+
+.element-item p {
+    margin: 0;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+}
+
+.element-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+.shows-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.shows-info p {
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shows-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.shows-datetime {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.shows-datetime p {
+    font-size: 12px;
+    color: #b0c4de;
+}
+
+.shows-hall, .shows-price {
+    text-align: left;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    width: 36px;
+    height: 36px;
+}
+
+.edit-button svg {
+    width: 18px;
+    height: 18px;
+    fill: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.edit-button:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.edit-button:hover svg {
+    fill: #007bff;
+}
+
 
 .divider {
     width: 1px;
     height: 20px;
     background-color: #ffffff;
     margin: 0 auto;
-}
-
-.edit-user-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .edit-user-button svg {
@@ -201,54 +340,6 @@
     min-height: 60px;
     padding: 10px 20px;
     margin-bottom: 5px;
-}
-
-.shows-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.shows-info p {
-    margin: 0;
-    padding: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.shows-title {
-    font-weight: bold;
-}
-
-.shows-datetime {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.shows-hall, .shows-price {
-    text-align: left;
-}
-
-.edit-shows-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.edit-shows-button svg {
-    width: 20px;
-    height: 20px;
-    fill: #ffffff;
-    background-color: transparent;
-}
-
-.edit-shows-button:hover svg {
-    fill: #007bff;
 }
 
 /* Events Tab */
@@ -392,49 +483,6 @@
     text-overflow: ellipsis;
 }
 
-.edit-performance-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-}
-
-.edit-performance-button svg {
-    width: 20px;
-    height: 20px;
-    fill: #ffffff;
-    transition: fill 0.3s ease;
-}
-
-.edit-performance-button:hover svg {
-    fill: #007bff;
-}
-
-.edit-producer-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.edit-producer-button svg {
-    width: 20px;
-    height: 20px;
-    fill: #ffffff;
-    transition: fill 0.3s ease;
-}
-
-.edit-producer-button:hover svg {
-    fill: #007bff;
-}
-
 /* Loader Styles */
 .loader-container {
     display: flex;
@@ -456,6 +504,314 @@
 @keyframes l1 {
     to {
         transform: rotate(.5turn)
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .elements-container {
+        width: 95%;
+    }
+    
+    .tab-labels, .element-item {
+        width: 98%;
+    }
+    
+    .tab-labels.shows-labels,
+    .element-item.show-item {
+        grid-template-columns: 1fr 1fr 1fr 0.8fr 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .elements-container {
+        width: 100%;
+        margin: 1% auto;
+    }
+    
+    .tab-labels, .element-item {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .edit-button {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .edit-button svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .elements-list {
+        padding: 8px 10px;
+    }
+}
+
+/* Покращені стилі для таблиць */
+.admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.admin-table th {
+    color: #fff;
+    padding: 16px 12px;
+    font-weight: 600;
+    text-align: left;
+    background-color: #22305b;
+    border-bottom: 2px solid #2d3c6a;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.admin-table th:first-child {
+    border-top-left-radius: 16px;
+    width: 60px;
+    text-align: center;
+}
+
+.admin-table th:last-child {
+    border-top-right-radius: 16px;
+    width: 80px;
+    text-align: center;
+}
+
+.admin-table td {
+    color: #fff;
+    padding: 14px 12px;
+    border-bottom: 1px solid #2d3c6a;
+    vertical-align: middle;
+}
+
+.admin-table tr {
+    transition: background-color 0.2s ease;
+}
+
+.admin-table tr:nth-child(even) {
+    background-color: #22305b;
+}
+
+.admin-table tr:nth-child(odd) {
+    background-color: #1a2341;
+}
+
+.admin-table tr:hover {
+    background-color: #2d3c6a !important;
+    cursor: pointer;
+}
+
+/* Стилі для конкретних колонок */
+.id-column {
+    width: 60px;
+    text-align: center;
+    font-weight: 600;
+    color: #4fc3f7;
+}
+
+.image-column {
+    width: 80px;
+    text-align: center;
+    padding: 8px;
+}
+
+.image-column img {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #2d3c6a;
+    transition: transform 0.2s ease;
+}
+
+.image-column img:hover {
+    transform: scale(1.1);
+    border-color: #4fc3f7;
+}
+
+.image-placeholder {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    background-color: #2d3c6a;
+    border: 2px solid #2d3c6a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.image-placeholder:hover {
+    background-color: #4fc3f7;
+    border-color: #4fc3f7;
+}
+
+.image-placeholder:hover svg {
+    fill: #fff !important;
+}
+
+.name-column {
+    font-weight: 500;
+    color: #e3f2fd;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.duration-column,
+.price-column,
+.hall-column {
+    width: 120px;
+    text-align: center;
+    color: #b0c4de;
+    font-weight: 500;
+}
+
+.date-column {
+    width: 160px;
+    color: #b0c4de;
+    font-size: 13px;
+}
+
+.phone-column,
+.email-column,
+.passport-column {
+    color: #b0c4de;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.actions-column {
+    width: 80px;
+    text-align: center;
+    padding: 8px;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-btn:hover {
+    background-color: rgba(79, 195, 247, 0.15);
+    transform: scale(1.1);
+}
+
+.edit-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: #b0c4de;
+    transition: fill 0.3s ease;
+}
+
+.edit-btn:hover svg {
+    fill: #4fc3f7;
+}
+
+/* Контейнер таблиці */
+.table-container {
+    overflow-x: auto;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1a2341 0%, #0d1929 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    margin: 0;
+}
+
+.table-header {
+    color: #fff;
+    margin: 0 0 20px 0;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Статуси та спеціальні індикатори */
+.status-active {
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.status-inactive {
+    color: #ff9800;
+    font-weight: 600;
+}
+
+.placeholder-text {
+    color: #616161;
+    font-style: italic;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #b0c4de;
+    font-size: 16px;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .elements-container {
+        width: 95%;
+    }
+    
+    .admin-table {
+        font-size: 13px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 10px 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .elements-container {
+        width: 100%;
+        margin: 1% auto;
+    }
+    
+    .elements-list {
+        padding: 8px 10px;
+    }
+    
+    .admin-table {
+        font-size: 12px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 6px;
+    }
+    
+    .table-header {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .image-column img {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .edit-btn svg {
+        width: 16px;
+        height: 16px;
     }
 }
   

@@ -9,6 +9,7 @@ export interface IUser {
     emailVerifiedAt?: string | null;
     rememberToken?: string | null;
     stripeCustomerId?: string | null;
+    newsletterSubscription?: boolean;
     created_at?: string | null;
     updated_at?: string | null;
 }

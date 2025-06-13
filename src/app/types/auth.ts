@@ -13,6 +13,7 @@ export interface User {
     stripeCustomerId?: string | null
     emailVerifiedAt?: string | null
     rememberToken?: string | null
+    newsletterSubscription?: boolean | null
 }
 
 export interface LoginCredentials {

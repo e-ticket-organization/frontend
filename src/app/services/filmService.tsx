@@ -268,19 +268,21 @@ export const getUsers = async (): Promise<IUser[]> => {
 };
 
 export const getHalls = async (): Promise<IHall[]> => {
-    return customFetch<IHall[]>('shows/hall');
+    return customFetch<IHall[]>('shows/halls/all');
 };
 
 export const addShow = async (showData: {
     performance_id: number;
-    datetime: string;
+    datetime: Date;
+    date: Date;
     hall_id: number;
     price: number;
 }): Promise<IShow> => {
     try {
         const formattedData = {
             performance_id: Number(showData.performance_id),
-            datetime: showData.datetime,
+            datetime: showData.datetime.toISOString(),
+            date: showData.date.toISOString().split('T')[0],
             hall_id: Number(showData.hall_id),
             price: Number(showData.price)
         };
@@ -637,12 +639,22 @@ interface IShowUpdate {
 
 export const updateShow = async (showId: number, updateData: IShowUpdate): Promise<IShow> => {
   try {
-    console.log('Відправка даних на сервер:', updateData);
+    const showDateTime = new Date(updateData.datetime);
+    
+    const formattedData = {
+      performance_id: Number(updateData.performance_id),
+      datetime: showDateTime.toISOString(),
+      date: showDateTime.toISOString().split('T')[0],
+      hall_id: Number(updateData.hall_id),
+      price: Number(updateData.price)
+    };
+
+    console.log('Відправка даних на сервер:', formattedData);
     const data = await customFetch<{ show: IShow }>(
       `/shows/${showId}`,
       {
         method: 'PUT',
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(formattedData)
       }
     );
     
@@ -739,5 +751,23 @@ export const getShowDetailsById = async (id: number): Promise<IShow> => {
     } catch (error) {
         console.error('Помилка отримання даних показу:', error);
         throw new Error('Помилка отримання даних показу');
+    }
+};
+
+export const updateNewsletterSubscription = async (newsletterSubscription: boolean): Promise<any> => {
+    try {
+        console.log('Оновлення підписки на розсилку:', newsletterSubscription);
+        const data = await customFetch('/users/newsletter-subscription', {
+            method: 'PATCH',
+            body: JSON.stringify({
+                newsletterSubscription: newsletterSubscription
+            })
+        });
+        
+        console.log('Відповідь від сервера:', data);
+        return data;
+    } catch (error: any) {
+        console.error('Помилка оновлення підписки на розсилку:', error);
+        throw new Error(error.message || 'Помилка при оновленні підписки на розсилку');
     }
 };

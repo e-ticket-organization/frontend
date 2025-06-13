@@ -1,0 +1,174 @@
+.newsletter-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    background-color: rgba(1, 15, 41, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.newsletter-popup-content {
+    background: linear-gradient(135deg, #010F29 0%, #1a1a3e 100%);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUp 0.3s ease-out;
+}
+
+.newsletter-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.newsletter-popup-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button:hover {
+    color: #FF4400;
+}
+
+.newsletter-popup-body {
+    margin-bottom: 25px;
+}
+
+.newsletter-popup-body p {
+    margin: 0 0 15px 0;
+    line-height: 1.6;
+    color: #e0e7ff;
+    font-size: 1rem;
+}
+
+.newsletter-subtitle {
+    font-size: 0.9rem !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-style: italic;
+}
+
+.newsletter-popup-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.subscribe-button,
+.skip-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    flex: 1;
+    max-width: 160px;
+}
+
+.subscribe-button {
+    background: linear-gradient(135deg, #486CCB 0%, #5a7dd4 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(72, 108, 203, 0.3);
+}
+
+.subscribe-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a7dd4 0%, #486CCB 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(72, 108, 203, 0.4);
+}
+
+.subscribe-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.skip-button {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.skip-button:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.skip-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .newsletter-popup-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .newsletter-popup-actions {
+        flex-direction: column;
+    }
+    
+    .subscribe-button,
+    .skip-button {
+        max-width: none;
+        width: 100%;
+    }
+} 

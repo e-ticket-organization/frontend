@@ -5,7 +5,7 @@ import DatePicker, { registerLocale } from 'react-datepicker';
 import { uk } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import './profile.styles.css';
-import { getUserProfile, updateUserProfile } from '@/app/services/filmService';
+import { getUserProfile, updateUserProfile, updateNewsletterSubscription } from '@/app/services/filmService';
 import { IUser } from '@/app/types/user';
 import { useRouter } from 'next/dist/client/components/navigation';
 import { AuthContext } from '@/app/context/authContext';
@@ -21,7 +21,8 @@ export default function Profile() {
     email: '',
     password: '',
     phoneNumbers: '',
-    dateOfBirth: ''
+    dateOfBirth: '',
+    newsletterSubscription: false
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +55,8 @@ export default function Profile() {
         email: currentUser.email || '',
         password: '',
         phoneNumbers: currentUser.phoneNumbers || '',
-        dateOfBirth: currentUser.dateOfBirth || ''
+        dateOfBirth: currentUser.dateOfBirth || '',
+        newsletterSubscription: currentUser.newsletterSubscription || false
       };
       
       // Конвертуємо дату з рядка в об'єкт Date для DatePicker
@@ -149,10 +151,26 @@ export default function Profile() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     setUserData({
       ...userData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  const handleNewsletterChange = async (checked: boolean) => {
+    try {
+      await updateNewsletterSubscription(checked);
+      setUserData({
+        ...userData,
+        newsletterSubscription: checked
+      });
+      setSuccessMessage(checked ? 'Підписка на розсилку увімкнена' : 'Підписка на розсилку вимкнена');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: any) {
+      setError(error.message || 'Помилка при оновленні налаштувань розсилки');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   if (isLoading && !userData.email) {
@@ -237,6 +255,31 @@ export default function Profile() {
             popperClassName="custom-datepicker-popper"
             calendarClassName="custom-datepicker-calendar"
           />
+        </div>
+
+        <div className="form-group newsletter-group">
+          <div className="newsletter-toggle">
+            <label htmlFor="newsletter" className="newsletter-label">
+              Розсилка новин
+            </label>
+            <p className="newsletter-description">
+              Отримувати повідомлення про нові вистави та спеціальні пропозиції
+            </p>
+            <div className="toggle-switch">
+              <input
+                type="checkbox"
+                id="newsletter"
+                name="newsletterSubscription"
+                checked={userData.newsletterSubscription || false}
+                onChange={(e) => handleNewsletterChange(e.target.checked)}
+                disabled={isLoading}
+                className="toggle-input"
+              />
+              <label htmlFor="newsletter" className="toggle-label">
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <button onClick={handleSubmit} type="submit" className="save-button" disabled={isLoading}>

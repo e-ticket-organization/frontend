@@ -16,7 +16,7 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
   const [performances, setPerformances] = useState<IPerfomance[]>([]);
   const [halls, setHalls] = useState<IHall[]>([]);
 
-  const formatDateForInput = (dateString: string) => {
+  const formatDateForInput = (dateString: string | Date) => {
     const date = new Date(dateString);  
     return date.toISOString().slice(0, 16);
   };
