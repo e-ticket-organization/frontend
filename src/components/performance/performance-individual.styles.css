@@ -405,7 +405,101 @@
 }
 
 .cancel-button:hover {
-  background-color: #ffffff;
-  color: #010F29;
-  transform: translateY(-2px);
+  background-color: #666;
+}
+
+/* Стилі для секції міст */
+.performance-cities {
+    margin: 30px 0;
+    padding: 20px;
+    background-color: rgba(11, 40, 104, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(11, 40, 104, 0.3);
+}
+
+.performance-cities h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.cities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.city-item {
+    background-color: rgba(11, 40, 104, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #C1272D;
+}
+
+.city-item h4 {
+    color: #ffd700;
+    font-size: 1.2rem;
+    margin: 0 0 10px 0;
+}
+
+.city-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shows-count {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.theaters-list {
+    color: #ccc;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.theaters-list span:first-child {
+    font-weight: 500;
+    color: #fff;
+}
+
+@media screen and (max-width: 700px) {
+    .performance-cities {
+        margin: 20px 0;
+        padding: 15px;
+    }
+    
+    .performance-cities h3 {
+        font-size: 1.3rem;
+    }
+    
+    .city-item {
+        padding: 12px;
+    }
+    
+    .city-item h4 {
+        font-size: 1.1rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .performance-cities {
+        margin: 15px 0;
+        padding: 12px;
+    }
+    
+    .cities-list {
+        gap: 12px;
+    }
+    
+    .city-item {
+        padding: 10px;
+    }
+    
+    .city-details {
+        gap: 6px;
+    }
 }

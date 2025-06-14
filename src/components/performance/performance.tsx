@@ -6,7 +6,9 @@ import { IGenre } from '@/app/types/genre';
 import { IShow } from '@/app/types/show';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
-import { getPerfomances, getPerfomancesWithFilters, getGenres, getShows } from '@/app/services/filmService';
+import { getPerfomances, getPerfomancesWithFilters, getGenres, getShows, getCitiesWithShows, getCitiesWithUpcomingShows, getTheatersWithShows, getPerformancesWithLocationFilters, getShowsByFilters } from '@/app/services/filmService';
+import { ICity } from '@/app/types/city';
+import { ITheater } from '@/app/types/theater';
 
 interface PerformanceWithGenres extends IPerfomance {
     genres: {
@@ -69,17 +71,35 @@ function PerformanceCard({ performance, handlePerformanceClick, hasUpcomingShows
 export default function PerformanceMain() {
     const [performances, setPerformances] = useState<PerformanceWithGenres[]>([]);
     const [genres, setGenres] = useState<IGenre[]>([]);
+    const [cities, setCities] = useState<ICity[]>([]);
+    const [theaters, setTheaters] = useState<ITheater[]>([]);
     const [shows, setShows] = useState<Record<number, IShow[]>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [sortBy, setSortBy] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('');
+    const [selectedCity, setSelectedCity] = useState('');
+    const [selectedTheater, setSelectedTheater] = useState('');
     const router = useRouter();
 
     useEffect(() => {
         fetchGenres();
+        fetchCities();
         fetchData();
-    }, [sortBy, searchTerm, selectedGenre]);
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [sortBy, searchTerm, selectedGenre, selectedCity, selectedTheater]);
+
+    useEffect(() => {
+        if (selectedCity) {
+            fetchTheaters(Number(selectedCity));
+        } else {
+            setTheaters([]);
+            setSelectedTheater('');
+        }
+    }, [selectedCity]);
 
     const fetchGenres = async () => {
         try {
@@ -101,6 +121,37 @@ export default function PerformanceMain() {
             console.error('Помилка завантаження жанрів:', error);
         }
     };
+
+    const fetchCities = async () => {
+        try {
+            // Використовуємо міста з майбутніми показами для кращого UX
+            const citiesData = await getCitiesWithUpcomingShows();
+            console.log('Міста з майбутніми показами отримані:', citiesData);
+            setCities(citiesData);
+        } catch (error) {
+            console.error('Помилка завантаження міст:', error);
+            // Якщо новий ендпоінт не працює, використаємо старий
+            try {
+                const fallbackCitiesData = await getCitiesWithShows();
+                console.log('Міста з виставами отримані (fallback):', fallbackCitiesData);
+                setCities(fallbackCitiesData);
+            } catch (fallbackError) {
+                console.error('Помилка завантаження міст (fallback):', fallbackError);
+            }
+        }
+    };
+
+    const fetchTheaters = async (cityId: number) => {
+        try {
+            setTheaters([]); // Очищуємо попередні театри
+            const theatersData = await getTheatersWithShows(cityId);
+            console.log('Театри з показами отримані:', theatersData);
+            setTheaters(Array.isArray(theatersData) ? theatersData : []);
+        } catch (error) {
+            console.error('Помилка завантаження театрів:', error);
+            setTheaters([]); // Встановлюємо порожній масив при помилці
+        }
+    };
     
     const fetchAllShows = async () => {
         try {
@@ -118,6 +169,43 @@ export default function PerformanceMain() {
             setShows(groupedShows);
         } catch (error) {
             console.error('Помилка завантаження показів:', error);
+        }
+    };
+
+    const fetchFilteredShows = async (filters: {
+        search?: string;
+        genre?: string;
+        cityId?: number;
+        theaterId?: number;
+        limit?: number;
+        page?: number;
+    }) => {
+        try {
+            // Якщо є фільтри по місту або театру, завантажуємо тільки відповідні покази
+            if (filters.cityId || filters.theaterId) {
+                const filteredShows = await getShowsByFilters({
+                    cityId: filters.cityId,
+                    theaterId: filters.theaterId
+                });
+                console.log('Отримані відфільтровані покази:', filteredShows);
+                
+                const groupedShows: Record<number, IShow[]> = {};
+                filteredShows.forEach((show: IShow) => {
+                    if (!groupedShows[show.performance_id]) {
+                        groupedShows[show.performance_id] = [];
+                    }
+                    groupedShows[show.performance_id].push(show);
+                });
+                
+                setShows(groupedShows);
+            } else {
+                // Якщо немає фільтрів по місцю, завантажуємо всі покази
+                await fetchAllShows();
+            }
+        } catch (error) {
+            console.error('Помилка завантаження відфільтрованих показів:', error);
+            // Fallback до всіх показів
+            await fetchAllShows();
         }
     };
 
@@ -162,23 +250,30 @@ export default function PerformanceMain() {
         const performanceShows = shows[performanceId] || [];
         return performanceShows
             .filter(show => new Date(show.datetime) > new Date())
-            .map(show => show.datetime)
+            .map(show => show.datetime.toString())
             .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
     };
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const url = '/performances?';
+            const filters = {
+                search: searchTerm || undefined,
+                genre: selectedGenre || undefined,
+                cityId: selectedCity ? Number(selectedCity) : undefined,
+                theaterId: selectedTheater ? Number(selectedTheater) : undefined,
+                limit: 40,
+                page: 1
+            };
+
+            console.log('Фільтри для запиту:', filters);
             
-            console.log('URL запиту:', url);
-            
-            const data = await getPerfomancesWithFilters(url);
-            console.log('Отримані вистави:', data);
+            const data = await getPerformancesWithLocationFilters(filters);
+            console.log('Отримані вистави з фільтрами:', data);
 
             if (data && Array.isArray(data)) {
                 setPerformances(data);
-                await fetchAllShows();
+                await fetchFilteredShows(filters);
             } else {
                 console.error('Неочікувана структура відповіді:', data);
                 setPerformances([]);
@@ -204,11 +299,13 @@ export default function PerformanceMain() {
     };
 
     const filteredPerformances = performances.filter(performance => {
-        const matchesGenre = selectedGenre ? performance.genres.some(genre => genre.id === Number(selectedGenre)) : true;
-        const matchesSearchTerm = performance.title.toLowerCase().includes(searchTerm.toLowerCase());
         const hasFutureShows = hasUpcomingShows(performance.id);
-        return matchesGenre && matchesSearchTerm && hasFutureShows;
+        return hasFutureShows;
     });
+
+    console.log('🎭 Всього вистав з сервера:', performances.length);
+    console.log('🎭 Після клієнтської фільтрації:', filteredPerformances.length);
+    console.log('🎭 Поточні фільтри:', { selectedCity, selectedTheater, selectedGenre, searchTerm });
 
     return (
         <div className='performance-main'>
@@ -219,6 +316,41 @@ export default function PerformanceMain() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                
+                <select 
+                    value={selectedCity} 
+                    onChange={(e) => {
+                        setSelectedCity(e.target.value);
+                        setSelectedTheater(''); // Скидаємо театр при зміні міста
+                    }}
+                >
+                    <option value="">Всі міста</option>
+                    {cities.map(city => (
+                        <option key={city.id} value={city.id}>
+                            {city.name}
+                        </option>
+                    ))}
+                </select>
+
+                <select 
+                    value={selectedTheater} 
+                    onChange={(e) => setSelectedTheater(e.target.value)}
+                    disabled={!selectedCity}
+                >
+                    <option value="">
+                        {selectedCity ? 'Всі театри в місті' : 'Спочатку виберіть місто'}
+                    </option>
+                    {theaters && theaters.length > 0 ? (
+                        theaters.map(theater => (
+                            <option key={theater.id} value={theater.id}>
+                                {theater.name}
+                            </option>
+                        ))
+                    ) : selectedCity ? (
+                        <option disabled>Немає доступних театрів</option>
+                    ) : null}
+                </select>
+                
                 <select 
                     value={selectedGenre} 
                     onChange={(e) => setSelectedGenre(e.target.value)}
@@ -230,6 +362,7 @@ export default function PerformanceMain() {
                         </option>
                     ))}
                 </select>
+                
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                     <option value="">Сортувати за...</option>
                     {hasPerformancesWithPrice() && (

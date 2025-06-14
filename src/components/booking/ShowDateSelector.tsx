@@ -9,13 +9,15 @@ interface ShowDateSelectorProps {
     onShowSelect: (show: IShow) => void;
     selectedPerformance: IPerfomance | null;
     isLoading: boolean;
+    onBack?: () => void;
 }
 
 export default function ShowDateSelector({ 
     shows, 
     onShowSelect,
     selectedPerformance,
-    isLoading
+    isLoading,
+    onBack
 }: ShowDateSelectorProps) {
     const sortedShows = [...shows].sort((a, b) => 
         new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
@@ -44,14 +46,24 @@ export default function ShowDateSelector({
     if (shows.length === 0 && !isLoading) {
         return (
             <div className="show-date-selector">
+                {onBack && (
+                    <button onClick={onBack} className="back-button">
+                        ← Назад до вибору міста та театру
+                    </button>
+                )}
                 <h2 className='show-title'>{selectedPerformance?.title}</h2>
-                <p className="no-shows">На жаль, наразі немає доступних показів</p>
+                <p className="no-shows">На жаль, наразі немає доступних показів у вибраному місті та театрі</p>
             </div>
         );
     }
 
     return (
         <div className="show-date-selector">
+            {onBack && (
+                <button onClick={onBack} className="back-button">
+                    ← Назад до вибору міста та театру
+                </button>
+            )}
             <h2>{selectedPerformance?.title}</h2>
             <div className="dates-container">
                 {isLoading ? (

@@ -9,8 +9,12 @@ export interface IShow {
     price: number;
     hall_id: number;
     date: Date;
+    city_id?: number;
+    theater_id?: number;
     performance?: IPerfomance;
     hall?: IHall;
+    city?: { id: number; name: string; };
+    theater?: { id: number; name: string; address?: string; };
     tickets?: ITicket[];
 }
 

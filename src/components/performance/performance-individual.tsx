@@ -5,7 +5,9 @@ import { IPerfomance } from '@/app/types/perfomance';
 import { IShow } from '@/app/types/show';
 import { IGenre } from '@/app/types/genre';
 import BookingModal from '@/components/booking/BookingModal';
-import { getShows } from '@/app/services/filmService';
+import { getShows, getShowsByFilters } from '@/app/services/filmService';
+import { ICity } from '@/app/types/city';
+import { ITheater } from '@/app/types/theater';
 import { getToken } from '@/app/services/authService';
 import './performance-individual.styles.css';
 
@@ -16,14 +18,15 @@ interface PerformanceIndividualProps {
 export default function PerformanceIndividual({ performance }: PerformanceIndividualProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shows, setShows] = useState<IShow[]>([]);
+  const [cities, setCities] = useState<{city: ICity, theaters: ITheater[], showsCount: number}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAuthError, setShowAuthError] = useState(false);
 
   useEffect(() => {
-    const fetchShows = async () => {
+    const fetchShowsAndCities = async () => {
       try {
         if (performance.id) {
-          // Отримуємо всі покази та фільтруємо по performance_id та майбутній даті
+          // Отримуємо всі покази для цієї вистави
           const allShows = await getShows();
           const performanceShows = allShows.filter(show => 
             show.performance_id === Number(performance.id) && 
@@ -33,6 +36,34 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
           setShows(performanceShows.sort((a, b) => 
             new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
           ));
+
+          // Групуємо покази по містах та театрах
+          const cityMap = new Map<number, {city: ICity, theaters: Map<number, ITheater>, showsCount: number}>();
+          
+          performanceShows.forEach(show => {
+            if (show.city && show.theater) {
+              if (!cityMap.has(show.city.id)) {
+                cityMap.set(show.city.id, {
+                  city: show.city,
+                  theaters: new Map(),
+                  showsCount: 0
+                });
+              }
+              
+              const cityData = cityMap.get(show.city.id)!;
+              cityData.theaters.set(show.theater.id, show.theater);
+              cityData.showsCount++;
+            }
+          });
+
+          // Конвертуємо в масив для відображення
+          const citiesArray = Array.from(cityMap.values()).map(cityData => ({
+            city: cityData.city,
+            theaters: Array.from(cityData.theaters.values()),
+            showsCount: cityData.showsCount
+          }));
+
+          setCities(citiesArray);
         }
       } catch (error) {
         console.error('Помилка завантаження показів:', error);
@@ -41,7 +72,7 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
       }
     };
 
-    fetchShows();
+    fetchShowsAndCities();
   }, [performance.id]);
 
   const handleBookingClick = () => {
@@ -120,6 +151,31 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
           </div>
         )}
       </div>
+
+      {cities.length > 0 && (
+        <div className="performance-cities">
+          <h3>Доступно в містах:</h3>
+          <div className="cities-list">
+            {cities.map(cityData => (
+              <div key={cityData.city.id} className="city-item">
+                <h4>{cityData.city.name}</h4>
+                <div className="city-details">
+                  <span className="shows-count">Показів: {cityData.showsCount}</span>
+                  <div className="theaters-list">
+                    <span>Театри: </span>
+                    {cityData.theaters.map((theater, index) => (
+                      <span key={theater.id}>
+                        {theater.name}
+                        {index < cityData.theaters.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="performance-description">
         <p className="next-show">

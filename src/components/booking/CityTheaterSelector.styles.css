@@ -1,0 +1,210 @@
+.city-theater-selector {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  color: white;
+}
+
+.city-theater-selector h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: white;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #ccc;
+  font-size: 1rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #7545FD;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 20px;
+  padding: 8px 0;
+  transition: color 0.3s ease;
+}
+
+.back-button:hover {
+  color: #9b6cff;
+}
+
+.selection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.cities-section h3,
+.theaters-section h3 {
+  margin-bottom: 15px;
+  color: white;
+  font-size: 1.3rem;
+}
+
+.cities-grid,
+.theaters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.city-card,
+.theater-card {
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  color: white;
+}
+
+.city-card:hover,
+.theater-card:hover {
+  border-color: #7545FD;
+  background: #2a2a2a;
+  transform: translateY(-2px);
+}
+
+.city-card.selected,
+.theater-card.selected {
+  border-color: #7545FD;
+  background: #7545FD;
+  color: white;
+}
+
+.city-card:disabled,
+.theater-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.city-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.shows-count {
+  font-size: 0.9rem;
+  color: #ccc;
+  font-weight: normal;
+}
+
+.selected .shows-count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.theater-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.theater-address {
+  font-size: 0.9rem;
+  color: #ccc;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.selected .theater-address {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 15px;
+}
+
+.loading-container p {
+  color: #ccc;
+  margin: 0;
+}
+
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ff6b6b;
+}
+
+.retry-button {
+  background: #7545FD;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #9b6cff;
+}
+
+.no-theaters {
+  text-align: center;
+  color: #ccc;
+  font-style: italic;
+  padding: 20px;
+}
+
+.proceed-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.proceed-button {
+  background: #C1272D;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.proceed-button:hover:not(:disabled) {
+  background: #d73940;
+  transform: translateY(-2px);
+}
+
+.proceed-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .cities-grid,
+  .theaters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .city-theater-selector {
+    padding: 15px;
+  }
+  
+  .city-theater-selector h2 {
+    font-size: 1.5rem;
+  }
+} 

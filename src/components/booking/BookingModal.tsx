@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import SeatsGrid from './SeatsGrid';
 import ShowDateSelector from './ShowDateSelector';
+import CityTheaterSelector from './CityTheaterSelector';
 import Spinner from '../ui/Spinner';
 import { ISeat } from '@/app/types/seat';
 import { IShow } from '@/app/types/show';
-import { bookTickets, getShowSeats, getShows } from '@/app/services/filmService';
+import { bookTickets, getShowSeats, getShows, getShowsByFilters } from '@/app/services/filmService';
 import { IPerfomance } from '@/app/types/perfomance';
 import { StripePaymentForm } from '../payment/stripePaymentForm';
 import '../payment/stripePaymentForm.styles.css';
@@ -27,51 +28,70 @@ export default function BookingModal({
     const [selectedSeats, setSelectedSeats] = useState<ISeat[]>([]);
     const [availableSeats, setAvailableSeats] = useState<ISeat[]>([]);
     const [bookedSeats, setBookedSeats] = useState<ISeat[]>([]);
+    const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+    const [selectedTheaterId, setSelectedTheaterId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'dates' | 'seats' | 'payment'>('dates');
+    const [step, setStep] = useState<'city-theater' | 'dates' | 'seats' | 'payment'>('city-theater');
     const [totalAmount, setTotalAmount] = useState(0);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
 
     useEffect(() => {
-        const fetchShows = async () => {
-            if (!selectedPerformance?.id) return;
-            
-            try {
-                setIsLoading(true);
-                // Отримуємо всі покази та фільтруємо по performance_id та майбутній даті
-                const allShows = await getShows();
-                console.log('Завантажені всі покази:', allShows);
-                
-                // Фільтруємо покази для конкретної вистави та тільки майбутні
-                const performanceShows = allShows.filter(show => 
-                    show.performance_id === selectedPerformance.id && 
-                    new Date(show.datetime) > new Date()
-                );
-                console.log('Майбутні покази для вистави після фільтрації:', performanceShows);
-                
-                setShows(performanceShows);
-                setStep('dates');
-            } catch (err: any) {
-                setError(err.message || 'Помилка при завантаженні показів');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         if (isOpen && selectedPerformance) {
-            fetchShows();
-        } else {
+            // Скидаємо всі стани при відкритті модалки
+            setStep('city-theater');
             setShows([]);
             setSelectedShow(null);
             setSelectedSeats([]);
             setAvailableSeats([]);
             setBookedSeats([]);
+            setSelectedCityId(null);
+            setSelectedTheaterId(null);
             setError(null);
-            setStep('dates');
+            setPaymentSuccess(false);
+        } else {
+            // Скидаємо стани при закритті
+            setShows([]);
+            setSelectedShow(null);
+            setSelectedSeats([]);
+            setAvailableSeats([]);
+            setBookedSeats([]);
+            setSelectedCityId(null);
+            setSelectedTheaterId(null);
+            setError(null);
+            setStep('city-theater');
             setPaymentSuccess(false);
         }
     }, [isOpen, selectedPerformance]);
+
+    const handleCityTheaterSelect = async (cityId: number, theaterId: number) => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            setSelectedCityId(cityId);
+            setSelectedTheaterId(theaterId);
+
+            // Завантажуємо покази для вибраної вистави, міста та театру
+            const filteredShows = await getShowsByFilters({
+                performanceId: selectedPerformance?.id,
+                cityId: cityId,
+                theaterId: theaterId
+            });
+
+            // Фільтруємо тільки майбутні покази
+            const futureShows = filteredShows.filter(show => 
+                new Date(show.datetime) > new Date()
+            );
+
+            console.log('Завантажені покази для міста та театру:', futureShows);
+            setShows(futureShows);
+            setStep('dates');
+        } catch (err: any) {
+            setError(err.message || 'Помилка при завантаженні показів');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleShowSelect = async (show: IShow) => {
         try {
@@ -205,46 +225,79 @@ export default function BookingModal({
         }
     };
 
-    const handleCloseModal = () => {
+    const handleBackToCityTheater = () => {
+        setStep('city-theater');
+        setShows([]);
+        setSelectedShow(null);
+        setSelectedSeats([]);
+        setAvailableSeats([]);
+        setBookedSeats([]);
+        setError(null);
+    };
+
+    const handleBackToDates = () => {
         setStep('dates');
         setSelectedShow(null);
         setSelectedSeats([]);
         setAvailableSeats([]);
         setBookedSeats([]);
         setError(null);
+    };
+
+    const handleCloseModal = () => {
+        setStep('city-theater');
+        setShows([]);
+        setSelectedShow(null);
+        setSelectedSeats([]);
+        setAvailableSeats([]);
+        setBookedSeats([]);
+        setSelectedCityId(null);
+        setSelectedTheaterId(null);
+        setError(null);
         setPaymentSuccess(false);
         onClose();
     };
 
     const renderModalContent = () => {
-        if (isLoading) {
+        if (isLoading && (step === 'city-theater' || step === 'dates')) {
             return (
                 <div className="loader-container">
-                    <div className="loader"></div>
+                    <Spinner />
+                    <p>{step === 'city-theater' ? 'Завантаження...' : 'Завантаження показів...'}</p>
                 </div>
             );
         }
-        
+
         if (error) {
             return (
-                <div className="error-message">
+                <div className="error-container">
+                    <h3>Помилка</h3>
                     <p>{error}</p>
-                    <button className="btn-primary" onClick={() => setError(null)}>Спробувати знову</button>
+                    <button onClick={handleCloseModal} className="close-button">
+                        Закрити
+                    </button>
                 </div>
             );
         }
-        
+
         if (paymentSuccess) {
             return (
-                <div className="success-payment">
-                    <div className="success-icon">✓</div>
-                    <h3>Оплата успішна!</h3>
-                    <p>Квитки успішно заброньовано. Дякуємо за покупку!</p>
+                <div className="success-container">
+                    <h3>Бронювання успішне!</h3>
+                    <p>Ваші квитки заброньовано. Перевірте електронну пошту для отримання деталей.</p>
                 </div>
             );
         }
-        
+
         switch (step) {
+            case 'city-theater':
+                return (
+                    <CityTheaterSelector
+                        selectedPerformance={selectedPerformance}
+                        onSelectionComplete={handleCityTheaterSelect}
+                        isLoading={isLoading}
+                    />
+                );
             case 'dates':
                 return (
                     <ShowDateSelector
@@ -252,6 +305,7 @@ export default function BookingModal({
                         onShowSelect={handleShowSelect}
                         selectedPerformance={selectedPerformance}
                         isLoading={isLoading}
+                        onBack={handleBackToCityTheater}
                     />
                 );
             case 'seats':
@@ -265,32 +319,27 @@ export default function BookingModal({
                         selectedShow={selectedShow}
                         handleBooking={handleProceedToPayment}
                         onClose={handleCloseModal}
+                        onBack={handleBackToDates}
                         setAvailableSeats={setAvailableSeats}
                         setBookedSeats={setBookedSeats}
                         isLoading={isLoading}
                     />
                 );
             case 'payment':
-                if (!selectedShow) {
-                    return <div className="error-message">Не вибрано сеанс</div>;
-                }
                 return (
-                    <StripePaymentForm 
+                    <StripePaymentForm
                         amount={totalAmount}
                         onSuccess={handleBooking}
                         onCancel={handleCancelPayment}
                         bookingData={{
                             tickets: selectedSeats.map(seat => ({
-                                show_id: selectedShow.id,
-                                seat_id: seat.id
+                                show_id: Number(selectedShow?.id),
+                                seat_id: Number(seat.id)
                             })),
-                            silent: true,
                             paymentData: {
                                 currency: "uah",
                                 metadata: {
-                                    source: "web-app",
-                                    seatCount: String(selectedSeats.length),
-                                    showId: String(selectedShow.id)
+                                    source: "web-app"
                                 },
                                 description: "Оплата квитків на виставу"
                             }
@@ -307,4 +356,4 @@ export default function BookingModal({
             {renderModalContent()}
         </Modal>
     );
-};
+} 

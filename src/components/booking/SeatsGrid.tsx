@@ -15,6 +15,7 @@ interface SeatsGridProps {
     selectedShow: IShow | null;
     handleBooking: () => void;
     onClose: () => void;
+    onBack?: () => void;
     setAvailableSeats: Dispatch<SetStateAction<ISeat[]>>;
     setBookedSeats: Dispatch<SetStateAction<ISeat[]>>;
     isLoading: boolean;
@@ -29,6 +30,7 @@ export default function SeatsGrid({
     selectedShow,
     handleBooking,
     onClose,
+    onBack,
     setAvailableSeats,
     setBookedSeats,
     isLoading
@@ -105,6 +107,11 @@ export default function SeatsGrid({
 
     return (
         <div className="seats-container">
+            {onBack && (
+                <button onClick={onBack} className="back-button">
+                    ← Назад до вибору показів
+                </button>
+            )}
             <div className="seats-grid">
                 <div className="side-seats left">
                     {leftSeats.map((seat, index) => (

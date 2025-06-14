@@ -8,13 +8,19 @@ import { IActor } from '../types/actor';
 import { IGenre } from '../types/genre';
 import { ISeat } from '../types/seat';
 import { ITicket } from '../types/ticket';
+import { ICity } from '../types/city';
+import { ITheater } from '../types/theater';
 
+// Використовуємо проксі Next.js для уникнення проблем з CORS
 const API_BASE = '/api';
 
 async function customFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_BASE}${normalizedEndpoint}`;
     
+    console.log('API_BASE:', API_BASE);
+    console.log('endpoint:', endpoint);
+    console.log('normalizedEndpoint:', normalizedEndpoint);
     console.log('Виконується запит до URL:', url);
     
     const token = localStorage.getItem('token');
@@ -149,9 +155,9 @@ export const getPerfomances = async (params: GetPerformancesParams = {}): Promis
         
         const data = await fetchWithParams<PaginatedResponse<IPerfomance>>(url, {
             search,
-            limit,
-            page,
-            in_shows: true
+            limit: limit.toString(),
+            page: page.toString(),
+            in_shows: 'true'
         });
         
         console.log('Відповідь від сервера:', data);
@@ -186,6 +192,46 @@ export const getPerfomancesWithFilters = async (url: string): Promise<IPerfomanc
         console.error('Помилка запиту:', error);
         return [];
     }
+};
+
+export const getPerformancesWithLocationFilters = async (filters: {
+  search?: string;
+  genre?: string;
+  cityId?: number;
+  theaterId?: number;
+  limit?: number;
+  page?: number;
+} = {}): Promise<IPerfomance[]> => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filters.search) params.append('search', filters.search);
+    if (filters.genre) params.append('genre_id', filters.genre);
+    if (filters.cityId) params.append('city_id', filters.cityId.toString());
+    if (filters.theaterId) params.append('theater_id', filters.theaterId.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.page) params.append('page', filters.page.toString());
+    
+    params.append('in_shows', 'true');
+    
+    const url = `/performances/in-shows${params.toString() ? `?${params.toString()}` : ''}`;
+    console.log('🔍 Запит з фільтрами:', url);
+    console.log('🔍 Параметри фільтрів:', filters);
+    
+    const data = await customFetch<PaginatedResponse<IPerfomance>>(url);
+    console.log('📦 Відповідь від сервера:', data);
+    
+    if (data && Array.isArray(data.items)) {
+      console.log('✅ Отримано вистав:', data.items.length);
+      return data.items;
+    }
+    
+    console.error('❌ Неочікувана структура відповіді:', data);
+    return [];
+  } catch (error) {
+    console.error('❌ Помилка отримання вистав з фільтрами:', error);
+    return [];
+  }
 };
 
 export const getProducers = async (): Promise<IProducer[]> => {
@@ -770,4 +816,147 @@ export const updateNewsletterSubscription = async (newsletterSubscription: boole
         console.error('Помилка оновлення підписки на розсилку:', error);
         throw new Error(error.message || 'Помилка при оновленні підписки на розсилку');
     }
+};
+
+export const getTicketHistory = async (): Promise<ITicket[]> => {
+  try {
+    return customFetch<ITicket[]>('/tickets/history');
+  } catch (error) {
+    console.error('Помилка отримання історії квитків:', error);
+    throw new Error('Помилка отримання історії квитків');
+  }
+};
+
+// API для роботи з містами та театрами
+export const getCities = async (): Promise<ICity[]> => {
+  try {
+    return customFetch<ICity[]>('/cities');
+  } catch (error) {
+    console.error('Помилка отримання міст:', error);
+    throw new Error('Помилка отримання міст');
+  }
+};
+
+export const getCitiesWithShows = async (): Promise<ICity[]> => {
+  try {
+    return customFetch<ICity[]>('/cities/with-shows');
+  } catch (error) {
+    console.error('Помилка отримання міст з виставами:', error);
+    throw new Error('Помилка отримання міст з виставами');
+  }
+};
+
+export const getCitiesWithUpcomingShows = async (): Promise<ICity[]> => {
+  try {
+    return customFetch<ICity[]>('/cities/with-upcoming-shows');
+  } catch (error) {
+    console.error('Помилка отримання міст з майбутніми показами:', error);
+    throw new Error('Помилка отримання міст з майбутніми показами');
+  }
+};
+
+export const getCityWithShows = async (cityId: number): Promise<ICity> => {
+  try {
+    return customFetch<ICity>(`/cities/${cityId}/with-shows`);
+  } catch (error) {
+    console.error('Помилка отримання міста з показами:', error);
+    throw new Error('Помилка отримання міста з показами');
+  }
+};
+
+export const getCityWithUpcomingShows = async (cityId: number): Promise<ICity> => {
+  try {
+    return customFetch<ICity>(`/cities/${cityId}/with-upcoming-shows`);
+  } catch (error) {
+    console.error('Помилка отримання міста з майбутніми показами:', error);
+    throw new Error('Помилка отримання міста з майбутніми показами');
+  }
+};
+
+export const getTheaters = async (): Promise<ITheater[]> => {
+  try {
+    return customFetch<ITheater[]>('/cities/theaters');
+  } catch (error) {
+    console.error('Помилка отримання театрів:', error);
+    throw new Error('Помилка отримання театрів');
+  }
+};
+
+export const getTheatersByCity = async (cityId: number): Promise<ITheater[]> => {
+  try {
+    return customFetch<ITheater[]>(`/cities/${cityId}/theaters`);
+  } catch (error) {
+    console.error('Помилка отримання театрів міста:', error);
+    throw new Error('Помилка отримання театрів міста');
+  }
+};
+
+export const getTheatersWithShows = async (cityId?: number): Promise<ITheater[]> => {
+  try {
+    if (cityId) {
+      try {
+        const cityData = await customFetch<ICity>(`/cities/${cityId}/with-upcoming-shows`);
+        if (cityData.theaters && Array.isArray(cityData.theaters)) {
+          return cityData.theaters;
+        }
+      } catch (error: any) {
+        console.log('Ендпоінт міста з показами не працює, використовуємо fallback');
+      }
+      
+      try {
+        const theaters = await customFetch<ITheater[]>(`/cities/${cityId}/theaters`);
+        
+        const allShows = await getShows();
+        const cityShows = allShows.filter(show => 
+          show.city_id === cityId && new Date(show.datetime) > new Date()
+        );
+        
+        const theatersWithShows = theaters.filter(theater => 
+          cityShows.some(show => show.theater_id === theater.id)
+        );
+        
+        return theatersWithShows;
+      } catch (error: any) {
+        console.error('Помилка отримання театрів міста:', error);
+        return [];
+      }
+    } else {
+      try {
+        const allTheaters = await customFetch<ITheater[]>('/cities/theaters');
+        const allShows = await getShows();
+        const upcomingShows = allShows.filter(show => new Date(show.datetime) > new Date());
+        
+        const theatersWithShows = allTheaters.filter(theater => 
+          upcomingShows.some(show => show.theater_id === theater.id)
+        );
+        
+        return theatersWithShows;
+      } catch (error: any) {
+        console.error('Помилка отримання всіх театрів:', error);
+        return [];
+      }
+    }
+  } catch (error) {
+    console.error('Помилка отримання театрів з показами:', error);
+    return [];
+  }
+};
+
+export const getShowsByFilters = async (filters: {
+  cityId?: number;
+  theaterId?: number;
+  performanceId?: number;
+}): Promise<IShow[]> => {
+  try {
+    const params = new URLSearchParams();
+    if (filters.cityId) params.append('city_id', filters.cityId.toString());
+    if (filters.theaterId) params.append('theater_id', filters.theaterId.toString());
+    if (filters.performanceId) params.append('performance_id', filters.performanceId.toString());
+    
+    const url = `/shows${params.toString() ? `?${params.toString()}` : ''}`;
+    return customFetch<IShow[]>(url);
+  } catch (error) {
+    console.error('Помилка отримання показів з фільтрами:', error);
+    throw new Error('Помилка отримання показів з фільтрами');
+  }
 };
