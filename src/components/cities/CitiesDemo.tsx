@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import CitiesWithShows from './CitiesWithShows';
 import './CitiesDemo.styles.css';

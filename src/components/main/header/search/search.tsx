@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from 'react';
 import './search.styles.css';
 import { IPerfomance } from '@/app/types/perfomance';

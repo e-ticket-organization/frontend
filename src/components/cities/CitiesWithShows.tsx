@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import useCities from '@/hooks/useCities';
 import { ICity } from '@/app/types/city';

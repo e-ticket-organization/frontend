@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useContext } from 'react';
 import { updateNewsletterSubscription } from '@/app/services/filmService';
 import { AuthContext } from '@/app/context/authContext';
