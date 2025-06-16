@@ -1,12 +1,12 @@
 'use client';
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '@/app/context/authContext';
 import { useRouter } from 'next/navigation';
 import { LoginCredentials } from '@/app/types/auth';
 import './admin-login.styles.css';
 
 const AdminLogin = () => {
-  const { admin_login } = useContext(AuthContext);
+  const { admin_login, isAuthenticated, isAdmin } = useContext(AuthContext);
   const router = useRouter();
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
@@ -16,6 +16,32 @@ const AdminLogin = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Перевірка, чи користувач вже аутентифікований як адмін
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        if (userData.status === 'admin') {
+          console.log('Користувач вже аутентифікований як адмін, перенаправлення на панель');
+          router.push('/admin');
+        }
+      } catch (error) {
+        console.error('Помилка парсингу даних користувача:', error);
+      }
+    }
+  }, [router]);
+
+  // Додаткова перевірка через контекст
+  useEffect(() => {
+    if (isAuthenticated && isAdmin) {
+      console.log('Користувач аутентифікований через контекст, перенаправлення на панель');
+      router.push('/admin');
+    }
+  }, [isAuthenticated, isAdmin, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredentials({

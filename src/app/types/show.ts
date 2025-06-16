@@ -24,4 +24,6 @@ export interface IShowCreate {
     price: number;
     hall_id: number;
     date: Date;
+    city_id: number;
+    theater_id: number;
 }

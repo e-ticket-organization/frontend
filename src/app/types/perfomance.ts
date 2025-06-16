@@ -41,4 +41,18 @@ export interface IPerfomance {
         date: string | null;
     }>;
     description: string;
+    premiereDate?: string;
+    price?: number;
+}
+
+export interface IPerfomanceCreate {
+    title: string;
+    description?: string;
+    duration: number;
+    image: string;
+    genre_ids: number[];
+    premiereDate?: string;
+    price?: number;
+    actor_ids: number[];
+    producer_id: number;
 }

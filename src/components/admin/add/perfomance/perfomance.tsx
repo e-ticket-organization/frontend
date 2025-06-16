@@ -4,21 +4,25 @@ import './perfomance.styles.css';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { getProducers, addPerfomance, getGenres, getActors } from '@/app/services/filmService';
+import { getAllProducers, addPerfomance, getGenres, getAllActors } from '@/app/services/filmService';
 import { IProducer } from '@/app/types/producer';
 import { useRouter } from 'next/navigation';
 import { getToken } from '@/app/services/authService';
 import { IGenre } from '@/app/types/genre';
 import { IActor } from '@/app/types/actor';
+
 export default function Perfomance() {
   const router = useRouter();
   const [perfomance, setPerfomance] = useState({
     title: '',
+    description: '',
     duration: '',
     producer_id: '',
     image: '',
     genre_id: '',
-    actors: [] as string[]
+    actors: [] as string[],
+    premiereDate: '',
+    price: ''
   });
   const [producers, setProducers] = useState<IProducer[]>([]);
   const [genres, setGenres] = useState<IGenre[]>([]);
@@ -27,7 +31,6 @@ export default function Perfomance() {
   const [error, setError] = useState<string>('');
   const [selectedActor, setSelectedActor] = useState('');
   const [selectedActors, setSelectedActors] = useState<{id: string, name: string}[]>([]);
-
 
   useEffect(() => {
     const token = getToken();
@@ -39,9 +42,9 @@ export default function Perfomance() {
     const loadData = async () => {
       try {
         const [producersData, genresData, actorsData] = await Promise.all([
-          getProducers(),
+          getAllProducers(),
           getGenres(),
-          getActors()
+          getAllActors()
         ]);
         
         console.log('Завантажені актори:', actorsData);
@@ -57,14 +60,14 @@ export default function Perfomance() {
     loadData();
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     console.log(`Зміна поля ${name}:`, value); 
     setPerfomance(prev => ({
         ...prev,
         [name]: value
     }));
-};
+  };
 
   const handleActorSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedActorId = e.target.value;
@@ -106,11 +109,14 @@ export default function Perfomance() {
     try {
       const performanceData = {
         title: perfomance.title,
+        description: perfomance.description,
         duration: Number(perfomance.duration),
         image: perfomance.image,
         producer: Number(perfomance.producer_id),
         genre_id: Number(perfomance.genre_id),
-        actors: perfomance.actors.map(Number)
+        actors: perfomance.actors.map(Number),
+        premiereDate: perfomance.premiereDate,
+        price: perfomance.price ? Number(perfomance.price) : undefined
       };
 
       console.log('Відправляємо дані:', performanceData);
@@ -137,7 +143,7 @@ export default function Perfomance() {
         
         <input 
           className='form-input' 
-          placeholder='Введіть назву' 
+          placeholder='Введіть назву *' 
           type="text" 
           name="title" 
           value={perfomance.title} 
@@ -145,9 +151,18 @@ export default function Perfomance() {
           required 
         />
         
+        <textarea 
+          className='form-input' 
+          placeholder='Введіть опис' 
+          name="description" 
+          value={perfomance.description} 
+          onChange={handleChange}
+          rows={4}
+        />
+        
         <input 
           className='form-input' 
-          placeholder='Введіть тривалість' 
+          placeholder='Введіть тривалість (хвилини) *' 
           type="number" 
           name="duration" 
           value={perfomance.duration} 
@@ -162,7 +177,7 @@ export default function Perfomance() {
           onChange={handleChange}
           required
         >
-          <option value="">Виберіть жанр</option>
+          <option value="">Виберіть жанр *</option>
           {genres.map((genre) => (
             <option key={genre.id} value={genre.id}>
               {genre.name}
@@ -176,23 +191,43 @@ export default function Perfomance() {
           value={perfomance.producer_id}
           onChange={handleChange}
           required
-      >
-          <option value="">Виберіть продюсера</option>
+        >
+          <option value="">Виберіть продюсера *</option>
           {producers.map((producer) => (
               <option key={producer.id} value={producer.id}>
                   {`${producer.first_name} ${producer.last_name}`}
               </option>
           ))}
-      </select>
+        </select>
         
         <input 
           className='form-input' 
-          placeholder='Введіть URL зображення' 
+          placeholder='Введіть URL зображення *' 
           type="text" 
           name="image" 
           value={perfomance.image} 
           onChange={handleChange} 
           required 
+        />
+
+        <input 
+          className='form-input' 
+          placeholder='Дата прем&apos;єри' 
+          type="date" 
+          name="premiereDate" 
+          value={perfomance.premiereDate} 
+          onChange={handleChange}
+        />
+
+        <input 
+          className='form-input' 
+          placeholder='Ціна (грн)' 
+          type="number" 
+          step="0.01"
+          min="0"
+          name="price" 
+          value={perfomance.price} 
+          onChange={handleChange}
         />
         
         <div className="actors-selection">
@@ -208,7 +243,7 @@ export default function Perfomance() {
                 <option key={actor.id} value={actor.id}>
                   {`${actor.first_name} ${actor.last_name}`}
                 </option>
-          ))}
+            ))}
           </select>
 
           <div className="selected-actors">

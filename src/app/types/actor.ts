@@ -2,19 +2,24 @@ export interface IActor {
     id: number;
     first_name: string;
     last_name: string;
-    phone_number?: string;
-    date_of_birth?: string;
-    passport?: string;
-    created_at: string | null;
-    updated_at: string | null;
+    phone_number: string;
+    date_of_birth: Date;
+    passport: string;
+    created_at: Date | null;
+    updated_at: Date | null;
     performances: any[];
     full_name: string;
-  }
+    bio?: string;
+    photoUrl?: string;
+    birthDate?: string;
+    education?: string;
+    achievements?: string[];
+}
   
-  export interface IActorCreate {
+export interface IActorCreate {
     first_name: string;
     last_name: string;
-    phone_number?: string;
-    date_of_birth?: string;
-    passport?: string;
-  }
+    phone_number: string;
+    date_of_birth: Date;
+    passport: string;
+}

@@ -1,5 +1,5 @@
 import { IPerfomance } from '@/app/types/perfomance';
-import { IShow } from '@/app/types/show';
+import { IShow, IShowCreate } from '@/app/types/show';
 import { IProducer } from '@/app/types/producer';
 import { IHall } from '@/app/types/hall';
 import { getUser, refreshToken } from './authService';
@@ -142,11 +142,21 @@ interface GetPerformancesParams {
     page?: number;
 }
 
-export const getPerfomances = async (params: GetPerformancesParams = {}): Promise<IPerfomance[]> => {
+interface PerformancesResponse {
+    performances: IPerfomance[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+    };
+}
+
+export const getPerfomances = async (params: GetPerformancesParams = {}): Promise<PerformancesResponse> => {
     try {
         if (!API_BASE) {
             console.error('API_BASE не визначено. Перевірте налаштування змінних середовища.');
-            return [];
+            return { performances: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
         }
 
         const { search = '', limit = 10, page = 1 } = params;
@@ -163,13 +173,31 @@ export const getPerfomances = async (params: GetPerformancesParams = {}): Promis
         console.log('Відповідь від сервера:', data);
         
         if (data && Array.isArray(data.items)) {
-            return data.items;
+            return {
+                performances: data.items,
+                meta: {
+                    total: data.total || 0,
+                    page: data.page || 1,
+                    limit: data.limit || 10,
+                    pages: data.pages || Math.ceil((data.total || 0) / (data.limit || 10))
+                }
+            };
         }
         
         console.error('Неочікувана структура відповіді:', data);
-        return [];
+        return { performances: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     } catch (error) {
         console.error('Помилка запиту:', error);
+        return { performances: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
+    }
+};
+
+export const getAllPerformances = async (): Promise<IPerfomance[]> => {
+    try {
+        const data = await getPerfomances({ page: 1, limit: 1000 });
+        return data.performances;
+    } catch (error) {
+        console.error('Помилка отримання всіх вистав:', error);
         return [];
     }
 };
@@ -234,21 +262,60 @@ export const getPerformancesWithLocationFilters = async (filters: {
   }
 };
 
-export const getProducers = async (): Promise<IProducer[]> => {
-    const data = await customFetch<PaginatedResponse<IProducer>>('/producers');
-    if (data && Array.isArray(data.items)) {
-        return data.items;
+interface ProducersResponse {
+    producers: IProducer[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+    };
+}
+
+export const getProducers = async (page = 1, limit = 10): Promise<ProducersResponse> => {
+    try {
+        const data = await customFetch<PaginatedResponse<IProducer>>(`/producers?page=${page}&limit=${limit}`);
+        console.log('Отримані дані продюсерів:', data);
+        
+        if (data && data.items) {
+            return {
+                producers: data.items,
+                meta: {
+                    total: data.total || 0,
+                    page: data.page || 1,
+                    limit: data.limit || 10,
+                    pages: data.pages || Math.ceil((data.total || 0) / (data.limit || 10))
+                }
+            };
+        }
+        
+        return { producers: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
+    } catch (error) {
+        console.error('Помилка отримання продюсерів:', error);
+        return { producers: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     }
-    return [];
+};
+
+export const getAllProducers = async (): Promise<IProducer[]> => {
+    try {
+        const data = await customFetch<PaginatedResponse<IProducer>>(`/producers?page=1&limit=1000`);
+        return data?.items || [];
+    } catch (error) {
+        console.error('Помилка отримання всіх продюсерів:', error);
+        return [];
+    }
 };
 
 interface IPerformanceCreate {
     title: string;
+    description?: string;
     duration: number;
     image: string;
     producer: number;
     genre_id: number;   
     actors: number[];
+    premiereDate?: string;
+    price?: number;
 }
 
 export const addPerfomance = async (performanceData: IPerformanceCreate): Promise<IPerfomance> => {
@@ -279,37 +346,92 @@ export const addPerfomance = async (performanceData: IPerformanceCreate): Promis
     }
 };
 
-export const getActors = async (page = 1, limit = 10): Promise<IActor[]> => {
+interface ActorsResponse {
+    actors: IActor[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+    };
+}
+
+export const getActors = async (page = 1, limit = 10): Promise<ActorsResponse> => {
     try {
-        const response = await fetch(`https://backend-3ih2.onrender.com/api/actors?page=${page}&limit=${limit}`, {
-            headers: {
-                'accept': 'application/json'
-            }
-        });
-        if (!response.ok) throw new Error('Не вдалося отримати акторів');
-        const data = await response.json();
-        return data.actors || data.items || [];
+        // Використовуємо customFetch та правильну структуру відповіді згідно з бекендом
+        const data = await customFetch<PaginatedResponse<IActor>>(`/actors?page=${page}&limit=${limit}`);
+        console.log('Отримані дані акторів:', data);
+        
+        // Бекенд повертає {items: [], total: number, page: number, limit: number, pages: number}
+        if (data && data.items) {
+            return {
+                actors: data.items,
+                meta: {
+                    total: data.total || 0,
+                    page: data.page || 1,
+                    limit: data.limit || 10,
+                    pages: data.pages || Math.ceil((data.total || 0) / (data.limit || 10))
+                }
+            };
+        }
+        
+        return { actors: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     } catch (error) {
         console.error('Помилка отримання акторів:', error);
+        return { actors: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
+    }
+};
+
+// Функція для отримання всіх акторів без пагінації (для форм)
+export const getAllActors = async (): Promise<IActor[]> => {
+    try {
+        // Отримуємо велику кількість акторів за один раз
+        const data = await customFetch<PaginatedResponse<IActor>>(`/actors?page=1&limit=1000`);
+        console.log('Отримані всі актори:', data);
+        
+        return data?.items || [];
+    } catch (error) {
+        console.error('Помилка отримання всіх акторів:', error);
         return [];
     }
 };
 
-export const getUsers = async (): Promise<IUser[]> => {
+interface UsersResponse {
+    users: IUser[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+    };
+}
+
+export const getUsers = async (page = 1, limit = 10): Promise<UsersResponse> => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('https://backend-3ih2.onrender.com/api/users', {
-            headers: {
-                'accept': '*/*',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Не вдалося отримати користувачів');
-        const data = await response.json();
-        return data.users || data.items || data || [];
+        const data = await customFetch<IUser[]>(`/users?page=${page}&limit=${limit}`);
+        console.log('Отримані дані користувачів:', data);
+        
+        if (data && Array.isArray(data)) {
+            // Симулюємо пагінацію на фронтенді, оскільки API повертає всі дані
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedUsers = data.slice(startIndex, endIndex);
+            
+            return {
+                users: paginatedUsers,
+                meta: {
+                    total: data.length,
+                    page: page,
+                    limit: limit,
+                    pages: Math.ceil(data.length / limit)
+                }
+            };
+        }
+        
+        return { users: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     } catch (error) {
         console.error('Помилка отримання користувачів:', error);
-        return [];
+        return { users: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     }
 };
 
@@ -317,54 +439,68 @@ export const getHalls = async (): Promise<IHall[]> => {
     return customFetch<IHall[]>('shows/halls/all');
 };
 
-export const addShow = async (showData: {
-    performance_id: number;
-    datetime: Date;
-    date: Date;
-    hall_id: number;
-    price: number;
-}): Promise<IShow> => {
+export const addShow = async (showData: IShowCreate): Promise<IShow> => {
     try {
+        console.log('Відправляємо дані на сервер:', showData);
+        
         const formattedData = {
-            performance_id: Number(showData.performance_id),
+            performance_id: showData.performance_id,
             datetime: showData.datetime.toISOString(),
-            date: showData.date.toISOString().split('T')[0],
-            hall_id: Number(showData.hall_id),
-            price: Number(showData.price)
+            date: showData.date ? showData.date.toISOString().split('T')[0] : showData.datetime.toISOString().split('T')[0],
+            hall_id: showData.hall_id,
+            price: showData.price,
+            ...(showData.city_id && { city_id: showData.city_id }),
+            ...(showData.theater_id && { theater_id: showData.theater_id })
         };
 
-        console.log('Форматовані дані для відправки:', formattedData);
-        
-        const data = await customFetch<{show: IShow, message: string}>(
-            '/shows', 
-            {
-                method: 'POST',
-                body: JSON.stringify(formattedData)
-            }
-        );
-        
-        console.log('Відповідь від сервера:', data);
-        return data.show;
-    } catch (error) {
-        console.error('Деталі помилки:', error);
-        throw error;
+        console.log('Форматовані дані:', formattedData);
+
+        return customFetch<IShow>('/shows', {
+            method: 'POST',
+            body: JSON.stringify(formattedData)
+        });
+    } catch (error: any) {
+        console.error('Помилка додавання показу:', error);
+        throw new Error(error.message || 'Помилка при додаванні показу');
     }
 };
 
-export const getShows = async (): Promise<IShow[]> => {
+interface ShowsResponse {
+    shows: IShow[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+    };
+}
+
+export const getShows = async (page = 1, limit = 10): Promise<ShowsResponse> => {
     try {
-        const data = await customFetch<IShow[]>('/shows');
-        console.log('Отримані дані показів:', data); 
+        const data = await customFetch<IShow[]>(`/shows?page=${page}&limit=${limit}`);
+        console.log('Отримані дані показів:', data);
         
-        if (Array.isArray(data)) {
-            return data;
+        if (data && Array.isArray(data)) {
+            // Симулюємо пагінацію на фронтенді, оскільки API повертає всі дані
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedShows = data.slice(startIndex, endIndex);
+            
+            return {
+                shows: paginatedShows,
+                meta: {
+                    total: data.length,
+                    page: page,
+                    limit: limit,
+                    pages: Math.ceil(data.length / limit)
+                }
+            };
         }
         
-        console.error('Неочікувана структура відповіді:', data);
-        return [];
+        return { shows: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     } catch (error) {
         console.error('Помилка отримання показів:', error);
-        return [];
+        return { shows: [], meta: { total: 0, page: 1, limit: 10, pages: 0 } };
     }
 };
 
@@ -382,20 +518,20 @@ export const getGenres = async (): Promise<IGenre[]> => {
     }
 };
 
-export const addProducer = async (producerData: IProducer): Promise<IProducer> => {
+export const addProducer = async (producerData: Omit<IProducer, 'id' | 'created_at' | 'updated_at'>): Promise<IProducer> => {
     return customFetch<IProducer>('/producers', {
         method: 'POST',
         body: JSON.stringify(producerData)
     });
 };
 
-export const addActor = async (actorData: Omit<IActor, 'id'>): Promise<IActor> => {
+export const addActor = async (actorData: any): Promise<IActor> => {
     try {
-        const data = await customFetch<{actor: IActor}>('/actors', {
+        const data = await customFetch<IActor>('/actors', {
             method: 'POST',
             body: JSON.stringify(actorData)
         });
-        return data.actor;
+        return data;
     } catch (error) {
         console.error('Add actor error:', error);
         throw error;
@@ -906,13 +1042,13 @@ export const getTheatersWithShows = async (cityId?: number): Promise<ITheater[]>
       try {
         const theaters = await customFetch<ITheater[]>(`/cities/${cityId}/theaters`);
         
-        const allShows = await getShows();
-        const cityShows = allShows.filter(show => 
+        const allShows = await customFetch<IShow[]>('/shows');
+        const cityShows = allShows.filter((show: IShow) => 
           show.city_id === cityId && new Date(show.datetime) > new Date()
         );
         
-        const theatersWithShows = theaters.filter(theater => 
-          cityShows.some(show => show.theater_id === theater.id)
+        const theatersWithShows = theaters.filter((theater: ITheater) => 
+          cityShows.some((show: IShow) => show.theater_id === theater.id)
         );
         
         return theatersWithShows;
@@ -923,11 +1059,11 @@ export const getTheatersWithShows = async (cityId?: number): Promise<ITheater[]>
     } else {
       try {
         const allTheaters = await customFetch<ITheater[]>('/cities/theaters');
-        const allShows = await getShows();
-        const upcomingShows = allShows.filter(show => new Date(show.datetime) > new Date());
+        const allShows = await customFetch<IShow[]>('/shows');
+        const upcomingShows = allShows.filter((show: IShow) => new Date(show.datetime) > new Date());
         
-        const theatersWithShows = allTheaters.filter(theater => 
-          upcomingShows.some(show => show.theater_id === theater.id)
+        const theatersWithShows = allTheaters.filter((theater: ITheater) => 
+          upcomingShows.some((show: IShow) => show.theater_id === theater.id)
         );
         
         return theatersWithShows;

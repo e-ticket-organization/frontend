@@ -137,12 +137,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedRefreshToken = localStorage.getItem('refreshToken');
+    const storedUser = localStorage.getItem('user');
     
     if (storedToken) {
       console.log('Знайдено збережений токен при завантаженні');
       setToken(storedToken);
       setRefreshToken(storedRefreshToken);
-      fetchUserProfile();
+      
+      // Відновлюємо користувача з localStorage
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setIsAuthenticated(true);
+          setIsAdmin(userData.status === 'admin');
+          console.log('Відновлено дані користувача з localStorage:', userData);
+        } catch (error) {
+          console.error('Помилка парсингу даних користувача:', error);
+          fetchUserProfile();
+        }
+      } else {
+        fetchUserProfile();
+      }
       
       if (shouldRefreshToken(storedToken)) {
         console.log('Токен потребує оновлення при завантаженні');
@@ -182,6 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       setIsAuthenticated(true);
       setIsAdmin(userData.status === 'admin');
+      
+      // Оновлюємо дані користувача в localStorage
+      localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       console.error('Error fetching user profile:', error);
       logout();
@@ -285,13 +304,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const admin_login = async (credentials: LoginCredentials) => {
-    const response = await fetch('https://backend-3ih2.onrender.com/api/auth/login/admin', {
+    console.log('Відправка запиту авторизації адміна на:', `${AUTH_BASE}/admin/login`);
+    
+    const response = await fetch(`${AUTH_BASE}/login/admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(credentials)
+      body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -300,9 +322,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const data = await response.json();
+    console.log('Отримано відповідь від сервера:', data);
 
     // Зберігаємо токен і статус адміністратора
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     setToken(data.token);
     setIsAdmin(data.is_admin || false);
     setUser(data.user);
@@ -315,6 +339,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     setupTokenRefreshTimer(data.token);
+    console.log('Логування адміна завершено успішно');
   };
 
   // Публічний метод для отримання поточного користувача з кешуванням

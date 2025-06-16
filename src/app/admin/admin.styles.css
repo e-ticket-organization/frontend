@@ -1,7 +1,0 @@
-.admin-container{
-    display: flex;
-    width: 95%;
-    flex-direction: row;
-    justify-content: space-between;
-    margin: 10% auto;
-}

@@ -4,20 +4,20 @@ import './producer.styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { IProducer } from '@/app/types/producer';
+import { IProducer, IProducerCreate } from '@/app/types/producer';
 import { addProducer } from '@/app/services/filmService';
 import { getToken } from '@/app/services/authService';
 import { useRouter } from 'next/navigation';
+
 export default function Producers() {
-  const [producer, setProducer] = useState<IProducer>({
-    id: 0,
+  const [producer, setProducer] = useState<IProducerCreate>({
     first_name: '',
     last_name: '',
     phone_number: '',
     email: '',
     date_of_birth: '',
-    created_at: '',
-    updated_at: '',
+    bio: '',
+    photoUrl: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +34,12 @@ export default function Producers() {
       setError('Прізвище є обов\'язковим полем');
       return false;
     }
-    if (producer.date_of_birth && !/^\d{2}\/\d{2}\/\d{4}$/.test(producer.date_of_birth)) {
-      setError('Невірний формат дати. Використовуйте формат ДД/ММ/РРРР');
+    if (!producer.email.trim()) {
+      setError('Email є обов\'язковим полем');
+      return false;
+    }
+    if (!producer.phone_number.trim()) {
+      setError('Номер телефону є обов\'язковим полем');
       return false;
     }
     if (producer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(producer.email)) {
@@ -49,28 +53,14 @@ export default function Producers() {
     return true;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(''); // Очищаємо помилки при зміні полів
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setError('');
     setProducer({ ...producer, [e.target.name]: e.target.value });
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputDate = e.target.value;
-    const [year, month, day] = inputDate.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
-    setProducer({ ...producer, date_of_birth: formattedDate });
+    setProducer({ ...producer, date_of_birth: inputDate });
     setError('');
   };
 
@@ -80,16 +70,31 @@ export default function Producers() {
     
     setIsLoading(true);
     try {
-      const producerData: IProducer = {
-        id: Number(producer.id),
+      // Створюємо об'єкт даних продюсера
+      const producerData: Omit<IProducer, 'id' | 'created_at' | 'updated_at'> = {
         first_name: producer.first_name.trim(),
         last_name: producer.last_name.trim(),
-        date_of_birth: producer.date_of_birth,
         email: producer.email.trim(),
         phone_number: producer.phone_number.trim(),
-        created_at: '',
-        updated_at: ''
+        bio: producer.bio?.trim(),
+        photoUrl: producer.photoUrl?.trim()
       };
+
+      // Додаємо дату тільки якщо вона є і валідна
+      if (producer.date_of_birth && producer.date_of_birth.trim()) {
+        // Перевіряємо чи дата вже в правильному форматі YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(producer.date_of_birth.trim())) {
+          producerData.date_of_birth = producer.date_of_birth.trim();
+        } else {
+          // Якщо ні, то конвертуємо
+          const dateObj = new Date(producer.date_of_birth);
+          if (!isNaN(dateObj.getTime())) {
+            producerData.date_of_birth = dateObj.toISOString().split('T')[0];
+          }
+        }
+      }
+      
+      console.log('Відправляємо дані продюсера:', producerData);
       
       await addProducer(producerData);
       setSuccess(true);
@@ -97,12 +102,19 @@ export default function Producers() {
         router.push('/admin');
       }, 2000);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Помилка при додаванні продюсера');
+      console.error('Error details:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Помилка при додаванні продюсера';
+      
+      // Якщо це помилка валідації, показуємо детальну інформацію
+      if (error.response?.data?.message && Array.isArray(error.response.data.message)) {
+        setError(error.response.data.message.join(', '));
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
-
 
   useEffect(() => {
     const token = getToken();
@@ -127,7 +139,7 @@ export default function Producers() {
         <label>
           <input 
             type="text" 
-            placeholder="Ім'я" 
+            placeholder="Ім'я *" 
             name="first_name" 
             value={producer.first_name} 
             onChange={handleChange} 
@@ -137,7 +149,7 @@ export default function Producers() {
         <label>
           <input 
             type="text" 
-            placeholder="Прізвище" 
+            placeholder="Прізвище *" 
             name="last_name" 
             value={producer.last_name} 
             onChange={handleChange} 
@@ -146,32 +158,52 @@ export default function Producers() {
         </label>
         <label>
           <input 
-            type="date" 
-            placeholder='Дата народження' 
-            name="date_of_birth" 
-            value={producer.date_of_birth ? formatDateForInput(producer.date_of_birth) : ''}
-            onChange={handleDateChange}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </label>
-        <label>
-          <input 
             type="email" 
-            placeholder='Email' 
+            placeholder='Email *' 
             name="email" 
-            value={producer.email || ''} 
+            value={producer.email} 
             onChange={handleChange}
             pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+            required
           />
         </label>
         <label>
           <input 
             type="tel" 
-            placeholder='Номер телефону (+380...)' 
+            placeholder='Номер телефону (+380...) *' 
             name="phone_number" 
-            value={producer.phone_number || ''} 
+            value={producer.phone_number} 
             onChange={handleChange}
             pattern="\+?\d{10,13}"
+            required
+          />
+        </label>
+        <label>
+          <input 
+            type="date" 
+            placeholder='Дата народження' 
+            name="date_of_birth" 
+            value={producer.date_of_birth}
+            onChange={handleDateChange}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </label>
+        <label>
+          <textarea 
+            placeholder='Біографія' 
+            name="bio" 
+            value={producer.bio || ''} 
+            onChange={handleChange}
+            rows={4}
+          />
+        </label>
+        <label>
+          <input 
+            type="url" 
+            placeholder='URL фото' 
+            name="photoUrl" 
+            value={producer.photoUrl || ''} 
+            onChange={handleChange}
           />
         </label>
         <button 

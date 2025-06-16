@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { IPerfomance } from '@/app/types/perfomance';
-import { updatePerformance, getActors, getProducers, getGenres, deletePerformance } from '@/app/services/filmService';
+import { updatePerformance, getAllActors, getAllProducers, getGenres, deletePerformance } from '@/app/services/filmService';
 import './EditPerformance.css';
 
 interface EditPerformanceProps {
@@ -34,11 +34,11 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [actorsData, producersData, genresData] = await Promise.all([
-                    getActors(),
-                    getProducers(),
-                    getGenres()
-                ]);
+                        const [actorsData, producersData, genresData] = await Promise.all([
+          getAllActors(),
+          getAllProducers(),
+          getGenres()
+        ]);
                 setActors(actorsData);
                 setProducers(producersData);
 

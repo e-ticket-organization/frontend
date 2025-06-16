@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './panel.styles.css';
 import { useRouter } from 'next/navigation';
 import { getPerfomances, getProducers, getUsers, getShows, getActors, getPerfomanceById, getShowById } from '@/app/services/filmService';
@@ -9,6 +9,7 @@ import { IUser } from '@/app/types/user';
 import { IShow } from '@/app/types/show';
 import { IActor } from '@/app/types/actor';
 import { getToken } from '@/app/services/authService';
+import { AuthContext } from '@/app/context/authContext';
 import EditPerformance from '@/components/admin/edit/EditPerformance';
 import EditActor from '@/components/admin/edit/EditActor';
 import EditProducer from '@/components/admin/edit/EditProducer';
@@ -18,7 +19,8 @@ import Analytics from '@/components/admin/analytics/Analytics';
 
 export default function Panel() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('Events');
+  const { isAuthenticated, isAdmin } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('Analytics');
   const [performances, setPerformances] = useState<IPerfomance[]>([]);
   const [producers, setProducers] = useState<IProducer[]>([]);
   const [actors, setActors] = useState<IActor[]>([]);
@@ -31,29 +33,144 @@ export default function Panel() {
   const [selectedProducer, setSelectedProducer] = useState<(IProducer & { id: number }) | null>(null);
   const [selectedShow, setSelectedShow] = useState<IShow | null>(null);
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  
+  // Стан для пагінації
+  const [actorsPage, setActorsPage] = useState(1);
+  const [actorsLimit] = useState(10);
+  const [actorsMeta, setActorsMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0
+  });
+
+  const [performancesPage, setPerformancesPage] = useState(1);
+  const [performancesLimit] = useState(10);
+  const [performancesMeta, setPerformancesMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0
+  });
+
+  const [producersPage, setProducersPage] = useState(1);
+  const [producersLimit] = useState(10);
+  const [producersMeta, setProducersMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0
+  });
+
+  const [showsPage, setShowsPage] = useState(1);
+  const [showsLimit] = useState(10);
+  const [showsMeta, setShowsMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0
+  });
+
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersLimit] = useState(10);
+  const [usersMeta, setUsersMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0
+  });
 
   useEffect(() => {
+    // Перевірка наявності токена в localStorage
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!token) {
+      console.log('Токен відсутній, перенаправлення на сторінку логування');
+      router.push('/admin/login');
+      return;
+    }
+    
+    // Перевірка статусу адміна з localStorage
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        if (userData.status !== 'admin') {
+          console.log('Користувач не є адміном, перенаправлення на сторінку логування');
+          router.push('/admin/login');
+          return;
+        }
+      } catch (error) {
+        console.error('Помилка парсингу даних користувача:', error);
+        router.push('/admin/login');
+        return;
+      }
+    }
+    
+    // Перевірка аутентифікації адміна з контексту (якщо дані вже завантажені)
+    if (isAuthenticated !== undefined && isAdmin !== undefined && (!isAuthenticated || !isAdmin)) {
+      console.log('Користувач не аутентифікований як адмін, перенаправлення на сторінку логування');
+      router.push('/admin/login');
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
         console.log('Запит до API для отримання акторів');
         if (activeTab === 'Actors') {
-          const actorsData = await getActors();
+          const actorsData = await getActors(actorsPage, actorsLimit);
           console.log('Отримані актори:', actorsData);
-          setActors(actorsData);
+          console.log('Meta дані:', actorsData.meta);
+          
+          if (actorsData && actorsData.actors) {
+            setActors(actorsData.actors);
+            setActorsMeta(actorsData.meta || { total: 0, page: 1, limit: 5, pages: 0 });
+          } else {
+            console.error('Неправильна структура відповіді:', actorsData);
+            setActors([]);
+            setActorsMeta({ total: 0, page: 1, limit: 5, pages: 0 });
+          }
         } else if (activeTab === 'Events') {
-          const performancesData = await getPerfomances();
-          setPerformances(performancesData);
+          const performancesData = await getPerfomances({ page: performancesPage, limit: performancesLimit });
+          console.log('Отримані вистави:', performancesData);
+          if (performancesData && performancesData.performances) {
+            setPerformances(performancesData.performances);
+            setPerformancesMeta(performancesData.meta || { total: 0, page: 1, limit: 10, pages: 0 });
+          } else {
+            setPerformances([]);
+            setPerformancesMeta({ total: 0, page: 1, limit: 10, pages: 0 });
+          }
         } else if (activeTab === 'Producers') {
-          const producersData = await getProducers();
-          setProducers(producersData);
+          const producersData = await getProducers(producersPage, producersLimit);
           console.log('Отримані продюсери:', producersData);
+          if (producersData && producersData.producers) {
+            setProducers(producersData.producers);
+            setProducersMeta(producersData.meta || { total: 0, page: 1, limit: 10, pages: 0 });
+          } else {
+            setProducers([]);
+            setProducersMeta({ total: 0, page: 1, limit: 10, pages: 0 });
+          }
         } else if (activeTab === 'Users') {
-          const usersData = await getUsers();
-          setUsers(usersData);
+          const usersData = await getUsers(usersPage, usersLimit);
+          console.log('Отримані користувачі:', usersData);
+          if (usersData && usersData.users) {
+            setUsers(usersData.users);
+            setUsersMeta(usersData.meta || { total: 0, page: 1, limit: 10, pages: 0 });
+          } else {
+            setUsers([]);
+            setUsersMeta({ total: 0, page: 1, limit: 10, pages: 0 });
+          }
         } else if (activeTab === 'Shows') {
-          const showsData = await getShows();
-          setShows(showsData);
+          const showsData = await getShows(showsPage, showsLimit);
+          console.log('Отримані покази:', showsData);
+          if (showsData && showsData.shows) {
+            setShows(showsData.shows);
+            setShowsMeta(showsData.meta || { total: 0, page: 1, limit: 10, pages: 0 });
+          } else {
+            setShows([]);
+            setShowsMeta({ total: 0, page: 1, limit: 10, pages: 0 });
+          }
         }
       } catch (error) {
         console.error('Помилка завантаження даних:', error);
@@ -65,7 +182,7 @@ export default function Panel() {
     if (activeTab !== 'Analytics') {
       fetchData();
     }
-  }, [activeTab]);
+  }, [activeTab, actorsPage, performancesPage, producersPage, usersPage, showsPage, isAuthenticated, isAdmin, router]);
 
   const handleEditPerformance = async (performance: IPerfomance) => {
     try {
@@ -165,8 +282,18 @@ export default function Panel() {
     setSelectedUser(null);
   };
 
-  const handleDeleteActor = (actorId: number) => {
-    setActors(prevActors => prevActors.filter(actor => actor.id !== actorId));
+  const handleDeleteActor = async (actorId: number) => {
+    setActors(prevActors => prevActors?.filter(actor => actor.id !== actorId) || []);
+    // Перезавантажуємо дані після видалення
+    try {
+      const actorsData = await getActors(actorsPage, actorsLimit);
+      if (actorsData && actorsData.actors) {
+        setActors(actorsData.actors);
+        setActorsMeta(actorsData.meta || { total: 0, page: 1, limit: 5, pages: 0 });
+      }
+    } catch (error) {
+      console.error('Помилка перезавантаження акторів:', error);
+    }
   };
 
   const handleDeleteUser = (userId: number) => {
@@ -189,8 +316,91 @@ export default function Panel() {
     </div>
   );
 
+  const renderPagination = (
+    currentPage: number,
+    setPage: (page: number) => void,
+    meta: { total: number; page: number; limit: number; pages: number },
+    itemsArray: any[],
+    itemName: string
+  ) => (
+    <div className="pagination-container">
+      <div className="pagination-info">
+        Показано {((currentPage - 1) * meta.limit) + 1}-{Math.min(currentPage * meta.limit, meta.total || itemsArray?.length || 0)} з {meta.total || itemsArray?.length || 0} {itemName}
+        <br />
+      </div>
+      <div className="pagination-controls">
+        <button 
+          className="pagination-btn"
+          onClick={() => setPage(1)}
+          disabled={currentPage === 1}
+          title="Перша сторінка"
+        >
+          ««
+        </button>
+        <button 
+          className="pagination-btn"
+          onClick={() => setPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          title="Попередня сторінка"
+        >
+          «
+        </button>
+        
+        {Array.from({ length: Math.min(5, Math.max(1, meta.pages)) }, (_, i) => {
+          let pageNum;
+          if (meta.pages <= 5) {
+            pageNum = i + 1;
+          } else if (currentPage <= 3) {
+            pageNum = i + 1;
+          } else if (currentPage >= meta.pages - 2) {
+            pageNum = meta.pages - 4 + i;
+          } else {
+            pageNum = currentPage - 2 + i;
+          }
+          
+          return (
+            <button
+              key={pageNum}
+              className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+              onClick={() => setPage(pageNum)}
+            >
+              {pageNum}
+            </button>
+          );
+        })}
+        
+        <button 
+          className="pagination-btn"
+          onClick={() => setPage(Math.min(meta.pages, currentPage + 1))}
+          disabled={currentPage === meta.pages}
+          title="Наступна сторінка"
+        >
+          »
+        </button>
+        <button 
+          className="pagination-btn"
+          onClick={() => setPage(meta.pages)}
+          disabled={currentPage === meta.pages}
+          title="Остання сторінка"
+        >
+          »»
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <aside className='elements-container'>
+    <aside 
+      className='elements-container'
+      style={{
+        width: '95%',
+        maxWidth: '1600px',
+        margin: '2% auto',
+        minWidth: '800px',
+        backgroundColor: '#081731',
+        border: '2px solid #4fc3f7'
+      }}
+    >
       <div className='buttons-container'>
         <button 
           className={activeTab === 'Analytics' ? 'active' : ''} 
@@ -308,6 +518,8 @@ export default function Panel() {
                   </tbody>
                 </table>
               </div>
+              
+              {renderPagination(performancesPage, setPerformancesPage, performancesMeta, performances, 'вистав')}
             </>
           )}
         </div>
@@ -327,7 +539,7 @@ export default function Panel() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th className="id-column">ID</th>
+                      <th className="id-column">#</th>
                       <th className="name-column">Вистава</th>
                       <th className="date-column">Дата і час</th>
                       <th className="price-column">Ціна</th>
@@ -337,9 +549,9 @@ export default function Panel() {
                   </thead>
                   <tbody>
                     {shows.length > 0 ? (
-                      shows.map((show) => (
+                      shows.map((show, index) => (
                         <tr key={show.id}>
-                          <td className="id-column">{show.id}</td>
+                          <td className="id-column">{((showsPage - 1) * showsLimit) + index + 1}</td>
                           <td className="name-column" title={show.performance?.title || 'Невідома вистава'}>
                             {show.performance?.title || 'Невідома вистава'}
                           </td>
@@ -381,6 +593,8 @@ export default function Panel() {
                   </tbody>
                 </table>
               </div>
+              
+              {renderPagination(showsPage, setShowsPage, showsMeta, shows, 'показів')}
             </>
           )}
         </div>
@@ -400,27 +614,35 @@ export default function Panel() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th className="id-column">ID</th>
+                      <th className="id-column">#</th>
                       <th className="image-column">Фото</th>
                       <th className="name-column">Ім'я</th>
+                      <th className="phone-column">Телефон</th>
+                      <th className="passport-column">Паспорт</th>
                       <th className="actions-column">Дії</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {actors.length > 0 ? (
-                      actors.map((actor) => (
+                    {actors && actors.length > 0 ? (
+                      actors.map((actor, index) => (
                         <tr key={actor.id}>
-                          <td className="id-column">{actor.id}</td>
-                                                     <td className="image-column">
-                             <div className="image-placeholder">
-                               <svg viewBox="0 0 24 24" width="24" height="24" fill="#b0c4de">
-                                 <path d="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z"/>
-                               </svg>
-                             </div>
-                           </td>
-                           <td className="name-column" title={actor.full_name}>
-                             {actor.full_name}
-                           </td>
+                          <td className="id-column">{((actorsPage - 1) * actorsLimit) + index + 1}</td>
+                          <td className="image-column">
+                            <div className="image-placeholder">
+                              <svg viewBox="0 0 24 24" width="24" height="24" fill="#b0c4de">
+                                <path d="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z"/>
+                              </svg>
+                            </div>
+                          </td>
+                          <td className="name-column" title={`${actor.first_name} ${actor.last_name}`}>
+                            {`${actor.first_name} ${actor.last_name}`}
+                          </td>
+                          <td className="phone-column" title={actor.phone_number || 'Не вказано'}>
+                            {actor.phone_number || <span className="placeholder-text">Не вказано</span>}
+                          </td>
+                          <td className="passport-column" title={actor.passport || 'Не вказано'}>
+                            {actor.passport || <span className="placeholder-text">Не вказано</span>}
+                          </td>
                           <td className="actions-column">
                             <button
                               className="edit-btn"
@@ -438,7 +660,7 @@ export default function Panel() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="empty-state">
+                        <td colSpan={6} className="empty-state">
                           Немає акторів для відображення
                         </td>
                       </tr>
@@ -446,6 +668,8 @@ export default function Panel() {
                   </tbody>
                 </table>
               </div>
+              
+              {renderPagination(actorsPage, setActorsPage, actorsMeta, actors, 'акторів')}
             </>
           )}
         </div>
@@ -511,6 +735,8 @@ export default function Panel() {
                   </tbody>
                 </table>
               </div>
+              
+              {renderPagination(producersPage, setProducersPage, producersMeta, producers, 'продюсерів')}
             </>
           )}
         </div>
@@ -530,7 +756,7 @@ export default function Panel() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th className="id-column">ID</th>
+                      <th className="id-column">#</th>
                       <th className="name-column">Ім'я</th>
                       <th className="email-column">Email</th>
                       <th className="phone-column">Телефон</th>
@@ -540,9 +766,9 @@ export default function Panel() {
                   </thead>
                   <tbody>
                     {users.length > 0 ? (
-                      users.map((user) => (
+                      users.map((user, index) => (
                         <tr key={user.id}>
-                          <td className="id-column">{user.id}</td>
+                          <td className="id-column">{((usersPage - 1) * usersLimit) + index + 1}</td>
                           <td className="name-column" title={user.name}>
                             {user.name}
                           </td>
@@ -580,6 +806,8 @@ export default function Panel() {
                   </tbody>
                 </table>
               </div>
+              
+              {renderPagination(usersPage, setUsersPage, usersMeta, users, 'користувачів')}
             </>
           )}
         </div>

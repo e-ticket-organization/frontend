@@ -114,19 +114,7 @@
   padding: 40px 0;
 }
 
-/* Сайтбар/панель */
-.admin-panel-container {
-  width: 100%;
-  max-width: 1200px;
-  background: rgba(255,255,255,0.92);
-  border-radius: 1.5rem;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  padding: 2.5rem 2rem;
-  margin: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+/* Ці стилі видалені, щоб не конфліктувати з панеллю адміністратора */
 
 
 

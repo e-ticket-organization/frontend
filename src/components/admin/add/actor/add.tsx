@@ -13,9 +13,9 @@ export default function Add() {
   const [actor, setActor] = useState<IActorCreate>({
     first_name: '',
     last_name: '',
-    date_of_birth: '',
+    date_of_birth: new Date(),
     passport: '',
-    phone_number: '',
+    phone_number: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -36,16 +36,12 @@ export default function Add() {
       setError('Дата народження є обов\'язковим полем');
       return false;
     }
-    if (!actor.phone_number) {
+    if (!actor.phone_number.trim()) {
       setError('Номер телефону є обов\'язковим полем');
       return false;
     }
-    if (!actor.passport) {
+    if (!actor.passport.trim()) {
       setError('Код паспорта є обов\'язковим полем');
-      return false;
-    }
-    if (actor.date_of_birth && !/^\d{2}\/\d{2}\/\d{4}$/.test(actor.date_of_birth)) {
-      setError('Невірний формат дати. Використовуйте формат ДД/ММ/РРРР');
       return false;
     }
     if (actor.phone_number && !/^\+?\d{10,13}$/.test(actor.phone_number)) {
@@ -60,24 +56,10 @@ export default function Add() {
     setActor({ ...actor, [e.target.name]: e.target.value });
   };
 
-  const formatDateForBackend = (dateString: string) => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputDate = e.target.value;
-    const [year, month, day] = inputDate.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
-    setActor({ ...actor, date_of_birth: formattedDate });
+    setActor({ ...actor, date_of_birth: new Date(inputDate) });
     setError('');
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('/');
-    return `${year}-${month}-${day}`;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -86,23 +68,23 @@ export default function Add() {
     
     setIsLoading(true);
     try {
-      if (!actor.first_name || !actor.last_name || !actor.phone_number || 
-          !actor.date_of_birth || !actor.passport) {
-        setError('Всі поля є обов\'язковими');
-        return;
-      }
-
-      const actorData: Omit<IActor, 'id'> = {
+      console.log('=== ПОЧАТОК ДЕБАГУ ===');
+      console.log('Початкові дані актора:', actor);
+      console.log('Дата народження (raw):', actor.date_of_birth);
+      console.log('Тип дати:', typeof actor.date_of_birth);
+      
+      // Створюємо об'єкт даних актора відповідно до entity
+      const actorData: any = {
         first_name: actor.first_name.trim(),
         last_name: actor.last_name.trim(),
         phone_number: actor.phone_number.trim(),
         passport: actor.passport.trim(),
-        date_of_birth: formatDateForBackend(actor.date_of_birth),
-        created_at: null,
-        updated_at: null,
-        performances: [],
-        full_name: `${actor.first_name.trim()} ${actor.last_name.trim()}`
+        date_of_birth: actor.date_of_birth.toISOString().split('T')[0]
       };
+      
+      console.log('Фінальні дані для відправки:', actorData);
+      console.log('JSON.stringify:', JSON.stringify(actorData, null, 2));
+      console.log('=== КІНЕЦЬ ДЕБАГУ ===');
       
       await addActor(actorData);
       setSuccess(true);
@@ -110,14 +92,24 @@ export default function Add() {
         router.push('/admin');
       }, 2000);
     } catch (error: any) {
+      console.error('=== ПОМИЛКА ===');
       console.error('Error details:', error);
-      setError(error.response?.data?.message || 'Помилка при додаванні актора');
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Помилка при додаванні актора';
+      
+      // Якщо це помилка валідації, показуємо детальну інформацію
+      if (error.response?.data?.message && Array.isArray(error.response.data.message)) {
+        setError(error.response.data.message.join(', '));
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -162,7 +154,7 @@ export default function Add() {
             type="date" 
             placeholder='Дата народження *' 
             name="date_of_birth" 
-            value={actor.date_of_birth ? formatDateForInput(actor.date_of_birth) : ''}
+            value={actor.date_of_birth instanceof Date ? actor.date_of_birth.toISOString().split('T')[0] : ''}
             onChange={handleDateChange}
             max={new Date().toISOString().split('T')[0]}
             required
@@ -173,7 +165,7 @@ export default function Add() {
             type="text" 
             placeholder='Код паспорта *' 
             name="passport" 
-            value={actor.passport || ''} 
+            value={actor.passport} 
             onChange={handleChange}
             required
           />
@@ -183,12 +175,13 @@ export default function Add() {
             type="tel" 
             placeholder='Номер телефону (+380...) *' 
             name="phone_number" 
-            value={actor.phone_number || ''} 
+            value={actor.phone_number} 
             onChange={handleChange}
             pattern="\+?\d{10,13}"
             required
           />
         </label>
+        
         <button 
           type="submit" 
           disabled={isLoading}
