@@ -41,16 +41,19 @@ export default function PerformanceRelises() {
 
     const fetchAllShows = async () => {
         try {
-            const allShows = await getShows();
-            console.log('Отримані всі покази:', allShows);
+            const result = await getShows(1, 1000);
+            console.log('Отримані всі покази:', result);
             
             const groupedShows: Record<number, IShow[]> = {};
-            allShows.forEach(show => {
-                if (!groupedShows[show.performance_id]) {
-                    groupedShows[show.performance_id] = [];
-                }
-                groupedShows[show.performance_id].push(show);
-            });
+            
+            if (result && result.shows && Array.isArray(result.shows)) {
+                result.shows.forEach(show => {
+                    if (!groupedShows[show.performance_id]) {
+                        groupedShows[show.performance_id] = [];
+                    }
+                    groupedShows[show.performance_id].push(show);
+                });
+            }
             
             setShows(groupedShows);
         } catch (error) {
@@ -103,26 +106,24 @@ export default function PerformanceRelises() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-        const searchQuery = searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : '';
-        const url = `https://backend-3ih2.onrender.com/api/performances?limit=40&page=1${searchQuery}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json'
+            const result = await getPerfomances({ 
+                limit: 40, 
+                page: 1,
+                search: searchTerm || undefined
+            });
+            
+            console.log('Отримані вистави для релізів:', result);
+            
+            if (result && result.performances && Array.isArray(result.performances)) {
+                setPerformances(result.performances);
+                await fetchAllShows();
+            } else {
+                console.error('Неочікувана структура відповіді:', result);
+                setPerformances([]);
             }
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        
-        setPerformances(data.items);
-        await fetchAllShows();
         } catch (error) {
             console.error('Помилка завантаження даних:', error);
+            setPerformances([]);
         } finally {
             setIsLoading(false);
         }

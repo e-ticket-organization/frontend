@@ -588,6 +588,20 @@ interface BookTicketsRequest {
     };
 }
 
+export const validatePromoCode = async (promoCode: string): Promise<any> => {
+    try {
+        const upperPromoCode = promoCode.toUpperCase();
+        console.log('Перевірка промокоду:', upperPromoCode);
+        
+        return customFetch(`/discounts/promo/${upperPromoCode}`, {
+            method: 'GET'
+        });
+    } catch (error) {
+        console.error('Помилка перевірки промокоду:', error);
+        throw new Error('Промокод не знайдено або недійсний');
+    }
+};
+
 export const bookTickets = async (bookingData: BookTicketsRequest): Promise<any> => {
     try {
         const defaultPaymentData = {

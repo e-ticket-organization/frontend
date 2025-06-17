@@ -155,16 +155,19 @@ export default function PerformanceMain() {
     
     const fetchAllShows = async () => {
         try {
-            const allShows = await getShows();
-            console.log('Отримані всі покази:', allShows);
+            const result = await getShows(1, 1000);
+            console.log('Отримані всі покази:', result);
             
             const groupedShows: Record<number, IShow[]> = {};
-            allShows.forEach(show => {
-                if (!groupedShows[show.performance_id]) {
-                    groupedShows[show.performance_id] = [];
-                }
-                groupedShows[show.performance_id].push(show);
-            });
+            
+            if (result && result.shows && Array.isArray(result.shows)) {
+                result.shows.forEach(show => {
+                    if (!groupedShows[show.performance_id]) {
+                        groupedShows[show.performance_id] = [];
+                    }
+                    groupedShows[show.performance_id].push(show);
+                });
+            }
             
             setShows(groupedShows);
         } catch (error) {

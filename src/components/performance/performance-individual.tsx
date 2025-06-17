@@ -27,7 +27,8 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
       try {
         if (performance.id) {
           // Отримуємо всі покази для цієї вистави
-          const allShows = await getShows();
+          const result = await getShows(1, 1000);
+          const allShows = result?.shows || [];
           const performanceShows = allShows.filter(show => 
             show.performance_id === Number(performance.id) && 
             new Date(show.datetime) > new Date()

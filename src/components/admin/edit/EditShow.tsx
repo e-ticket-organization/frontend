@@ -32,11 +32,11 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [performancesData, hallsData] = await Promise.all([
-          getPerfomances(),
+        const [performancesResult, hallsData] = await Promise.all([
+          getPerfomances({ limit: 100, page: 1 }),
           getHalls()
         ]);
-        setPerformances(performancesData);
+        setPerformances(performancesResult.performances || []);
         setHalls(hallsData);
       } catch (error) {
         console.error('Помилка завантаження даних:', error);

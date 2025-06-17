@@ -3,6 +3,7 @@ import Modal from './Modal';
 import SeatsGrid from './SeatsGrid';
 import ShowDateSelector from './ShowDateSelector';
 import CityTheaterSelector from './CityTheaterSelector';
+import PromoCodeInput from './PromoCodeInput';
 import Spinner from '../ui/Spinner';
 import { ISeat } from '@/app/types/seat';
 import { IShow } from '@/app/types/show';
@@ -32,9 +33,11 @@ export default function BookingModal({
     const [selectedTheaterId, setSelectedTheaterId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'city-theater' | 'dates' | 'seats' | 'payment'>('city-theater');
+    const [step, setStep] = useState<'city-theater' | 'dates' | 'seats' | 'promo' | 'payment'>('city-theater');
     const [totalAmount, setTotalAmount] = useState(0);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+    const [finalAmount, setFinalAmount] = useState(0);
 
     useEffect(() => {
         if (isOpen && selectedPerformance) {
@@ -49,6 +52,8 @@ export default function BookingModal({
             setSelectedTheaterId(null);
             setError(null);
             setPaymentSuccess(false);
+            setAppliedDiscount(null);
+            setFinalAmount(0);
         } else {
             // Скидаємо стани при закритті
             setShows([]);
@@ -61,6 +66,8 @@ export default function BookingModal({
             setError(null);
             setStep('city-theater');
             setPaymentSuccess(false);
+            setAppliedDiscount(null);
+            setFinalAmount(0);
         }
     }, [isOpen, selectedPerformance]);
 
@@ -172,7 +179,7 @@ export default function BookingModal({
         }
     };
 
-    const handleProceedToPayment = () => {
+    const handleProceedToPromo = () => {
         if (!selectedShow || selectedSeats.length === 0) {
             setError('Виберіть місця для бронювання');
             return;
@@ -180,11 +187,42 @@ export default function BookingModal({
 
         const amount = selectedSeats.length * Number(selectedShow.price || 0);
         setTotalAmount(amount);
+        setFinalAmount(amount);
+        setStep('promo');
+    };
+
+    const handlePromoCodeApplied = (discount: any) => {
+        setAppliedDiscount(discount);
+        
+        const discountAmount = calculateDiscountAmount(discount, totalAmount);
+        const newFinalAmount = totalAmount - discountAmount;
+        setFinalAmount(newFinalAmount);
+        
         setStep('payment');
     };
 
+    const handleContinueWithoutPromo = () => {
+        setAppliedDiscount(null);
+        setFinalAmount(totalAmount);
+        setStep('payment');
+    };
+
+    const calculateDiscountAmount = (discount: any, amount: number) => {
+        if (!discount) return 0;
+        
+        if (discount.percentage) {
+            const percentageValue = parseFloat(discount.percentage);
+            return Math.round((amount * percentageValue) / 100);
+        } else if (discount.discount_type === 'percentage') {
+            return Math.round((amount * discount.discount_value) / 100);
+        } else if (discount.discount_type === 'fixed') {
+            return Math.min(discount.discount_value, amount);
+        }
+        return 0;
+    };
+
     const handleCancelPayment = () => {
-        setStep('seats');
+        setStep('promo');
     };
 
     const handleBooking = async (paymentIntentId?: string) => {
@@ -317,7 +355,7 @@ export default function BookingModal({
                         onSeatSelect={handleSeatSelect}
                         price={Number(selectedShow?.price) || 0}
                         selectedShow={selectedShow}
-                        handleBooking={handleProceedToPayment}
+                        handleBooking={handleProceedToPromo}
                         onClose={handleCloseModal}
                         onBack={handleBackToDates}
                         setAvailableSeats={setAvailableSeats}
@@ -325,10 +363,19 @@ export default function BookingModal({
                         isLoading={isLoading}
                     />
                 );
+            case 'promo':
+                return (
+                    <PromoCodeInput
+                        totalAmount={totalAmount}
+                        onPromoCodeApplied={handlePromoCodeApplied}
+                        onContinueWithoutPromo={handleContinueWithoutPromo}
+                    />
+                );
+
             case 'payment':
                 return (
                     <StripePaymentForm
-                        amount={totalAmount}
+                        amount={finalAmount}
                         onSuccess={handleBooking}
                         onCancel={handleCancelPayment}
                         bookingData={{
@@ -336,12 +383,13 @@ export default function BookingModal({
                                 show_id: Number(selectedShow?.id),
                                 seat_id: Number(seat.id)
                             })),
+                            discount_id: appliedDiscount?.id || undefined,
                             paymentData: {
                                 currency: "uah",
                                 metadata: {
                                     source: "web-app"
                                 },
-                                description: "Оплата квитків на виставу"
+                                description: `Оплата квитків на виставу${appliedDiscount ? ` (застосовано промокод: ${appliedDiscount.promo_code})` : ''}`
                             }
                         }}
                     />

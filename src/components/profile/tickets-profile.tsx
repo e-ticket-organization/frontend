@@ -46,8 +46,8 @@ export default function TicketsProfile() {
   };
 
   const fetchPerformance = async () => {
-    const performance = await getShows();
-    setPerformance(performance);
+    const result = await getShows(1, 1000);
+    setPerformance(result?.shows || []);
   };
 
   const handleCancelBooking = async (ticketId: number) => {

@@ -24,11 +24,11 @@ export default function Favorite() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const performancesData = await getPerfomances({ limit: 10, page: 1 });
+        const result = await getPerfomances({ limit: 10, page: 1 });
         
-        if (Array.isArray(performancesData) && performancesData.length > 0) {
-          setPerfomances(performancesData);
-          const randomData = [...performancesData]
+        if (result && result.performances && Array.isArray(result.performances) && result.performances.length > 0) {
+          setPerfomances(result.performances);
+          const randomData = [...result.performances]
             .sort(() => Math.random() - 0.5)
             .slice(0, 3);
           setRandomPerfomances(randomData);
@@ -37,6 +37,7 @@ export default function Favorite() {
           setRandomPerfomances([]);
         }
       } catch (error) {
+        console.error('Помилка завантаження вистав у favorite:', error);
         setPerfomances([]);
         setRandomPerfomances([]);
       } finally {

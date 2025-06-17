@@ -39,7 +39,8 @@ export default function CityTheaterSelector({
       setError(null);
       
       // Отримуємо всі покази для цієї вистави
-      const allShows = await getShows();
+      const result = await getShows(1, 1000);
+      const allShows = result?.shows || [];
       const performanceShows = allShows.filter(show => 
         show.performance_id === selectedPerformance?.id && 
         new Date(show.datetime) > new Date()
@@ -80,7 +81,8 @@ export default function CityTheaterSelector({
       setError(null);
 
       // Отримуємо покази для цієї вистави в цьому місті
-      const allShows = await getShows();
+      const result = await getShows(1, 1000);
+      const allShows = result?.shows || [];
       const cityShows = allShows.filter(show => 
         show.performance_id === selectedPerformance?.id && 
         show.city_id === cityId &&
