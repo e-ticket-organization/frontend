@@ -1110,3 +1110,92 @@ export const getShowsByFilters = async (filters: {
     throw new Error('Помилка отримання показів з фільтрами');
   }
 };
+
+// Функції для завантаження PDF квитків
+export const downloadTicketPdf = async (ticketId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE}/tickets/${ticketId}/pdf`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Помилка при завантаженні PDF квитка';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // Якщо не вдалося розпарсити JSON, використовуємо стандартне повідомлення
+        if (errorText.includes('toLocaleDateString')) {
+          errorMessage = 'Помилка при обробці дати квитка. Будь ласка, зверніться до підтримки.';
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `ticket-${ticketId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Помилка завантаження PDF квитка:', error);
+    throw error;
+  }
+};
+
+export const downloadAllUserTicketsPdf = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE}/tickets/user/pdf`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Помилка при завантаженні PDF усіх квитків';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // Якщо не вдалося розпарсити JSON, використовуємо стандартне повідомлення
+        if (errorText.includes('toLocaleDateString')) {
+          errorMessage = 'Помилка при обробці дат квитків. Будь ласка, зверніться до підтримки.';
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'my-tickets.pdf';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Помилка завантаження PDF усіх квитків:', error);
+    throw error;
+  }
+};

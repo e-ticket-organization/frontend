@@ -4,10 +4,51 @@
   margin: 0 auto;
 }
 
+.tickets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .tickets-title {
   font-size: 2rem;
   color: white;
-  margin-bottom: 2rem;
+  margin: 0;
+  text-align: center;
+}
+
+.download-all-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.download-all-button:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.download-all-button:disabled {
+  background: #81c784;
+  cursor: not-allowed;
+}
+
+.pdf-disabled-notice {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 6px;
+  color: #ffc107;
+  font-size: 0.9rem;
   text-align: center;
 }
 
@@ -88,10 +129,43 @@
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.download-ticket-button {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: #2196f3;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.download-ticket-button:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.download-ticket-button:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+.download-ticket-button.disabled {
+  background: #666;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .cancel-button {
-  width: 100%;
+  flex: 1;
+  min-width: 150px;
   padding: 0.75rem;
   border: none;
   border-radius: 6px;
@@ -100,6 +174,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease;
+  font-size: 0.875rem;
 }
 
 .cancel-button:hover:not(:disabled) {
@@ -117,10 +192,49 @@
   color: #666;
 }
 
-.error {
+.error-container {
   text-align: center;
   padding: 2rem;
-  color: #d32f2f;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.error-details {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.error-details p {
+  color: #fff;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #4caf50;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #45a049;
 }
 
 .empty {
@@ -141,9 +255,19 @@
 }
 
 @media screen and (max-width: 768px) {
+  .tickets-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
   .tickets-title {
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+  }
+
+  .download-all-button {
+    align-self: center;
+    max-width: 280px;
   }
 
   .tickets-list {
@@ -155,6 +279,16 @@
 
   .ticket-card {
     padding: 1.2rem;
+    width: 100%;
+  }
+
+  .ticket-actions {
+    flex-direction: column;
+  }
+
+  .download-ticket-button,
+  .cancel-button {
+    min-width: auto;
     width: 100%;
   }
 }
