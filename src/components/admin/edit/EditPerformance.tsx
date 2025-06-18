@@ -1,7 +1,9 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { IPerfomance } from '@/app/types/perfomance';
-import { updatePerformance, getAllActors, getAllProducers, getGenres, deletePerformance } from '@/app/services/filmService';
+import { updatePerformance, getAllActors, getAllProducers, getGenres, deletePerformance, getCities, getTheaters } from '@/app/services/filmService';
+import { ICity } from '@/app/types/city';
+import { ITheater } from '@/app/types/theater';
 import './EditPerformance.css';
 
 interface EditPerformanceProps {
@@ -14,33 +16,41 @@ interface EditPerformanceProps {
 const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose, onUpdate, onDelete }) => {
     const [actors, setActors] = useState<any[]>([]);
     const [producers, setProducers] = useState<any[]>([]);
+    const [genres, setGenres] = useState<any[]>([]);
+    const [cities, setCities] = useState<ICity[]>([]);
+    const [theaters, setTheaters] = useState<ITheater[]>([]);
     const [selectedActors, setSelectedActors] = useState<{id: number, name: string}[]>([]);
-    const [selectedProducer, setSelectedProducer] = useState<{id: number, name: string} | null>(
-        performance.producer ? {
-            id: performance.producer.id,
-            name: `${performance.producer.first_name} ${performance.producer.last_name}`
-        } : null
-    );
+    const [selectedGenres, setSelectedGenres] = useState<{id: number, name: string}[]>([]);
 
     const [formData, setFormData] = useState({
         title: performance.title || '',
+        description: performance.description || '',
         duration: performance.duration || 0,
         image: performance.image || '',
-        genre_ids: performance.genres?.map(genre => genre.id) || [],
-        producer_id: performance.producer?.id || 0,
-        actor_ids: performance.actors?.map(actor => actor.id) || []
+        producer_id: performance.producer_id || 0,
+        genre_ids: performance.genre_ids || [],
+        actor_ids: performance.actor_ids || [],
+        premiereDate: performance.premiereDate || '',
+        price: performance.price || 0,
+        city_id: performance.city_id || 0,
+        theater_id: performance.theater_id || 0
     });
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                        const [actorsData, producersData, genresData] = await Promise.all([
-          getAllActors(),
-          getAllProducers(),
-          getGenres()
-        ]);
+                const [actorsData, producersData, genresData, citiesData, theatersData] = await Promise.all([
+                    getAllActors(),
+                    getAllProducers(),
+                    getGenres(),
+                    getCities(),
+                    getTheaters()
+                ]);
                 setActors(actorsData);
                 setProducers(producersData);
+                setGenres(genresData);
+                setCities(citiesData);
+                setTheaters(theatersData);
 
                 // Встановлюємо початкових вибраних акторів
                 const initialActors = performance.actors?.map(actor => ({
@@ -48,6 +58,13 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                     name: `${actor.first_name} ${actor.last_name}`
                 })) || [];
                 setSelectedActors(initialActors);
+
+                // Встановлюємо початкових вибраних жанрів
+                const initialGenres = performance.genres?.map(genre => ({
+                    id: genre.id,
+                    name: genre.name
+                })) || [];
+                setSelectedGenres(initialGenres);
             } catch (error) {
                 console.error('Помилка завантаження даних:', error);
             }
@@ -64,10 +81,11 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                 id: actorId,
                 name: `${actor.first_name} ${actor.last_name}`
             };
-            setSelectedActors([...selectedActors, newActor]);
+            const newSelectedActors = [...selectedActors, newActor];
+            setSelectedActors(newSelectedActors);
             setFormData(prev => ({
                 ...prev,
-                actor_ids: [...prev.actor_ids, actorId]
+                actor_ids: newSelectedActors.map(a => a.id)
             }));
         }
         
@@ -75,37 +93,40 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
     };
 
     const removeActor = (actorId: number) => {
-        setSelectedActors(selectedActors.filter(a => a.id !== actorId));
+        const newSelectedActors = selectedActors.filter(a => a.id !== actorId);
+        setSelectedActors(newSelectedActors);
         setFormData(prev => ({
             ...prev,
-            actor_ids: prev.actor_ids.filter(id => id !== actorId)
+            actor_ids: newSelectedActors.map(a => a.id)
         }));
     };
 
-    const handleProducerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const producerId = Number(e.target.value);
-        const producer = producers.find(p => p.id === producerId);
+    const handleGenreSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const genreId = Number(e.target.value);
+        const genre = genres.find(g => g.id === genreId);
         
-        if (producer) {
-            const newProducer = {
-                id: producerId,
-                name: `${producer.first_name} ${producer.last_name}`
+        if (genre && !selectedGenres.some(sg => sg.id === genreId)) {
+            const newGenre = {
+                id: genreId,
+                name: genre.name
             };
-            setSelectedProducer(newProducer);
+            const newSelectedGenres = [...selectedGenres, newGenre];
+            setSelectedGenres(newSelectedGenres);
             setFormData(prev => ({
                 ...prev,
-                producer_id: producerId
+                genre_ids: newSelectedGenres.map(g => g.id)
             }));
         }
         
         e.target.value = '';
     };
 
-    const removeProducer = () => {
-        setSelectedProducer(null);
+    const removeGenre = (genreId: number) => {
+        const newSelectedGenres = selectedGenres.filter(g => g.id !== genreId);
+        setSelectedGenres(newSelectedGenres);
         setFormData(prev => ({
             ...prev,
-            producer_id: 0
+            genre_ids: newSelectedGenres.map(g => g.id)
         }));
     };
 
@@ -117,23 +138,19 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
             return;
         }
 
-        if (formData.actor_ids.length === 0) {
-            console.error('Потрібно вибрати хоча б одного актора');
+        if (!formData.city_id) {
+            console.error('Місто обов\'язкове');
+            return;
+        }
+
+        if (!formData.theater_id) {
+            console.error('Театр обов\'язковий');
             return;
         }
 
         try {
-            const updateData = {
-                title: formData.title,
-                duration: Number(formData.duration),
-                image: formData.image,
-                producer: formData.producer_id,
-                genre_id: formData.genre_ids[0],
-                actors: formData.actor_ids
-            };
-
-            console.log('Дані для оновлення:', updateData);
-            const updatedPerformance = await updatePerformance(performance.id, updateData);
+            console.log('Дані для оновлення:', formData);
+            const updatedPerformance = await updatePerformance(performance.id, formData);
             onUpdate(updatedPerformance);
             onClose();
         } catch (error: any) {
@@ -141,12 +158,20 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === 'duration' ? Number(value) : value
-        }));
+        
+        if (name === 'duration' || name === 'price' || name === 'producer_id' || name === 'city_id' || name === 'theater_id') {
+            setFormData(prev => ({
+                ...prev,
+                [name]: Number(value)
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleDelete = async () => {
@@ -177,6 +202,16 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                         />
                     </div>
                     <div className="form-group">
+                        <label>Опис:</label>
+                        <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            required
+                            rows={4}
+                        />
+                    </div>
+                    <div className="form-group">
                         <label>Тривалість (хв):</label>
                         <input
                             type="number"
@@ -189,42 +224,110 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                     <div className="form-group">
                         <label>URL зображення:</label>
                         <input
-                            type="text"
+                            type="url"
                             name="image"
                             value={formData.image}
                             onChange={handleChange}
-                            required
                         />
                     </div>
                     <div className="form-group">
                         <label>Продюсер:</label>
                         <select
-                            onChange={handleProducerSelect}
+                            name="producer_id"
+                            value={formData.producer_id || ''}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="">Виберіть продюсера</option>
+                            {producers.map(producer => (
+                                <option key={producer.id} value={producer.id}>
+                                    {`${producer.first_name} ${producer.last_name}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Місто:</label>
+                        <select
+                            name="city_id"
+                            value={formData.city_id || ''}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="">Виберіть місто</option>
+                            {cities.map(city => (
+                                <option key={city.id} value={city.id}>
+                                    {city.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Театр:</label>
+                        <select
+                            name="theater_id"
+                            value={formData.theater_id || ''}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="">Виберіть театр</option>
+                            {theaters.map(theater => (
+                                <option key={theater.id} value={theater.id}>
+                                    {theater.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Дата прем'єри:</label>
+                        <input
+                            type="date"
+                            name="premiereDate"
+                            value={formData.premiereDate}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Ціна:</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Жанри:</label>
+                        <select
+                            onChange={handleGenreSelect}
                             value=""
                         >
-                            <option value="">Вибрати продюсера</option>
-                            {producers
-                                .filter(producer => !selectedProducer || producer.id !== selectedProducer.id)
-                                .map(producer => (
-                                    <option key={producer.id} value={producer.id}>
-                                        {`${producer.first_name} ${producer.last_name}`}
+                            <option value="">Додати жанр</option>
+                            {genres
+                                .filter(genre => !selectedGenres.some(sg => sg.id === genre.id))
+                                .map(genre => (
+                                    <option key={genre.id} value={genre.id}>
+                                        {genre.name}
                                     </option>
                                 ))
                             }
                         </select>
-                        <div className="selected-producers">
-                            {selectedProducer && (
-                                <div className="producer-tag">
-                                    <span>{selectedProducer.name}</span>
+                        <div className="selected-genres">
+                            {selectedGenres.map(genre => (
+                                <div key={genre.id} className="genre-tag">
+                                    <span>{genre.name}</span>
                                     <button
                                         type="button"
-                                        onClick={removeProducer}
-                                        className="remove-producer"
+                                        onClick={() => removeGenre(genre.id)}
+                                        className="remove-genre"
                                     >
                                         ×
                                     </button>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
                     <div className="form-group">

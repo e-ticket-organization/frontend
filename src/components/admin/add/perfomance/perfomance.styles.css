@@ -202,3 +202,55 @@ textarea:focus {
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
+
+.selection-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.genres-selection,
+.actors-selection {
+    width: 100%;
+}
+
+.selected-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 40px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.selected-item-tag {
+    background-color: #081731;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #1a3366;
+    animation: fadeIn 0.3s ease;
+}
+
+.remove-item {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-item:hover {
+    color: #ff4444;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}

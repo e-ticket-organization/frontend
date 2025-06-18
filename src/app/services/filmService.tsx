@@ -1,4 +1,4 @@
-import { IPerfomance } from '@/app/types/perfomance';
+import { IPerfomance, IPerfomanceCreate } from '@/app/types/perfomance';
 import { IShow, IShowCreate } from '@/app/types/show';
 import { IProducer } from '@/app/types/producer';
 import { IHall } from '@/app/types/hall';
@@ -306,27 +306,20 @@ export const getAllProducers = async (): Promise<IProducer[]> => {
     }
 };
 
-interface IPerformanceCreate {
-    title: string;
-    description?: string;
-    duration: number;
-    image: string;
-    producer: number;
-    genre_id: number;   
-    actors: number[];
-    premiereDate?: string;
-    price?: number;
-}
-
-export const addPerfomance = async (performanceData: IPerformanceCreate): Promise<IPerfomance> => {
+export const addPerfomance = async (performanceData: IPerfomanceCreate): Promise<IPerfomance> => {
     try {
         const formattedData = {
             title: performanceData.title,
-            duration: Number(performanceData.duration),
-            producer: Number(performanceData.producer),
+            description: performanceData.description,
+            duration: performanceData.duration,
             image: performanceData.image,
-            genre_id: Number(performanceData.genre_id),
-            actors: performanceData.actors
+            producer_id: performanceData.producer_id,
+            genre_ids: performanceData.genre_ids,
+            actor_ids: performanceData.actor_ids,
+            premiereDate: performanceData.premiereDate,
+            price: performanceData.price,
+            city_id: performanceData.city_id,
+            theater_id: performanceData.theater_id
         };
 
         console.log('Дані для відправки:', formattedData);
@@ -734,11 +727,16 @@ export const cancelTicketBooking = async (ticketId: number) => {
 
 interface IPerformanceUpdate {
     title: string;
+    description: string;
     duration: number;
-    image: string;
-    producer: number;
-    genre_id: number;
-    actors: number[];
+    image?: string;
+    producer_id: number;
+    genre_ids?: number[];
+    actor_ids?: number[];
+    premiereDate: string;
+    price: number;
+    city_id: number;
+    theater_id: number;
 }
 
 export const updatePerformance = async (performanceId: number, updateData: IPerformanceUpdate): Promise<IPerfomance> => {

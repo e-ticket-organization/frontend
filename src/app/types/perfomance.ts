@@ -5,12 +5,19 @@ import { IActor } from './actor';
 export interface IPerfomance {
     id: number;
     title: string;
+    description: string;
     duration: number;
-    image: string;
-    producerId: number;
+    image?: string;
+    producer_id: number;
+    genre_ids?: number[];
+    actor_ids?: number[];
+    premiereDate: string;
+    price: number;
+    city_id: number;
+    theater_id: number;
     created_at: string | null;
     updated_at: string | null;
-    producer: {
+    producer?: {
         id: number;
         first_name: string;
         last_name: string;
@@ -18,11 +25,11 @@ export interface IPerfomance {
         email: string;
         date_of_birth: string;
     };
-    genres: Array<{
+    genres?: Array<{
         id: number;
         name: string;
     }>;
-    actors: Array<{
+    actors?: Array<{
         id: number;
         first_name: string;
         last_name: string;
@@ -32,7 +39,7 @@ export interface IPerfomance {
         created_at: string | null;
         updated_at: string | null;
     }>;
-    shows: Array<{
+    shows?: Array<{
         id: number;
         performance_id: number;
         datetime: string;
@@ -40,19 +47,18 @@ export interface IPerfomance {
         hall_id: number;
         date: string | null;
     }>;
-    description: string;
-    premiereDate?: string;
-    price?: number;
 }
 
 export interface IPerfomanceCreate {
     title: string;
-    description?: string;
+    description: string;
     duration: number;
-    image: string;
-    genre_ids: number[];
-    premiereDate?: string;
-    price?: number;
-    actor_ids: number[];
+    image?: string;
     producer_id: number;
+    genre_ids?: number[];
+    actor_ids?: number[];
+    premiereDate: string;
+    price: number;
+    city_id: number;
+    theater_id: number;
 }

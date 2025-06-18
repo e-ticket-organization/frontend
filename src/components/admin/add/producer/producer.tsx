@@ -16,8 +16,6 @@ export default function Producers() {
     phone_number: '',
     email: '',
     date_of_birth: '',
-    bio: '',
-    photoUrl: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +40,10 @@ export default function Producers() {
       setError('Номер телефону є обов\'язковим полем');
       return false;
     }
+    if (!producer.date_of_birth.trim()) {
+      setError('Дата народження є обов\'язковим полем');
+      return false;
+    }
     if (producer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(producer.email)) {
       setError('Невірний формат email');
       return false;
@@ -53,7 +55,7 @@ export default function Producers() {
     return true;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('');
     setProducer({ ...producer, [e.target.name]: e.target.value });
   };
@@ -70,29 +72,14 @@ export default function Producers() {
     
     setIsLoading(true);
     try {
-      // Створюємо об'єкт даних продюсера
-      const producerData: Omit<IProducer, 'id' | 'created_at' | 'updated_at'> = {
+      // Створюємо об'єкт даних продюсера відповідно до DTO
+      const producerData: IProducerCreate = {
         first_name: producer.first_name.trim(),
         last_name: producer.last_name.trim(),
         email: producer.email.trim(),
         phone_number: producer.phone_number.trim(),
-        bio: producer.bio?.trim(),
-        photoUrl: producer.photoUrl?.trim()
+        date_of_birth: producer.date_of_birth.trim()
       };
-
-      // Додаємо дату тільки якщо вона є і валідна
-      if (producer.date_of_birth && producer.date_of_birth.trim()) {
-        // Перевіряємо чи дата вже в правильному форматі YYYY-MM-DD
-        if (/^\d{4}-\d{2}-\d{2}$/.test(producer.date_of_birth.trim())) {
-          producerData.date_of_birth = producer.date_of_birth.trim();
-        } else {
-          // Якщо ні, то конвертуємо
-          const dateObj = new Date(producer.date_of_birth);
-          if (!isNaN(dateObj.getTime())) {
-            producerData.date_of_birth = dateObj.toISOString().split('T')[0];
-          }
-        }
-      }
       
       console.log('Відправляємо дані продюсера:', producerData);
       
@@ -181,29 +168,12 @@ export default function Producers() {
         <label>
           <input 
             type="date" 
-            placeholder='Дата народження' 
+            placeholder='Дата народження *' 
             name="date_of_birth" 
             value={producer.date_of_birth}
             onChange={handleDateChange}
             max={new Date().toISOString().split('T')[0]}
-          />
-        </label>
-        <label>
-          <textarea 
-            placeholder='Біографія' 
-            name="bio" 
-            value={producer.bio || ''} 
-            onChange={handleChange}
-            rows={4}
-          />
-        </label>
-        <label>
-          <input 
-            type="url" 
-            placeholder='URL фото' 
-            name="photoUrl" 
-            value={producer.photoUrl || ''} 
-            onChange={handleChange}
+            required
           />
         </label>
         <button 

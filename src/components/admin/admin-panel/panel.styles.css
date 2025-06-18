@@ -1,4 +1,5 @@
 .elements-container{
+    min-width: 1200px !important;
     width: 95% !important;
     margin: 2% auto !important;
     height: 85vh !important;
