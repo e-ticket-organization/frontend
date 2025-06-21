@@ -1,16 +1,17 @@
 'use client'
 import React, { useState } from 'react';
 import { IProducer } from '@/app/types/producer';
-import { updateProducer } from '@/app/services/filmService';
+import { updateProducer, deleteProducer } from '@/app/services/filmService';
 import './EditProducer.css';
 
 interface EditProducerProps {
     producer: IProducer & { id: number };
     onClose: () => void;
     onUpdate: (updatedProducer: IProducer & { id: number }) => void;
+    onDelete: (producerId: number) => void;
 }
 
-const EditProducer: React.FC<EditProducerProps> = ({ producer, onClose, onUpdate }) => {
+const EditProducer: React.FC<EditProducerProps> = ({ producer, onClose, onUpdate, onDelete }) => {
     const [formData, setFormData] = useState<IProducer>({
         id: producer.id,
         first_name: producer.first_name,
@@ -46,11 +47,26 @@ const EditProducer: React.FC<EditProducerProps> = ({ producer, onClose, onUpdate
         }
     };
 
+    const handleDelete = async () => {
+        if (window.confirm('Ви впевнені, що хочете видалити цього продюсера?')) {
+            try {
+                await deleteProducer(producer.id);
+                onDelete(producer.id);
+                onClose();
+            } catch (error) {
+                console.error('Помилка видалення продюсера:', error);
+            }
+        }
+    };
+
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Редагувати продюсера</h2>
-                <form onSubmit={handleSubmit}>
+                <div className="modal-header">
+                    <h2>Редагувати продюсера</h2>
+                </div>
+                <div className="modal-body">
+                    <form id="edit-producer-form" onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Ім'я:</label>
                         <input
@@ -101,13 +117,22 @@ const EditProducer: React.FC<EditProducerProps> = ({ producer, onClose, onUpdate
                             required
                         />
                     </div>
-                    <div className="modal-actions">
-                        <button type="submit">Зберегти зміни</button>
-                        <button type="button" onClick={onClose}>
-                            Скасувати
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div className="modal-actions">
+                    <button type="submit" form="edit-producer-form">Зберегти зміни</button>
+                    <button type="button" onClick={onClose}>
+                        Скасувати
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={handleDelete}
+                        className="delete-button"
+                        style={{backgroundColor: '#dc3545'}}
+                    >
+                        Видалити
+                    </button>
+                </div>
             </div>
         </div>
     );

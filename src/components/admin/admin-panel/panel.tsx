@@ -202,6 +202,12 @@ export default function Panel() {
   };
 
   const handleUpdatePerformance = (updatedPerformance: IPerfomance) => {
+    if (!updatedPerformance || !updatedPerformance.id) {
+      console.error('Оновлена вистава не має ID або є undefined:', updatedPerformance);
+      setSelectedPerformance(null);
+      return;
+    }
+    
     setPerformances(prevPerformances => 
       prevPerformances.map(p => 
         p.id === updatedPerformance.id ? updatedPerformance : p
@@ -308,6 +314,20 @@ export default function Panel() {
     setPerformances(prevPerformances => 
         prevPerformances.filter(performance => performance.id !== performanceId)
     );
+  };
+
+  const handleDeleteProducer = async (producerId: number) => {
+    setProducers(prevProducers => prevProducers?.filter(producer => producer.id !== producerId) || []);
+    // Перезавантажуємо дані після видалення
+    try {
+      const producersData = await getProducers(producersPage, producersLimit);
+      if (producersData && producersData.producers) {
+        setProducers(producersData.producers);
+        setProducersMeta(producersData.meta || { total: 0, page: 1, limit: 5, pages: 0 });
+      }
+    } catch (error) {
+      console.error('Помилка перезавантаження продюсерів:', error);
+    }
   };
 
   const renderLoader = () => (
@@ -835,6 +855,7 @@ export default function Panel() {
           producer={selectedProducer}
           onClose={() => setSelectedProducer(null)}
           onUpdate={handleUpdateProducer}
+          onDelete={handleDeleteProducer}
         />
       )}
       {selectedShow && (

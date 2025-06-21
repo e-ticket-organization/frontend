@@ -4,77 +4,81 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 1rem;
 }
 
 .modal-content {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 1.5rem;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-
-    padding: 30px;
+    background-color: #09214a;
+    border-radius: 15px;
     width: 90%;
     max-width: 600px;
-    color: #e0e7ff;
+    height: 75vh;
+    max-height: 75vh;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 30px 30px 0 30px;
+    flex-shrink: 0;
 }
 
 .modal-content h2 {
     margin: 0 0 20px 0;
-    color: #ffffff;
+    color: white;
     font-size: 24px;
-    text-align: center;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 30px;
+    margin-bottom: 20px;
 }
 
 .form-group {
     margin-bottom: 20px;
-    text-align: left;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #e0e7ff;
+    color: #fff;
     font-weight: 500;
-    font-size: 1rem;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 10px 15px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border: 1px solid #2c4975;
     border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
-    font-size: 1rem;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease, background-color 0.3s ease;
+    background-color: #0c2b5e;
+    color: white;
+    font-size: 16px;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #6c3cc7;
-    background-color: rgba(255, 255, 255, 0.15);
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
+    justify-content: space-around !important;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: 5px;
 }
 
 .modal-actions button {
@@ -82,41 +86,40 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 16px;
+    transition: all 0.3s ease;
 }
 
 .modal-actions button[type="submit"] {
-    background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%);
+    background-color: #09214a;
     color: white;
+    border: 2px solid #4CAF50;
 }
 
 .modal-actions button[type="submit"]:hover {
-    background: linear-gradient(90deg, #45a049 0%, #7cb342 100%);
-    transform: translateY(-2px);
+    background-color: #4CAF50;
+    border-color: #45a049;
 }
 
 .modal-actions button[type="button"] {
-    background-color: #6c757d;
+    background-color: #09214a;
     color: white;
+    border: 2px solid #6c757d;
 }
 
 .modal-actions button[type="button"]:hover {
-    background-color: #5a6268;
-    transform: translateY(-2px);
+    background-color: #6c757d;
+    border-color: #5a6268;
 }
 
 .modal-actions .delete-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
+    background-color: #09214a !important;
+    border: 2px solid #dc3545 !important;
 }
 
 .modal-actions .delete-button:hover {
-    background-color: #c82333;
-    transform: translateY(-2px);
+    background-color: #dc3545 !important;
+    border-color: #c82333 !important;
 }
 
 /* Додамо стилі для повідомлення підтвердження */
@@ -288,4 +291,57 @@
 .remove-actor:hover,
 .remove-producer:hover {
     color: #e53e3e;
+}
+
+/* Кастомні стилі для смуги прокрутки */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #0f1419;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
+}
+
+/* Для Firefox */
+.modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: #4a90e2 #0f1419;
+}
+
+/* Адаптивність для мобільних пристроїв */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        height: 85vh;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        padding: 20px 20px 0 20px;
+    }
+    
+    .modal-body {
+        padding: 0 20px;
+    }
+    
+    .modal-actions {
+        padding: 20px;
+    }
+}
+
+@media (max-height: 600px) {
+    .modal-content {
+        height: 90vh;
+        max-height: 90vh;
+    }
 } 

@@ -14,6 +14,8 @@ interface EditPerformanceProps {
 }
 
 const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose, onUpdate, onDelete }) => {
+
+    
     const [actors, setActors] = useState<any[]>([]);
     const [producers, setProducers] = useState<any[]>([]);
     const [genres, setGenres] = useState<any[]>([]);
@@ -22,23 +24,32 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
     const [selectedActors, setSelectedActors] = useState<{id: number, name: string}[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<{id: number, name: string}[]>([]);
 
-    const [formData, setFormData] = useState({
-        title: performance.title || '',
-        description: performance.description || '',
-        duration: performance.duration || 0,
-        image: performance.image || '',
-        producer_id: performance.producer_id || 0,
-        genre_ids: performance.genre_ids || [],
-        actor_ids: performance.actor_ids || [],
-        premiereDate: performance.premiereDate || '',
-        price: performance.price || 0,
-        city_id: performance.city_id || 0,
-        theater_id: performance.theater_id || 0
+    const [formData, setFormData] = useState(() => {
+        // Беремо дані з першого show, якщо вони є
+        const firstShow = performance.shows?.[0] as any;
+        
+        const initialData = {
+            title: performance.title || '',
+            description: performance.description || '',
+            duration: performance.duration || 0,
+            image: performance.image || '',
+            producer_id: performance.producer_id || performance.producer?.id || 0,
+            genre_ids: performance.genre_ids || [],
+            actor_ids: performance.actor_ids || [],
+            premiereDate: performance.premiereDate || '',
+            price: firstShow?.price ? Number(firstShow.price) : (performance.price || 0),
+            city_id: firstShow?.city_id || (performance.city_id || 0),
+            theater_id: firstShow?.theater_id || (performance.theater_id || 0)
+        };
+
+        return initialData;
     });
 
     useEffect(() => {
         const loadData = async () => {
             try {
+
+
                 const [actorsData, producersData, genresData, citiesData, theatersData] = await Promise.all([
                     getAllActors(),
                     getAllProducers(),
@@ -65,12 +76,54 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                     name: genre.name
                 })) || [];
                 setSelectedGenres(initialGenres);
+
+                // Встановлюємо дату прем'єри з найранішого show, якщо є
+                let premiereDate = performance.premiereDate || '';
+                if (performance.shows && performance.shows.length > 0) {
+                    const sortedShows = performance.shows.sort((a, b) => 
+                        new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+                    );
+                    const firstShow = sortedShows[0];
+                    if (firstShow.date) {
+                        premiereDate = typeof firstShow.date === 'string' ? firstShow.date : new Date(firstShow.date).toISOString().split('T')[0];
+                    } else if (firstShow.datetime) {
+                        premiereDate = new Date(firstShow.datetime).toISOString().split('T')[0];
+                    }
+                }
+
+
+                // Беремо дані з першого show для price, city_id, theater_id
+                const firstShow = performance.shows?.[0] as any;
+
+                // Оновлюємо formData з правильними genre_ids та actor_ids та всіма іншими полями
+                const newFormData = {
+                    title: performance.title || '',
+                    description: performance.description || '',
+                    duration: performance.duration || 0,
+                    image: performance.image || '',
+                    producer_id: performance.producer_id || performance.producer?.id || 0,
+                    genre_ids: initialGenres.map(g => g.id),
+                    actor_ids: initialActors.map(a => a.id),
+                    premiereDate: premiereDate,
+                    price: firstShow?.price ? Number(firstShow.price) : (performance.price || 0),
+                    city_id: firstShow?.city_id || (performance.city_id || 0),
+                    theater_id: firstShow?.theater_id || (performance.theater_id || 0)
+                };
+
+                console.log('Performance object:', performance);
+                console.log('Producer ID from performance:', performance.producer_id);
+                console.log('Producers list:', producersData);
+                console.log('Final formData:', newFormData);
+
+                setFormData(newFormData);
             } catch (error) {
                 console.error('Помилка завантаження даних:', error);
             }
         };
         loadData();
     }, [performance]);
+
+
 
     const handleActorSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const actorId = Number(e.target.value);
@@ -148,13 +201,33 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
             return;
         }
 
+        if (!formData.premiereDate) {
+            console.error('Дата прем\'єри обов\'язкова');
+            return;
+        }
+
+        if (!formData.price || formData.price <= 0) {
+            console.error('Ціна повинна бути більше 0');
+            return;
+        }
+
         try {
-            console.log('Дані для оновлення:', formData);
+            console.log('Відправляємо дані для оновлення:', formData);
+            
             const updatedPerformance = await updatePerformance(performance.id, formData);
+            
+            if (!updatedPerformance) {
+                console.error('Сервер повернув undefined для оновленої вистави');
+                alert('Помилка: сервер не повернув дані про оновлену виставу');
+                return;
+            }
+            
+            console.log('Успішно оновлено виставу:', updatedPerformance);
             onUpdate(updatedPerformance);
             onClose();
         } catch (error: any) {
             console.error('Помилка оновлення вистави:', error);
+            alert(`Помилка при оновленні вистави: ${error.message || 'Невідома помилка'}`);
         }
     };
 
@@ -162,9 +235,19 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
         const { name, value } = e.target;
         
         if (name === 'duration' || name === 'price' || name === 'producer_id' || name === 'city_id' || name === 'theater_id') {
+            const numValue = value === '' ? 0 : Number(value);
+
+            // Додаємо логування для producer_id
+            if (name === 'producer_id') {
+                console.log('Producer ID changed to:', numValue);
+                console.log('Producer value from select:', value);
+            }
+
             setFormData(prev => ({
                 ...prev,
-                [name]: Number(value)
+                [name]: numValue,
+                // Якщо змінюється місто, скидаємо театр
+                ...(name === 'city_id' && numValue !== prev.city_id ? { theater_id: 0 } : {})
             }));
         } else {
             setFormData(prev => ({
@@ -189,8 +272,11 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Редагувати виставу</h2>
-                <form onSubmit={handleSubmit}>
+                <div className="modal-header">
+                    <h2>Редагувати виставу</h2>
+                </div>
+                <div className="modal-body">
+                    <form id="edit-performance-form" onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Назва:</label>
                         <input
@@ -250,7 +336,7 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                         <label>Місто:</label>
                         <select
                             name="city_id"
-                            value={formData.city_id || ''}
+                            value={formData.city_id && formData.city_id !== 0 ? formData.city_id : ''}
                             onChange={handleChange}
                             required
                         >
@@ -266,38 +352,26 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                         <label>Театр:</label>
                         <select
                             name="theater_id"
-                            value={formData.theater_id || ''}
+                            value={formData.theater_id && formData.theater_id !== 0 ? formData.theater_id : ''}
                             onChange={handleChange}
                             required
+                            disabled={!formData.city_id}
                         >
-                            <option value="">Виберіть театр</option>
-                            {theaters.map(theater => (
-                                <option key={theater.id} value={theater.id}>
-                                    {theater.name}
-                                </option>
-                            ))}
+                            <option value="">
+                                {formData.city_id ? 'Виберіть театр' : 'Спочатку виберіть місто'}
+                            </option>
+                            {theaters
+                                .filter(theater => 
+                                    !formData.city_id || 
+                                    theater.cities?.some(city => city.id === formData.city_id)
+                                )
+                                .map(theater => (
+                                    <option key={theater.id} value={theater.id}>
+                                        {theater.name}
+                                    </option>
+                                ))
+                            }
                         </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Дата прем'єри:</label>
-                        <input
-                            type="date"
-                            name="premiereDate"
-                            value={formData.premiereDate}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Ціна:</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            required
-                        />
                     </div>
                     <div className="form-group">
                         <label>Жанри:</label>
@@ -361,21 +435,22 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                             ))}
                         </div>
                     </div>
-                    <div className="modal-actions">
-                        <button type="submit">Зберегти зміни</button>
-                        <button type="button" onClick={onClose}>
-                            Скасувати
-                        </button>
-                        <button 
-                            type="button" 
-                            onClick={handleDelete}
-                            className="delete-button"
-                            style={{backgroundColor: '#dc3545'}}
-                        >
-                            Видалити
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div className="modal-actions">
+                    <button type="submit" form="edit-performance-form">Зберегти зміни</button>
+                    <button type="button" onClick={onClose}>
+                        Скасувати
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={handleDelete}
+                        className="delete-button"
+                        style={{backgroundColor: '#dc3545'}}
+                    >
+                        Видалити
+                    </button>
+                </div>
             </div>
         </div>
     );

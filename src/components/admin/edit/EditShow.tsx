@@ -3,7 +3,7 @@ import { IShow } from '@/app/types/show';
 import { IPerfomance } from '@/app/types/perfomance';
 import { IHall } from '@/app/types/hall';
 import { getPerfomances, getHalls, updateShow, deleteShow } from '@/app/services/filmService';
-import './EditActor.css';
+import './EditPerformance.css';
 
 interface EditShowProps {
   show: IShow;
@@ -21,11 +21,16 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
     return date.toISOString().slice(0, 16);
   };
 
+  const formatPrice = (price: number | string): string => {
+    const numPrice = typeof price === 'number' ? price : parseFloat(price.toString());
+    return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2);
+  };
+
   const [formData, setFormData] = useState({
     performance_id: show.performance_id.toString(),
     datetime: formatDateForInput(show.datetime),
     hall_id: show.hall_id.toString(),
-    price: show.price.toString()
+    price: formatPrice(show.price)
   });
   const [error, setError] = useState<string>('');
 
@@ -48,13 +53,40 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.performance_id) {
+      setError('Вистава обов\'язкова');
+      return;
+    }
+
+    if (!formData.hall_id) {
+      setError('Зал обов\'язковий');
+      return;
+    }
+
+    if (!formData.datetime) {
+      setError('Дата та час обов\'язкові');
+      return;
+    }
+
+    const priceValue = parseFloat(formData.price);
+    if (!formData.price || isNaN(priceValue) || priceValue <= 0) {
+      setError('Ціна повинна бути числом більше 0');
+      return;
+    }
+
     try {
       const updatedShow = await updateShow(show.id, {
         performance_id: Number(formData.performance_id),
         datetime: formData.datetime,
         hall_id: Number(formData.hall_id),
-        price: Number(formData.price)
+        price: parseFloat(formData.price)
       });
+
+      if (!updatedShow) {
+        setError('Сервер не повернув дані про оновлений показ');
+        return;
+      }
 
       const fullUpdatedShow = {
         ...updatedShow,
@@ -70,10 +102,27 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setError(''); // Очищаємо помилку при зміні полів
+    const { name, value } = e.target;
+    
+    // Спеціальна обробка для поля price
+    if (name === 'price') {
+      // Дозволяємо тільки числа з крапкою
+      const numericValue = value.replace(/[^0-9.]/g, '');
+      // Запобігаємо більше однієї крапки
+      const parts = numericValue.split('.');
+      const formattedValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : numericValue;
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleDelete = async () => {
@@ -82,8 +131,9 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
         await deleteShow(show.id);
         onDelete(show.id);
         onClose();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Помилка видалення показу:', error);
+        setError(error.message || 'Помилка при видаленні показу');
       }
     }
   };
@@ -91,75 +141,106 @@ export default function EditShow({ show, onClose, onUpdate, onDelete }: EditShow
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Редагувати показ</h2>
-        {error && <div className="error-message">{error}</div>}
+        <div className="modal-header">
+          <h2>Редагувати показ</h2>
+        </div>
+        <div className="modal-body">
+          {error && (
+            <div style={{
+              backgroundColor: '#f8d7da',
+              color: '#721c24',
+              padding: '10px',
+              borderRadius: '5px',
+              marginBottom: '15px',
+              border: '1px solid #f5c6cb'
+            }}>
+              {error}
+            </div>
+          )}
+          
+          <form id="edit-show-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Вистава:</label>
+              <select
+                name="performance_id"
+                value={formData.performance_id}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Виберіть виставу</option>
+                {performances.map(performance => (
+                  <option key={performance.id} value={performance.id}>
+                    {performance.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Дата та час:</label>
+              <input
+                type="datetime-local"
+                name="datetime"
+                value={formData.datetime}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Зал:</label>
+              <select
+                name="hall_id"
+                value={formData.hall_id}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Виберіть зал</option>
+                {halls.map(hall => (
+                  <option key={hall.id} value={hall.id}>
+                    Зал {hall.hall_number}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Ціна (грн):</label>
+              <input
+                type="text"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  if (value && !isNaN(parseFloat(value))) {
+                    const formatted = parseFloat(value).toFixed(2);
+                    setFormData(prev => ({ ...prev, price: formatted }));
+                  }
+                }}
+                placeholder="0.00"
+                pattern="^\d+(\.\d{1,2})?$"
+                title="Введіть ціну у форматі 0.00"
+                required
+              />
+            </div>
+          </form>
+        </div>
         
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Вистава:</label>
-            <select
-              name="performance_id"
-              value={formData.performance_id}
-              onChange={handleChange}
-            >
-              {performances.map(performance => (
-                <option key={performance.id} value={performance.id}>
-                  {performance.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Дата та час:</label>
-            <input
-              type="datetime-local"
-              name="datetime"
-              value={formData.datetime}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Зал:</label>
-            <select
-              name="hall_id"
-              value={formData.hall_id}
-              onChange={handleChange}
-            >
-              {halls.map(hall => (
-                <option key={hall.id} value={hall.id}>
-                  Зал {hall.hall_number}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Ціна:</label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="modal-actions">
-            <button type="submit">Зберегти зміни</button>
-            <button type="button" onClick={onClose}>
-                Скасувати
-            </button>
-            <button 
-                type="button" 
-                onClick={handleDelete}
-                className="delete-button"
-                style={{backgroundColor: '#dc3545'}}
-            >
-                Видалити
-            </button>
-          </div>
-        </form>
+        <div className="modal-actions">
+          <button type="submit" form="edit-show-form">Зберегти зміни</button>
+          <button type="button" onClick={onClose}>
+            Скасувати
+          </button>
+          <button 
+            type="button" 
+            onClick={handleDelete}
+            className="delete-button"
+            style={{backgroundColor: '#dc3545'}}
+          >
+            Видалити
+          </button>
+        </div>
       </div>
     </div>
   );

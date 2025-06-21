@@ -56,8 +56,11 @@ const EditActor: React.FC<EditActorProps> = ({ actor, onClose, onUpdate, onDelet
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Редагувати актора</h2>
-                <form onSubmit={handleSubmit}>
+                <div className="modal-header">
+                    <h2>Редагувати актора</h2>
+                </div>
+                <div className="modal-body">
+                    <form id="edit-actor-form" onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Ім'я:</label>
                         <input
@@ -108,21 +111,22 @@ const EditActor: React.FC<EditActorProps> = ({ actor, onClose, onUpdate, onDelet
                             required
                         />
                     </div>
-                    <div className="modal-actions">
-                        <button type="submit">Зберегти зміни</button>
-                        <button type="button" onClick={onClose}>
-                            Скасувати
-                        </button>
-                        <button 
-                            type="button" 
-                            onClick={handleDelete}
-                            className="delete-button"
-                            style={{backgroundColor: '#dc3545'}}
-                        >
-                            Видалити
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div className="modal-actions">
+                    <button type="submit" form="edit-actor-form">Зберегти зміни</button>
+                    <button type="button" onClick={onClose}>
+                        Скасувати
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={handleDelete}
+                        className="delete-button"
+                        style={{backgroundColor: '#dc3545'}}
+                    >
+                        Видалити
+                    </button>
+                </div>
             </div>
         </div>
     );
