@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getNewsletterStats, getAnalytics, getDashboardAnalytics } from '@/app/services/analyticsService';
+import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportCsvData } from '@/app/services/analyticsService';
 import { NewsletterStats, AnalyticsData, DashboardData } from '@/app/types/analytics';
 import './Analytics.styles.css';
 
@@ -9,8 +9,18 @@ export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'detailed' | 'newsletter'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'detailed' | 'newsletter' | 'export'>('dashboard');
   const [error, setError] = useState<string | null>(null);
+
+  const [exportLoading, setExportLoading] = useState<{[key: string]: boolean}>({
+    excel: false,
+    pdf: false,
+    csv: false
+  });
+  const [exportMessage, setExportMessage] = useState<{type: 'success' | 'error' | null, text: string}>({
+    type: null,
+    text: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,9 +37,9 @@ export default function Analytics() {
         setNewsletterStats(newsletter);
         setAnalyticsData(analytics);
         setDashboardData(dashboard);
-      } catch (error) {
-        console.error('Помилка завантаження аналітичних даних:', error);
-        setError('Не вдалося завантажити аналітичні дані');
+      } catch (err: any) {
+        console.error('Error fetching analytics:', err);
+        setError(err.message || 'Помилка завантаження аналітичних даних');
       } finally {
         setIsLoading(false);
       }
@@ -38,17 +48,24 @@ export default function Analytics() {
     fetchData();
   }, []);
 
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setExportMessage({ type, text });
+    setTimeout(() => {
+      setExportMessage({ type: null, text: '' });
+    }, 5000);
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('uk-UA', {
       style: 'currency',
       currency: 'UAH',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
   const formatPercentage = (value: string) => {
-    return `${value}%`;
+    return `${parseFloat(value).toFixed(1)}%`;
   };
 
   const renderLoader = () => (
@@ -60,7 +77,7 @@ export default function Analytics() {
 
   const renderError = () => (
     <div className="analytics-error">
-      <p>{error}</p>
+      <p>Помилка завантаження: {error}</p>
       <button onClick={() => window.location.reload()}>Спробувати знову</button>
     </div>
   );
@@ -74,36 +91,36 @@ export default function Analytics() {
           <div className="summary-card">
             <div className="card-icon revenue">
               <svg viewBox="0 0 24 24" width="24" height="24">
-                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,17H13V16H14A1,1 0 0,0 1,1 0 0,0 14,14H10A1,1 0 0,1 9,13A1,1 0 0,1 10,12H14A3,3 0 0,1 17,15A3,3 0 0,1 14,18H13V19H11V18H10A1,1 0 0,1 9,17A1,1 0 0,1 10,16H14A1,1 0 0,0 15,15A1,1 0 0,0 14,14H10A3,3 0 0,0 7,11A3,3 0 0,0 10,8H11V7H13V8H14A1,1 0 0,0 15,9A1,1 0 0,0 14,10H10A1,1 0 0,1 9,9A1,1 0 0,1 10,8H14A3,3 0 0,1 17,11A3,3 0 0,1 14,14H13V15H11V14Z"/>
+                <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
               </svg>
             </div>
             <div className="card-content">
               <h3>Загальний дохід</h3>
-              <p className="card-value">{formatCurrency(dashboardData.summary.totalRevenue)}</p>
+              <p className="card-value">{formatCurrency(typeof dashboardData.summary.totalRevenue === 'string' ? parseFloat(dashboardData.summary.totalRevenue) : dashboardData.summary.totalRevenue)}</p>
             </div>
           </div>
 
           <div className="summary-card">
             <div className="card-icon tickets">
               <svg viewBox="0 0 24 24" width="24" height="24">
-                <path d="M15.58,16.8L12,14.5L8.42,16.8L9.5,12.68L6.21,10H10.46L12,6L13.54,10H17.79L14.5,12.68L15.58,16.8M20,12C20,16.4 17.6,20 17.6,20H6.4C6.4,20 4,16.4 4,12V8H6L7,6H17L18,8H20V12Z"/>
+                <path d="M15.58,16.8L12,14.5L8.42,16.8L9.5,12.68L6.21,10H10.46L12,6L13.54,10H17.79L14.5,12.68L15.58,16.8M20,12C20,16.2 17.8,19.9 14.5,22.1L12,20L9.5,22.1C6.2,19.9 4,16.2 4,12C4,7.8 7.6,4.3 12,4.3C16.4,4.3 20,7.8 20,12Z"/>
               </svg>
             </div>
             <div className="card-content">
               <h3>Продано квитків</h3>
-              <p className="card-value">{dashboardData.summary.totalTicketsSold}</p>
+                              <p className="card-value">{dashboardData.summary.totalTicketsSold}</p>
             </div>
           </div>
 
           <div className="summary-card">
             <div className="card-icon occupancy">
               <svg viewBox="0 0 24 24" width="24" height="24">
-                <path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/>
+                <path d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/>
               </svg>
             </div>
             <div className="card-content">
-              <h3>Заповненість</h3>
-              <p className="card-value">{formatPercentage(dashboardData.summary.occupancyRate)}</p>
+              <h3>Середня заповненість</h3>
+                              <p className="card-value">{formatPercentage(dashboardData.summary.occupancyRate)}</p>
             </div>
           </div>
 
@@ -139,34 +156,6 @@ export default function Analytics() {
                 ))
               ) : (
                 <div className="empty-state">Немає даних про вистави</div>
-              )}
-            </div>
-          </div>
-
-          <div className="chart-container">
-            <h3>Продажі за днями тижня</h3>
-            <div className="weekday-chart">
-              {Array.isArray(dashboardData.weekdaySales) && dashboardData.weekdaySales.length > 0 ? (
-                dashboardData.weekdaySales.map((day, index) => {
-                  const maxTickets = Math.max(...dashboardData.weekdaySales.map(d => parseInt(d.ticketCount) || 0));
-                  const currentTickets = parseInt(day.ticketCount) || 0;
-                  const percentage = maxTickets > 0 ? Math.min(100, (currentTickets / maxTickets) * 100) : 0;
-                  
-                  return (
-                    <div key={index} className="weekday-item">
-                      <div className="weekday-name">{day.weekday || 'Невідомо'}</div>
-                      <div className="weekday-bar">
-                        <div 
-                          className="weekday-fill" 
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      <div className="weekday-value">{day.ticketCount}</div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="empty-state">Немає даних про продажі</div>
               )}
             </div>
           </div>
@@ -233,7 +222,6 @@ export default function Analytics() {
 
   const renderNewsletterStats = () => {
     if (!newsletterStats) return null;
-
     return (
       <div className="newsletter-content">
         <h3>Статистика розсилки</h3>
@@ -257,6 +245,138 @@ export default function Analytics() {
         </div>
       </div>
     );
+  };
+
+  const renderExport = () => {
+    return (
+      <div className="export-content">
+        <div className="export-header">
+          <h3>Експорт аналітичних даних</h3>
+          <p className="export-description">
+            Виберіть формат для експорту звітів. Файли автоматично завантажаться у вашу папку завантажень.
+          </p>
+        </div>
+
+        {/* Повідомлення про результат експорту */}
+        {exportMessage.type && (
+          <div className={`export-message ${exportMessage.type}`}>
+            <div className="message-icon">
+              {exportMessage.type === 'success' ? (
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="currentColor" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="currentColor" d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                </svg>
+              )}
+            </div>
+            <span>{exportMessage.text}</span>
+          </div>
+        )}
+
+        <div className="export-buttons">
+          <div className="export-button-group">
+            <button 
+              className={`export-button excel ${exportLoading.excel ? 'loading' : ''}`}
+              onClick={() => exportData('excel')}
+              disabled={exportLoading.excel}
+            >
+              <div className="button-icon">
+                {exportLoading.excel ? (
+                  <div className="button-spinner"></div>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  </svg>
+                )}
+              </div>
+              <div className="button-content">
+                <span className="button-title">Excel</span>
+                <span className="button-subtitle">Таблиця .xlsx</span>
+              </div>
+            </button>
+
+            <button 
+              className={`export-button pdf ${exportLoading.pdf ? 'loading' : ''}`}
+              onClick={() => exportData('pdf')}
+              disabled={exportLoading.pdf}
+            >
+              <div className="button-icon">
+                {exportLoading.pdf ? (
+                  <div className="button-spinner"></div>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/>
+                  </svg>
+                )}
+              </div>
+              <div className="button-content">
+                <span className="button-title">PDF</span>
+                <span className="button-subtitle">Документ .pdf</span>
+              </div>
+            </button>
+
+            <button 
+              className={`export-button csv ${exportLoading.csv ? 'loading' : ''}`}
+              onClick={() => exportData('csv')}
+              disabled={exportLoading.csv}
+            >
+              <div className="button-icon">
+                {exportLoading.csv ? (
+                  <div className="button-spinner"></div>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  </svg>
+                )}
+              </div>
+              <div className="button-content">
+                <span className="button-title">CSV</span>
+                <span className="button-subtitle">Дані .csv</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="export-info">
+          <div className="info-card">
+            <h4>Що включається в звіт:</h4>
+            <ul>
+              <li>Загальна статистика продажів</li>
+              <li>Дані за періодами (день, тиждень, місяць)</li>
+              <li>Топ вистави за доходом</li>
+              <li>Аналітика по залах</li>
+              <li>Статистика розсилки</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const exportData = async (format: string) => {
+    try {
+      // Встановлюємо стан завантаження для конкретної кнопки
+      setExportLoading(prev => ({ ...prev, [format]: true }));
+      
+      if (format === 'excel') {
+        await exportExcelData();
+        showMessage('success', 'Excel файл успішно завантажено!');
+      } else if (format === 'pdf') {
+        await exportPdfData();
+        showMessage('success', 'PDF файл успішно завантажено!');
+      } else if (format === 'csv') {
+        await exportCsvData();
+        showMessage('success', 'CSV файл успішно завантажено!');
+      }
+    } catch (error) {
+      console.error('Помилка експорту даних:', error);
+      showMessage('error', `Помилка експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
+    } finally {
+      // Прибираємо стан завантаження
+      setExportLoading(prev => ({ ...prev, [format]: false }));
+    }
   };
 
   if (isLoading) return renderLoader();
@@ -285,6 +405,12 @@ export default function Analytics() {
           >
             Розсилка
           </button>
+          <button 
+            className={activeTab === 'export' ? 'active' : ''} 
+            onClick={() => setActiveTab('export')}
+          >
+            Експорт
+          </button>
         </div>
       </div>
 
@@ -292,6 +418,7 @@ export default function Analytics() {
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'detailed' && renderDetailedAnalytics()}
         {activeTab === 'newsletter' && renderNewsletterStats()}
+        {activeTab === 'export' && renderExport()}
       </div>
     </div>
   );
