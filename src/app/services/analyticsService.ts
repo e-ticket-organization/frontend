@@ -323,15 +323,25 @@ export const exportPdfData = async (): Promise<void> => {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            console.log(`Спроба PDF експорту #${attempt}/${maxRetries}...`);
+            console.log(`🔄 Спроба PDF експорту #${attempt}/${maxRetries}...`);
             const currentDate = new Date().toISOString().split('T')[0];
-            console.log('Дата для файлу:', currentDate);
-            console.log('URL для PDF запиту: /api/analytics/pdf-report');
-            console.log('Таймаут для PDF:', pdfTimeout, 'мс');
+            console.log('📅 Дата для файлу:', currentDate);
+            console.log('🌐 Поточний домен:', window.location.origin);
+            console.log('📍 URL для PDF запиту: /api/analytics/pdf-report');
+            console.log('⏰ Таймаут для PDF:', pdfTimeout, 'мс');
+            console.log('🔑 Токен присутній:', !!localStorage.getItem('token'));
+            
+            console.log('🩺 Перевіряємо доступність API...');
+            const apiCheck = await checkApiAvailability();
+            console.log('📊 Результат перевірки API:', apiCheck);
+            
+            if (!apiCheck.success) {
+                console.warn('⚠️ API може бути недоступним, але продовжуємо спробу PDF завантаження...');
+            }
             
             // Збільшений таймаут для PDF (3 хвилини)
             await downloadFile('/analytics/pdf-report', `analytics-report-${currentDate}.pdf`, pdfTimeout);
-            console.log('PDF експорт завершено успішно');
+            console.log('✅ PDF експорт завершено успішно');
             return; // Успішний експорт - виходимо з функції
         }
         catch(error){
@@ -524,6 +534,65 @@ export const checkPdfHealth = async (): Promise<boolean> => {
         return false;
     }
 }
+
+export const checkApiAvailability = async (): Promise<{
+    success: boolean;
+    message: string;
+    details?: any;
+}> => {
+    try {
+        console.log('🔍 Перевіряємо доступність основного API...');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        
+        const response = await fetch(`${API_BASE}/analytics/health`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        console.log('📡 Відповідь API health check:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            url: response.url
+        });
+        
+        if (!response.ok) {
+            return {
+                success: false,
+                message: `API недоступний: ${response.status} ${response.statusText}`,
+                details: { 
+                    status: response.status, 
+                    statusText: response.statusText,
+                    url: response.url
+                }
+            };
+        }
+        
+        const healthData = await response.json();
+        return {
+            success: true,
+            message: 'API доступний',
+            details: healthData
+        };
+        
+    } catch (error) {
+        console.error('❌ Помилка перевірки API:', error);
+        return {
+            success: false,
+            message: `Помилка перевірки API: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
+            details: { error: error instanceof Error ? error.message : String(error) }
+        };
+    }
+};
 
 // Тестування PDF генерації
 export const testPdfGeneration = async (): Promise<{

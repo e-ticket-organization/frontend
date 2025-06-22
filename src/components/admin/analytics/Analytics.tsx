@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth, testPdfGeneration } from '@/app/services/analyticsService';
+import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth, testPdfGeneration, checkApiAvailability } from '@/app/services/analyticsService';
 import { NewsletterStats, AnalyticsData, DashboardData } from '@/app/types/analytics';
 import './Analytics.styles.css';
 

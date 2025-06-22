@@ -4,3 +4,17 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Редіректи для API запитів до вашого бекенду
+[[redirects]]
+  from = "/api/*"
+  to = "${NEXT_PUBLIC_API_URL}/api/:splat"
+  status = 200
+  force = true
+
+# Альтернативний редірект тільки для аналітики (якщо бекенд на іншому домені)
+# [[redirects]]
+#   from = "/api/analytics/*"
+#   to = "${ANALYTICS_BACKEND_URL}/analytics/:splat"
+#   status = 200
+#   force = true
