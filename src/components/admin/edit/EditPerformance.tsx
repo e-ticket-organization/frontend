@@ -28,12 +28,26 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
         // Беремо дані з першого show, якщо вони є
         const firstShow = performance.shows?.[0] as any;
         
+        // Визначаємо producer_id з різних можливих джерел
+        let producerId = 0;
+        if (performance.producer_id && performance.producer_id !== 0) {
+            producerId = performance.producer_id;
+        } else if (performance.producer?.id && performance.producer.id !== 0) {
+            producerId = performance.producer.id;
+        }
+        
+        console.log('Ініціалізація producer_id:', {
+            'performance.producer_id': performance.producer_id,
+            'performance.producer?.id': performance.producer?.id,
+            'обраний producerId': producerId
+        });
+        
         const initialData = {
             title: performance.title || '',
             description: performance.description || '',
             duration: performance.duration || 0,
             image: performance.image || '',
-            producer_id: performance.producer_id || performance.producer?.id || 0,
+            producer_id: producerId,
             genre_ids: performance.genre_ids || [],
             actor_ids: performance.actor_ids || [],
             premiereDate: performance.premiereDate || '',
@@ -95,13 +109,27 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                 // Беремо дані з першого show для price, city_id, theater_id
                 const firstShow = performance.shows?.[0] as any;
 
+                // Визначаємо producer_id з різних можливих джерел
+                let producerId = 0;
+                if (performance.producer_id && performance.producer_id !== 0) {
+                    producerId = performance.producer_id;
+                } else if (performance.producer?.id && performance.producer.id !== 0) {
+                    producerId = performance.producer.id;
+                }
+                
+                console.log('useEffect producer_id логіка:', {
+                    'performance.producer_id': performance.producer_id,
+                    'performance.producer?.id': performance.producer?.id,
+                    'обраний producerId': producerId
+                });
+
                 // Оновлюємо formData з правильними genre_ids та actor_ids та всіма іншими полями
                 const newFormData = {
                     title: performance.title || '',
                     description: performance.description || '',
                     duration: performance.duration || 0,
                     image: performance.image || '',
-                    producer_id: performance.producer_id || performance.producer?.id || 0,
+                    producer_id: producerId,
                     genre_ids: initialGenres.map(g => g.id),
                     actor_ids: initialActors.map(a => a.id),
                     premiereDate: premiereDate,
@@ -112,8 +140,20 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
 
                 console.log('Performance object:', performance);
                 console.log('Producer ID from performance:', performance.producer_id);
+                console.log('Producer object from performance:', performance.producer);
                 console.log('Producers list:', producersData);
                 console.log('Final formData:', newFormData);
+                
+                // Додаткова перевірка продюсера
+                if (performance.producer_id) {
+                    const foundProducer = producersData.find(p => p.id === performance.producer_id);
+                    console.log('Found producer by performance.producer_id:', foundProducer);
+                }
+                
+                if (performance.producer?.id) {
+                    const foundProducer = producersData.find(p => p.id === performance.producer!.id);
+                    console.log('Found producer by performance.producer.id:', foundProducer);
+                }
 
                 setFormData(newFormData);
             } catch (error) {
@@ -213,21 +253,36 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
 
         try {
             console.log('Відправляємо дані для оновлення:', formData);
+            console.log('ID вистави для оновлення:', performance.id);
             
             const updatedPerformance = await updatePerformance(performance.id, formData);
             
-            if (!updatedPerformance) {
-                console.error('Сервер повернув undefined для оновленої вистави');
-                alert('Помилка: сервер не повернув дані про оновлену виставу');
+            console.log('Отримана оновлена вистава:', updatedPerformance);
+            
+            if (!updatedPerformance || !updatedPerformance.id) {
+                console.error('Сервер повернув некоректні дані для оновленої вистави:', updatedPerformance);
+                alert('Помилка: сервер не повернув валідні дані про оновлену виставу. Перевірте з\'єднання та спробуйте знову.');
                 return;
             }
             
-            console.log('Успішно оновлено виставу:', updatedPerformance);
+            console.log('Виклик onUpdate з даними:', updatedPerformance);
             onUpdate(updatedPerformance);
+            
+            alert('Вистава успішно оновлена!');
             onClose();
         } catch (error: any) {
-            console.error('Помилка оновлення вистави:', error);
-            alert(`Помилка при оновленні вистави: ${error.message || 'Невідома помилка'}`);
+            console.error('Повна помилка оновлення вистави:', error);
+            console.error('Стек помилки:', error.stack);
+            
+            let errorMessage = 'Невідома помилка';
+            
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            }
+            
+            alert(`Помилка при оновленні вистави: ${errorMessage}`);
         }
     };
 
@@ -320,7 +375,7 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                         <label>Продюсер:</label>
                         <select
                             name="producer_id"
-                            value={formData.producer_id || ''}
+                            value={formData.producer_id && formData.producer_id !== 0 ? formData.producer_id : ''}
                             onChange={handleChange}
                             required
                         >

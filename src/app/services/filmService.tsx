@@ -97,15 +97,26 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
             }
             
             console.error('Помилка запиту:', {
+                url: url,
+                method: options.method || 'GET',
                 status: response.status,
                 statusText: response.statusText,
-                data: errorData
+                data: errorData,
+                errorText: errorText
             });
             
             throw new Error(errorData.message || `Помилка запиту: ${response.status} ${response.statusText}`);
         }
         
-        return await response.json();
+        const responseData = await response.json();
+        console.log('Успішна відповідь від сервера:', {
+            url: url,
+            method: options.method || 'GET',
+            status: response.status,
+            data: responseData
+        });
+        
+        return responseData;
     } catch (error) {
         console.error('Повна помилка запиту:', error);
         throw error;
@@ -742,7 +753,7 @@ interface IPerformanceUpdate {
 export const updatePerformance = async (performanceId: number, updateData: IPerformanceUpdate): Promise<IPerfomance> => {
     try {
         console.log('Відправка даних на сервер:', updateData);
-        const data = await customFetch<{ performance: IPerfomance }>(
+        const data = await customFetch<any>(
             `/performances/${performanceId}`, 
             {
                 method: 'PUT',
@@ -750,13 +761,46 @@ export const updatePerformance = async (performanceId: number, updateData: IPerf
             }
         );
         
+        console.log('Отримана відповідь від сервера:', data);
+        
         if (!data) {
             throw new Error('Відповідь сервера не містить даних');
         }
         
-        return data.performance;
+        // Перевіряємо різні можливі структури відповіді
+        let performance: IPerfomance;
+        
+        if (data.performance) {
+            // Структура: { performance: {...} }
+            performance = data.performance;
+        } else if (data.id) {
+            // Структура: { id: ..., title: ..., ... } (пряма відповідь)
+            performance = data;
+        } else if (Array.isArray(data) && data.length > 0) {
+            // Структура: [{ id: ..., title: ..., ... }]
+            performance = data[0];
+        } else {
+            console.error('Невідома структура відповіді:', data);
+            throw new Error('Сервер повернув дані в неочікуваному форматі');
+        }
+        
+        if (!performance || !performance.id) {
+            console.error('Некоректні дані вистави:', performance);
+            throw new Error('Сервер не повернув валідні дані вистави');
+        }
+        
+        console.log('Успішно оброблено відповідь:', performance);
+        return performance;
     } catch (error: any) {
         console.error('Помилка оновлення вистави:', error);
+        
+        // Додаткове логування для діагностики
+        if (error.message && error.message.includes('404')) {
+            throw new Error('Вистава не знайдена на сервері');
+        } else if (error.message && error.message.includes('500')) {
+            throw new Error('Внутрішня помилка сервера. Перевірте дані та спробуйте знову');
+        }
+        
         throw new Error(error.message || 'Помилка при оновленні вистави');
     }
 };
