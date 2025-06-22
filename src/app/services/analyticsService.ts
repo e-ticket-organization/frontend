@@ -192,10 +192,27 @@ async function downloadFile(endpoint: string, filename: string, timeout: number 
         }
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Текст помилки відповіді:', errorText);
+            let errorText = '';
+            let errorData = null;
+            
+            try {
+                errorText = await response.text();
+                console.error('Текст помилки відповіді:', errorText);
+                
+                // Спробуємо розпарсити JSON помилку
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (jsonError) {
+                    // Якщо не JSON, використовуємо текст як є
+                }
+            } catch (textError) {
+                console.error('Не вдалося прочитати текст помилки:', textError);
+                errorText = `Помилка читання відповіді сервера`;
+            }
+            
             console.error('Помилка статусу:', response.status, response.statusText);
             
+            // Обробляємо різні типи серверних помилок
             if (response.status === 502) {
                 console.error('Помилка 502 - Bad Gateway. Можливі причини:');
                 console.error('1. Сервер недоступний або перевантажений');
@@ -205,9 +222,25 @@ async function downloadFile(endpoint: string, filename: string, timeout: number 
                 console.error('5. URL містить подвійні слеші або некоректний маршрут');
                 
                 throw new Error(`Сервер тимчасово недоступний (502). Спробуйте знову через кілька хвилин або використайте альтернативний формат експорту.`);
+            } else if (response.status === 500) {
+                console.error('Помилка 500 - Internal Server Error. Можливі причини:');
+                console.error('1. Помилка в коді сервера під час генерації PDF');
+                console.error('2. Проблеми з базою даних');
+                console.error('3. Недостатньо пам\'яті для генерації великого PDF');
+                
+                const serverMessage = errorData?.message || errorData?.error || errorText;
+                throw new Error(`Внутрішня помилка сервера (500): ${serverMessage}. Спробуйте знову пізніше.`);
+            } else if (response.status === 503) {
+                console.error('Помилка 503 - Service Unavailable');
+                throw new Error(`Сервіс тимчасово недоступний (503). Спробуйте знову через кілька хвилин.`);
+            } else if (response.status === 504) {
+                console.error('Помилка 504 - Gateway Timeout');
+                throw new Error(`Таймаут сервера (504). PDF генерація займає занадто багато часу. Спробуйте знову пізніше.`);
             }
             
-            throw new Error(`Помилка завантаження файлу: ${response.status} ${response.statusText} - ${errorText}`);
+            // Загальна обробка помилок
+            const serverMessage = errorData?.message || errorData?.error || errorText;
+            throw new Error(`Помилка завантаження файлу (${response.status}): ${serverMessage || response.statusText}`);
         }
         
         const blob = await response.blob();
@@ -286,7 +319,7 @@ export const exportExcelData = async (): Promise<void> => {
 export const exportPdfData = async (): Promise<void> => {
     const maxRetries = 3;
     const retryDelay = 3000; // 3 секунди між спробами
-    const pdfTimeout = 120000; // 2 хвилини для PDF генерації
+    const pdfTimeout = 180000; // 3 хвилини для PDF генерації (збільшено для стабільності)
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -296,7 +329,7 @@ export const exportPdfData = async (): Promise<void> => {
             console.log('URL для PDF запиту: /api/analytics/pdf-report');
             console.log('Таймаут для PDF:', pdfTimeout, 'мс');
             
-            // Збільшений таймаут для PDF (2 хвилини)
+            // Збільшений таймаут для PDF (3 хвилини)
             await downloadFile('/analytics/pdf-report', `analytics-report-${currentDate}.pdf`, pdfTimeout);
             console.log('PDF експорт завершено успішно');
             return; // Успішний експорт - виходимо з функції
@@ -313,8 +346,10 @@ export const exportPdfData = async (): Promise<void> => {
             // Якщо це помилка 502, таймаут або серверна помилка і не остання спроба - чекаємо та повторюємо
             if (error instanceof Error && 
                 (error.message.includes('502') || 
+                 error.message.includes('500') ||
                  error.message.includes('таймаут') || 
                  error.message.includes('Таймаут') ||
+                 error.message.includes('timeout') ||
                  error.message.includes('недоступний')) && 
                 attempt < maxRetries) {
                 console.log(`Серверна помилка detected. Очікування ${retryDelay/1000} секунд перед наступною спробою...`);
@@ -330,9 +365,9 @@ export const exportPdfData = async (): Promise<void> => {
                 let enhancedMessage = `Помилка PDF експорту після ${maxRetries} спроб: ${error instanceof Error ? error.message : String(error)}`;
                 
                 if (error instanceof Error) {
-                    if (error.message.includes('502')) {
+                    if (error.message.includes('502') || error.message.includes('500')) {
                         enhancedMessage += '\n\nРекомендації:\n• Спробуйте знову через 5-10 хвилин\n• Використайте Excel або CSV формат\n• Перевірте стабільність інтернет-з\'єднання';
-                    } else if (error.message.includes('таймаут') || error.message.includes('Таймаут')) {
+                    } else if (error.message.includes('таймаут') || error.message.includes('Таймаут') || error.message.includes('timeout')) {
                         enhancedMessage += '\n\nПроблема з таймаутом:\n• Сервер занадто довго генерує PDF\n• Спробуйте експорт у менш навантажений час\n• Використайте альтернативні формати (Excel/CSV)';
                     }
                 }
@@ -364,58 +399,182 @@ export const exportPdfDataBase64 = async (): Promise<void> => {
         const currentDate = new Date().toISOString().split('T')[0];
         const filename = `analytics-report-${currentDate}.pdf`;
         
-        // Запит на base64 PDF
-        const response = await customFetch<{
-            success: boolean;
-            data?: string;
-            filename?: string;
-            message?: string;
-        }>('/analytics/pdf-base64');
+        // Встановлюємо більший таймаут для base64 запиту
+        const originalTimeout = 300000; // 5 хвилин
         
-        if (!response.success || !response.data) {
-            throw new Error(response.message || 'Помилка отримання PDF у base64 форматі');
+        // Запит на base64 PDF з retry логікою
+        let response;
+        const maxRetries = 2;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`Base64 PDF запит, спроба ${attempt}/${maxRetries}...`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), originalTimeout);
+                
+                const fetchResponse = await fetch(`${API_BASE}/analytics/pdf-base64`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!fetchResponse.ok) {
+                    const errorText = await fetchResponse.text();
+                    console.error('Base64 PDF помилка:', errorText);
+                    throw new Error(`Помилка отримання PDF base64: ${fetchResponse.status} ${fetchResponse.statusText}`);
+                }
+                
+                response = await fetchResponse.json();
+                break; // Успішно отримали відповідь
+                
+            } catch (attemptError) {
+                console.error(`Base64 спроба ${attempt} не вдалась:`, attemptError);
+                if (attempt === maxRetries) {
+                    throw attemptError;
+                }
+                // Короткі затримка перед повторною спробою
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        if (!response?.success || !response?.data) {
+            throw new Error(response?.error || 'Помилка отримання PDF у base64 форматі');
         }
         
         console.log('Отримано base64 дані, розмір:', response.data.length);
+        console.log('Рекомендоване ім\'я файлу:', response.filename);
         
         // Конвертуємо base64 в blob
-        const byteCharacters = atob(response.data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        try {
+            const byteCharacters = atob(response.data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            console.log('PDF blob створено, розмір:', blob.size);
+            
+            // Перевіряємо, чи blob не порожній
+            if (blob.size === 0) {
+                throw new Error('Отримано порожній PDF файл');
+            }
+            
+            // Завантажуємо файл
+            const finalFilename = response.filename || filename;
+            downloadBlob(blob, finalFilename);
+            
+            console.log('PDF експорт через base64 завершено успішно');
+        } catch (blobError) {
+            console.error('Помилка конвертації base64 в blob:', blobError);
+            throw new Error('Помилка обробки PDF файлу. Файл може бути пошкоджений.');
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
         
-        console.log('PDF blob створено, розмір:', blob.size);
-        
-        // Завантажуємо файл
-        const finalFilename = response.filename || filename;
-        downloadBlob(blob, finalFilename);
-        
-        console.log('PDF експорт через base64 завершено успішно');
     } catch (error) {
         console.error('Помилка PDF експорту через base64:', error);
-        throw error;
+        throw new Error(`Base64 PDF експорт: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
     }
 }
 
-// Перевірка здоров'я PDF сервісу
+// Перевірка здоров'я PDF сервісу  
 export const checkPdfHealth = async (): Promise<boolean> => {
     try {
         console.log('Перевірка здоров\'я PDF сервісу...');
-        const response = await customFetch<{
-            status: string;
-            pdf_service: boolean;
-            message?: string;
-        }>('/analytics/health');
         
-        const isHealthy = response.status === 'healthy' && response.pdf_service === true;
-        console.log('Стан PDF сервісу:', isHealthy ? 'здоровий' : 'недоступний', response);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут для health check
+        
+        const response = await fetch(`${API_BASE}/analytics/health`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            console.warn('Health check відповів з помилкою:', response.status, response.statusText);
+            return false;
+        }
+        
+        const healthData = await response.json();
+        console.log('Health check відповідь:', healthData);
+        
+        const isHealthy = healthData.status === 'healthy';
+        console.log('Стан PDF сервісу:', isHealthy ? 'здоровий' : 'недоступний');
         
         return isHealthy;
+        
     } catch (error) {
         console.error('Помилка перевірки здоров\'я PDF сервісу:', error);
         return false;
+    }
+}
+
+// Тестування PDF генерації
+export const testPdfGeneration = async (): Promise<{
+    success: boolean;
+    message: string;
+    details?: any;
+}> => {
+    try {
+        console.log('🧪 Тестування PDF генерації...');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут для тесту
+        
+        const response = await fetch(`${API_BASE}/analytics/pdf-test`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            console.error('PDF тест відповів з помилкою:', response.status, response.statusText);
+            const errorText = await response.text();
+            return {
+                success: false,
+                message: `Помилка тесту PDF: ${response.status} ${response.statusText}`,
+                details: { status: response.status, statusText: response.statusText, errorText }
+            };
+        }
+        
+        const testResult = await response.json();
+        console.log('🧪 Результат тесту PDF:', testResult);
+        
+        return {
+            success: testResult.success === true,
+            message: testResult.message || 'PDF тест завершено',
+            details: testResult
+        };
+        
+    } catch (error) {
+        console.error('❌ Помилка тесту PDF генерації:', error);
+        return {
+            success: false,
+            message: `Помилка тесту PDF: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
+            details: { error: error instanceof Error ? error.message : String(error) }
+        };
     }
 }

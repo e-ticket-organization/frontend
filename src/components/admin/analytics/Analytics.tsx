@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth } from '@/app/services/analyticsService';
+import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth, testPdfGeneration } from '@/app/services/analyticsService';
 import { NewsletterStats, AnalyticsData, DashboardData } from '@/app/types/analytics';
 import './Analytics.styles.css';
 
@@ -24,6 +24,8 @@ export default function Analytics() {
   const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
   const [lastPdfError, setLastPdfError] = useState<string | null>(null);
   const [pdfExportMethod, setPdfExportMethod] = useState<'standard' | 'base64' | null>(null);
+  const [pdfTestResult, setPdfTestResult] = useState<{success: boolean; message: string; details?: any} | null>(null);
+  const [pdfTestLoading, setPdfTestLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -399,7 +401,32 @@ export default function Analytics() {
                 >
                   🔄 Спробувати PDF знову
                 </button>
+                
+                <button 
+                  className={`export-button test ${pdfTestLoading ? 'loading' : ''}`}
+                  onClick={testPdf}
+                  disabled={pdfTestLoading}
+                  style={{marginLeft: '10px'}}
+                >
+                  {pdfTestLoading ? '🔄' : '🧪'} Тест PDF
+                </button>
               </div>
+            </div>
+          )}
+          
+          {/* Результат тесту PDF */}
+          {pdfTestResult && (
+            <div className={`info-card ${pdfTestResult.success ? 'success-info' : 'error-info'}`}>
+              <h4>{pdfTestResult.success ? '✅ Тест PDF успішний' : '❌ Тест PDF не вдався'}</h4>
+              <p>{pdfTestResult.message}</p>
+              {pdfTestResult.details && (
+                <details style={{marginTop: '10px'}}>
+                  <summary>Технічні деталі</summary>
+                  <pre style={{fontSize: '12px', background: '#f5f5f5', padding: '10px', borderRadius: '4px', overflow: 'auto'}}>
+                    {JSON.stringify(pdfTestResult.details, null, 2)}
+                  </pre>
+                </details>
+              )}
             </div>
           )}
           
@@ -441,34 +468,52 @@ export default function Analytics() {
         
         try {
           // Спочатку перевіряємо здоров'я PDF сервісу
+          console.log('Перевіряємо стан PDF сервісу...');
           const isHealthy = await checkPdfHealth();
+          console.log('Результат перевірки PDF сервісу:', isHealthy);
+          
           if (!isHealthy) {
-            console.warn('PDF сервіс недоступний, пробуємо base64 метод...');
-            await exportPdfDataBase64();
-            setPdfExportMethod('base64');
-          } else {
-            // Пробуємо стандартний метод
-            await exportPdfData();
-            setPdfExportMethod('standard');
+            console.warn('PDF сервіс може бути недоступний, але спробуємо стандартний метод...');
           }
           
-          console.log('PDF експорт завершено, час:', new Date().toISOString());
-          // Очищаємо попередню інформацію про помилку при успішному експорті
-          setLastPdfError(null);
-          showMessage('success', 'PDF файл успішно завантажено!');
-        } catch (pdfError) {
-          console.log('Стандартний PDF експорт не вдався, пробуємо base64 fallback...');
+          // Завжди спочатку пробуємо стандартний метод
           try {
-            await exportPdfDataBase64();
-            console.log('PDF експорт через base64 успішний');
+            console.log('Спроба стандартного PDF експорту...');
+            await exportPdfData();
+            setPdfExportMethod('standard');
             setLastPdfError(null);
-            setPdfExportMethod('base64');
-            showMessage('success', 'PDF файл успішно завантажено (через альтернативний метод)!');
-          } catch (base64Error) {
-            console.error('Обидва методи PDF експорту не вдалися');
-            setPdfExportMethod(null);
-            throw pdfError; // Кидаємо оригінальну помилку
+            console.log('✅ Стандартний PDF експорт успішний');
+            showMessage('success', 'PDF файл успішно завантажено!');
+          } catch (standardError: any) {
+            const standardErrorMessage = standardError instanceof Error ? standardError.message : String(standardError);
+            console.warn('❌ Стандартний PDF експорт не вдався:', standardErrorMessage);
+            
+            // Якщо стандартний метод не працює, пробуємо base64
+            console.log('🔄 Пробуємо base64 fallback метод...');
+            try {
+              await exportPdfDataBase64();
+              console.log('✅ PDF експорт через base64 успішний');
+              setLastPdfError(null);
+              setPdfExportMethod('base64');
+              showMessage('success', 'PDF файл успішно завантажено (через альтернативний метод)!');
+            } catch (base64Error: any) {
+              const base64ErrorMessage = base64Error instanceof Error ? base64Error.message : String(base64Error);
+              console.error('❌ Обидва методи PDF експорту не вдалися');
+              console.error('Стандартний метод:', standardErrorMessage);
+              console.error('Base64 метод:', base64ErrorMessage);
+              setPdfExportMethod(null);
+              
+              // Кидаємо помилку стандартного методу, як основну
+              throw new Error(`PDF експорт не вдався. Основна помилка: ${standardErrorMessage}`);
+            }
           }
+        } catch (pdfError: any) {
+          // Загальна обробка помилок PDF експорту
+          const pdfErrorMessage = pdfError instanceof Error ? pdfError.message : String(pdfError);
+          console.error('🚨 Критична помилка PDF експорту:', pdfError);
+          setLastPdfError(pdfErrorMessage);
+          setPdfExportMethod(null);
+          throw pdfError;
         }
       } else if (format === 'csv') {
         console.log('Виконується CSV експорт...');
@@ -505,6 +550,27 @@ export default function Analytics() {
       // Прибираємо стан завантаження
       setExportLoading(prev => ({ ...prev, [format]: false }));
       console.log(`Завершено процес експорту для формату: ${format}`);
+    }
+  };
+
+  const testPdf = async () => {
+    setPdfTestLoading(true);
+    setPdfTestResult(null);
+    
+    try {
+      console.log('🧪 Запуск тесту PDF генерації...');
+      const result = await testPdfGeneration();
+      console.log('🧪 Результат тесту PDF:', result);
+      setPdfTestResult(result);
+    } catch (error: any) {
+      console.error('❌ Помилка тесту PDF:', error);
+      setPdfTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Невідома помилка тесту',
+        details: { error: error instanceof Error ? error.stack : String(error) }
+      });
+    } finally {
+      setPdfTestLoading(false);
     }
   };
 
