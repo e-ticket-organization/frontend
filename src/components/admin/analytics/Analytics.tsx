@@ -21,6 +21,8 @@ export default function Analytics() {
     type: null,
     text: ''
   });
+  const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
+  const [lastPdfError, setLastPdfError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -350,6 +352,51 @@ export default function Analytics() {
               <li>Статистика розсилки</li>
             </ul>
           </div>
+          
+          {/* Додаткова інформація про PDF помилку */}
+          {lastPdfError && lastPdfError.includes('502') && (
+            <div className="info-card error-info">
+              <h4>⚠️ Проблема з PDF експортом:</h4>
+              <p>Виявлено помилку сервера (502) при створенні PDF файлу.</p>
+              
+              <div className="pdf-troubleshoot">
+                <h5>Можливі рішення:</h5>
+                <ul>
+                  <li>Спробуйте експорт знову через 2-3 хвилини</li>
+                  <li>Використайте Excel або CSV формат як альтернативу</li>
+                  <li>Перевірте стабільність інтернет-з'єднання</li>
+                </ul>
+              </div>
+              
+              <div className="technical-details">
+                <button 
+                  type="button"
+                  onClick={() => setShowTechnicalInfo(!showTechnicalInfo)}
+                  className="toggle-technical-info"
+                >
+                  {showTechnicalInfo ? 'Приховати' : 'Показати'} технічні деталі
+                </button>
+                
+                {showTechnicalInfo && (
+                  <div className="technical-info">
+                    <p><strong>Код помилки:</strong> 502 Bad Gateway</p>
+                    <p><strong>Повідомлення:</strong> {lastPdfError}</p>
+                    <p><strong>Причина:</strong> Сервер не може обробити запит на створення PDF, можливо через перевантаження або тимчасову недоступність сервісу PDF генерації.</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="retry-section">
+                <button 
+                  className="export-button pdf retry-button"
+                  onClick={() => exportData('pdf')}
+                  disabled={exportLoading.pdf}
+                >
+                  🔄 Спробувати PDF знову
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -357,25 +404,57 @@ export default function Analytics() {
 
   const exportData = async (format: string) => {
     try {
+      console.log(`Почато експорт у форматі: ${format}`);
       // Встановлюємо стан завантаження для конкретної кнопки
       setExportLoading(prev => ({ ...prev, [format]: true }));
       
       if (format === 'excel') {
+        console.log('Виконується Excel експорт...');
         await exportExcelData();
         showMessage('success', 'Excel файл успішно завантажено!');
       } else if (format === 'pdf') {
+        console.log('Виконується PDF експорт...');
+        console.log('Час початку PDF експорту:', new Date().toISOString());
         await exportPdfData();
+        console.log('PDF експорт завершено, час:', new Date().toISOString());
+        // Очищаємо попередню інформацію про помилку при успішному експорті
+        setLastPdfError(null);
         showMessage('success', 'PDF файл успішно завантажено!');
       } else if (format === 'csv') {
+        console.log('Виконується CSV експорт...');
         await exportCsvData();
         showMessage('success', 'CSV файл успішно завантажено!');
       }
+      console.log(`Експорт у форматі ${format} завершено успішно`);
     } catch (error) {
       console.error('Помилка експорту даних:', error);
-      showMessage('error', `Помилка експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
+      console.error(`Деталі помилки експорту ${format}:`, {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        format: format,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Додаткова інформація для PDF помилок
+      if (format === 'pdf' && error instanceof Error && error.message.includes('502')) {
+        console.error('Помилка 502 для PDF експорту. Можливі рішення:');
+        console.error('1. Спробуйте експорт через декілька хвилин');
+        console.error('2. Перевірте стан сервера');
+        console.error('3. Зв\'яжіться з адміністратором системи');
+        
+        // Зберігаємо інформацію про останню PDF помилку
+        setLastPdfError(error.message);
+        
+        // Показуємо спеціальне повідомлення для 502 помилки
+        showMessage('error', 'Помилка сервера при створенні PDF (502). Сервер тимчасово недоступний або перевантажений.');
+      } else {
+        showMessage('error', `Помилка експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
+      }
     } finally {
       // Прибираємо стан завантаження
       setExportLoading(prev => ({ ...prev, [format]: false }));
+      console.log(`Завершено процес експорту для формату: ${format}`);
     }
   };
 
