@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportCsvData } from '@/app/services/analyticsService';
+import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth } from '@/app/services/analyticsService';
 import { NewsletterStats, AnalyticsData, DashboardData } from '@/app/types/analytics';
 import './Analytics.styles.css';
 
@@ -23,6 +23,7 @@ export default function Analytics() {
   });
   const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
   const [lastPdfError, setLastPdfError] = useState<string | null>(null);
+  const [pdfExportMethod, setPdfExportMethod] = useState<'standard' | 'base64' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,6 +55,10 @@ export default function Analytics() {
     setExportMessage({ type, text });
     setTimeout(() => {
       setExportMessage({ type: null, text: '' });
+      // Очищуємо інформацію про метод PDF після 10 секунд
+      if (type === 'success' && pdfExportMethod) {
+        setPdfExportMethod(null);
+      }
     }, 5000);
   };
 
@@ -397,6 +402,24 @@ export default function Analytics() {
               </div>
             </div>
           )}
+          
+          {/* Інформація про успішний PDF експорт */}
+          {pdfExportMethod && (
+            <div className="info-card success-info">
+              <h4>✅ PDF експорт успішний</h4>
+              <p>
+                Файл було створено через {pdfExportMethod === 'standard' ? 'стандартний' : 'альтернативний (base64)'} метод.
+              </p>
+              {pdfExportMethod === 'base64' && (
+                <p className="method-note">
+                  <small>
+                    Використано альтернативний метод через проблеми з основним сервісом.
+                    Якщо проблема повторюється, зв'яжіться з адміністратором.
+                  </small>
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -415,11 +438,38 @@ export default function Analytics() {
       } else if (format === 'pdf') {
         console.log('Виконується PDF експорт...');
         console.log('Час початку PDF експорту:', new Date().toISOString());
-        await exportPdfData();
-        console.log('PDF експорт завершено, час:', new Date().toISOString());
-        // Очищаємо попередню інформацію про помилку при успішному експорті
-        setLastPdfError(null);
-        showMessage('success', 'PDF файл успішно завантажено!');
+        
+        try {
+          // Спочатку перевіряємо здоров'я PDF сервісу
+          const isHealthy = await checkPdfHealth();
+          if (!isHealthy) {
+            console.warn('PDF сервіс недоступний, пробуємо base64 метод...');
+            await exportPdfDataBase64();
+            setPdfExportMethod('base64');
+          } else {
+            // Пробуємо стандартний метод
+            await exportPdfData();
+            setPdfExportMethod('standard');
+          }
+          
+          console.log('PDF експорт завершено, час:', new Date().toISOString());
+          // Очищаємо попередню інформацію про помилку при успішному експорті
+          setLastPdfError(null);
+          showMessage('success', 'PDF файл успішно завантажено!');
+        } catch (pdfError) {
+          console.log('Стандартний PDF експорт не вдався, пробуємо base64 fallback...');
+          try {
+            await exportPdfDataBase64();
+            console.log('PDF експорт через base64 успішний');
+            setLastPdfError(null);
+            setPdfExportMethod('base64');
+            showMessage('success', 'PDF файл успішно завантажено (через альтернативний метод)!');
+          } catch (base64Error) {
+            console.error('Обидва методи PDF експорту не вдалися');
+            setPdfExportMethod(null);
+            throw pdfError; // Кидаємо оригінальну помилку
+          }
+        }
       } else if (format === 'csv') {
         console.log('Виконується CSV експорт...');
         await exportCsvData();

@@ -770,4 +770,27 @@
 .retry-button:disabled {
   background: #f87171 !important;
   cursor: not-allowed !important;
+}
+
+/* Success info */
+.info-card.success-info {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  margin-top: 1rem;
+}
+
+.info-card.success-info h4 {
+  color: #16a34a;
+  margin-bottom: 0.75rem;
+}
+
+.method-note {
+  margin-top: 0.5rem;
+  color: #059669;
+  font-style: italic;
+}
+
+.method-note small {
+  font-size: 0.8rem;
 } 
