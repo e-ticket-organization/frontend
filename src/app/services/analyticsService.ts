@@ -5,7 +5,9 @@ const API_BASE = '/api';
 
 async function customFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${API_BASE}${normalizedEndpoint}`;
+    // Видаляємо подвійні слеші з URL
+    const cleanEndpoint = normalizedEndpoint.replace(/\/+/g, '/');
+    const url = `${API_BASE}${cleanEndpoint}`;
     
     console.log('Виконується запит до URL:', url);
     
@@ -99,7 +101,8 @@ async function customFetch<T>(endpoint: string, options: RequestInit = {}): Prom
 
 async function downloadFile(endpoint: string, filename: string, timeout: number = 60000): Promise<void> {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const cleanEndpoint = normalizedEndpoint.replace(/\/+$/, '');
+    // Видаляємо подвійні слеші та зайві слеші в кінці
+    const cleanEndpoint = normalizedEndpoint.replace(/\/+/g, '/').replace(/\/+$/, '');
     const url = `${API_BASE}${cleanEndpoint}`;
     
     console.log('Завантаження файлу з URL:', url);
@@ -317,79 +320,28 @@ export const exportExcelData = async (): Promise<void> => {
 };
 
 export const exportPdfData = async (): Promise<void> => {
-    const maxRetries = 3;
-    const retryDelay = 3000; // 3 секунди між спробами
-    const pdfTimeout = 180000; // 3 хвилини для PDF генерації (збільшено для стабільності)
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            console.log(`🔄 Спроба PDF експорту #${attempt}/${maxRetries}...`);
-            const currentDate = new Date().toISOString().split('T')[0];
-            console.log('📅 Дата для файлу:', currentDate);
-            console.log('🌐 Поточний домен:', window.location.origin);
-            console.log('📍 URL для PDF запиту: /api/analytics/pdf-report');
-            console.log('⏰ Таймаут для PDF:', pdfTimeout, 'мс');
-            console.log('🔑 Токен присутній:', !!localStorage.getItem('token'));
-            
-            console.log('🩺 Перевіряємо доступність API...');
-            const apiCheck = await checkApiAvailability();
-            console.log('📊 Результат перевірки API:', apiCheck);
-            
-            if (!apiCheck.success) {
-                console.warn('⚠️ API може бути недоступним, але продовжуємо спробу PDF завантаження...');
-            }
-            
-            // Збільшений таймаут для PDF (3 хвилини)
-            await downloadFile('/analytics/pdf-report', `analytics-report-${currentDate}.pdf`, pdfTimeout);
-            console.log('✅ PDF експорт завершено успішно');
-            return; // Успішний експорт - виходимо з функції
-        }
-        catch(error){
-            console.error(`Помилка експорту даних в PDF (спроба ${attempt}/${maxRetries}):`, error);
-            console.error('Деталі помилки PDF експорту:', {
-                attempt: attempt,
-                name: error instanceof Error ? error.name : 'Unknown',
-                message: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined
-            });
-            
-            // Якщо це помилка 502, таймаут або серверна помилка і не остання спроба - чекаємо та повторюємо
-            if (error instanceof Error && 
-                (error.message.includes('502') || 
-                 error.message.includes('500') ||
-                 error.message.includes('таймаут') || 
-                 error.message.includes('Таймаут') ||
-                 error.message.includes('timeout') ||
-                 error.message.includes('недоступний')) && 
-                attempt < maxRetries) {
-                console.log(`Серверна помилка detected. Очікування ${retryDelay/1000} секунд перед наступною спробою...`);
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
-                continue;
-            }
-            
-            // Якщо всі спроби вичерпані - кидаємо помилку з додатковою інформацією
-            if (attempt === maxRetries) {
-                console.error('Всі спроби PDF експорту вичерпані');
-                
-                // Додаємо спеціальне повідомлення для різних типів помилок
-                let enhancedMessage = `Помилка PDF експорту після ${maxRetries} спроб: ${error instanceof Error ? error.message : String(error)}`;
-                
-                if (error instanceof Error) {
-                    if (error.message.includes('502') || error.message.includes('500')) {
-                        enhancedMessage += '\n\nРекомендації:\n• Спробуйте знову через 5-10 хвилин\n• Використайте Excel або CSV формат\n• Перевірте стабільність інтернет-з\'єднання';
-                    } else if (error.message.includes('таймаут') || error.message.includes('Таймаут') || error.message.includes('timeout')) {
-                        enhancedMessage += '\n\nПроблема з таймаутом:\n• Сервер занадто довго генерує PDF\n• Спробуйте експорт у менш навантажений час\n• Використайте альтернативні формати (Excel/CSV)';
-                    }
-                }
-                
-                throw new Error(enhancedMessage);
-            } else {
-                // Кидаємо помилку для не-серверних помилок (наприклад, проблеми з мережею)
-                throw error;
-            }
-        }
+    try {
+        const currentDate = new Date().toISOString().split('T')[0];
+        // Збільшуємо таймаут до 2 хвилин для PDF генерації
+        await downloadFile('/analytics/pdf-report', `analytics-report-${currentDate}.pdf`, 120000);
+    } catch (error) {
+        console.error('Помилка експорту даних в PDF:', error);
+        throw new Error(`Помилка PDF експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
     }
-}
+};
+
+export const testApiConnection = async (): Promise<{ status: string; message: string }> => {
+    try {
+        const response = await customFetch<{ status: string; message: string }>('/analytics/test');
+        return response;
+    } catch (error) {
+        console.error('Помилка тестування API:', error);
+        return {
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Невідома помилка'
+        };
+    }
+};
 
 export const exportCsvData = async (): Promise<void> => {
     try {
@@ -402,248 +354,3 @@ export const exportCsvData = async (): Promise<void> => {
     }
 }
 
-// Альтернативний метод PDF експорту через base64
-export const exportPdfDataBase64 = async (): Promise<void> => {
-    try {
-        console.log('Початок PDF експорту через base64...');
-        const currentDate = new Date().toISOString().split('T')[0];
-        const filename = `analytics-report-${currentDate}.pdf`;
-        
-        // Встановлюємо більший таймаут для base64 запиту
-        const originalTimeout = 300000; // 5 хвилин
-        
-        // Запит на base64 PDF з retry логікою
-        let response;
-        const maxRetries = 2;
-        
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                console.log(`Base64 PDF запит, спроба ${attempt}/${maxRetries}...`);
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), originalTimeout);
-                
-                const fetchResponse = await fetch(`${API_BASE}/analytics/pdf-base64`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (!fetchResponse.ok) {
-                    const errorText = await fetchResponse.text();
-                    console.error('Base64 PDF помилка:', errorText);
-                    throw new Error(`Помилка отримання PDF base64: ${fetchResponse.status} ${fetchResponse.statusText}`);
-                }
-                
-                response = await fetchResponse.json();
-                break; // Успішно отримали відповідь
-                
-            } catch (attemptError) {
-                console.error(`Base64 спроба ${attempt} не вдалась:`, attemptError);
-                if (attempt === maxRetries) {
-                    throw attemptError;
-                }
-                // Короткі затримка перед повторною спробою
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-        }
-        
-        if (!response?.success || !response?.data) {
-            throw new Error(response?.error || 'Помилка отримання PDF у base64 форматі');
-        }
-        
-        console.log('Отримано base64 дані, розмір:', response.data.length);
-        console.log('Рекомендоване ім\'я файлу:', response.filename);
-        
-        // Конвертуємо base64 в blob
-        try {
-            const byteCharacters = atob(response.data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/pdf' });
-            
-            console.log('PDF blob створено, розмір:', blob.size);
-            
-            // Перевіряємо, чи blob не порожній
-            if (blob.size === 0) {
-                throw new Error('Отримано порожній PDF файл');
-            }
-            
-            // Завантажуємо файл
-            const finalFilename = response.filename || filename;
-            downloadBlob(blob, finalFilename);
-            
-            console.log('PDF експорт через base64 завершено успішно');
-        } catch (blobError) {
-            console.error('Помилка конвертації base64 в blob:', blobError);
-            throw new Error('Помилка обробки PDF файлу. Файл може бути пошкоджений.');
-        }
-        
-    } catch (error) {
-        console.error('Помилка PDF експорту через base64:', error);
-        throw new Error(`Base64 PDF експорт: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
-    }
-}
-
-// Перевірка здоров'я PDF сервісу  
-export const checkPdfHealth = async (): Promise<boolean> => {
-    try {
-        console.log('Перевірка здоров\'я PDF сервісу...');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут для health check
-        
-        const response = await fetch(`${API_BASE}/analytics/health`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            console.warn('Health check відповів з помилкою:', response.status, response.statusText);
-            return false;
-        }
-        
-        const healthData = await response.json();
-        console.log('Health check відповідь:', healthData);
-        
-        const isHealthy = healthData.status === 'healthy';
-        console.log('Стан PDF сервісу:', isHealthy ? 'здоровий' : 'недоступний');
-        
-        return isHealthy;
-        
-    } catch (error) {
-        console.error('Помилка перевірки здоров\'я PDF сервісу:', error);
-        return false;
-    }
-}
-
-export const checkApiAvailability = async (): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-}> => {
-    try {
-        console.log('🔍 Перевіряємо доступність основного API...');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        
-        const response = await fetch(`${API_BASE}/analytics/health`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Accept': 'application/json'
-            },
-            credentials: 'include',
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        console.log('📡 Відповідь API health check:', {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-            url: response.url
-        });
-        
-        if (!response.ok) {
-            return {
-                success: false,
-                message: `API недоступний: ${response.status} ${response.statusText}`,
-                details: { 
-                    status: response.status, 
-                    statusText: response.statusText,
-                    url: response.url
-                }
-            };
-        }
-        
-        const healthData = await response.json();
-        return {
-            success: true,
-            message: 'API доступний',
-            details: healthData
-        };
-        
-    } catch (error) {
-        console.error('❌ Помилка перевірки API:', error);
-        return {
-            success: false,
-            message: `Помилка перевірки API: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
-            details: { error: error instanceof Error ? error.message : String(error) }
-        };
-    }
-};
-
-// Тестування PDF генерації
-export const testPdfGeneration = async (): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-}> => {
-    try {
-        console.log('🧪 Тестування PDF генерації...');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут для тесту
-        
-        const response = await fetch(`${API_BASE}/analytics/pdf-test`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            console.error('PDF тест відповів з помилкою:', response.status, response.statusText);
-            const errorText = await response.text();
-            return {
-                success: false,
-                message: `Помилка тесту PDF: ${response.status} ${response.statusText}`,
-                details: { status: response.status, statusText: response.statusText, errorText }
-            };
-        }
-        
-        const testResult = await response.json();
-        console.log('🧪 Результат тесту PDF:', testResult);
-        
-        return {
-            success: testResult.success === true,
-            message: testResult.message || 'PDF тест завершено',
-            details: testResult
-        };
-        
-    } catch (error) {
-        console.error('❌ Помилка тесту PDF генерації:', error);
-        return {
-            success: false,
-            message: `Помилка тесту PDF: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
-            details: { error: error instanceof Error ? error.message : String(error) }
-        };
-    }
-}

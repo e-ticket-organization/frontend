@@ -292,12 +292,6 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
         if (name === 'duration' || name === 'price' || name === 'producer_id' || name === 'city_id' || name === 'theater_id') {
             const numValue = value === '' ? 0 : Number(value);
 
-            // Додаємо логування для producer_id
-            if (name === 'producer_id') {
-                console.log('Producer ID changed to:', numValue);
-                console.log('Producer value from select:', value);
-            }
-
             setFormData(prev => ({
                 ...prev,
                 [name]: numValue,
@@ -323,6 +317,8 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
             }
         }
     };
+
+
 
     return (
         <div className="modal-overlay">
@@ -491,6 +487,8 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                         </div>
                     </div>
                     </form>
+                    
+
                 </div>
                 <div className="modal-actions">
                     <button type="submit" form="edit-performance-form">Зберегти зміни</button>
@@ -505,6 +503,7 @@ const EditPerformance: React.FC<EditPerformanceProps> = ({ performance, onClose,
                     >
                         Видалити
                     </button>
+
                 </div>
             </div>
         </div>

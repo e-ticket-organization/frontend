@@ -1,5 +1,0 @@
-# Редіректи для API запитів до бекенду
-/api/*  NEXT_PUBLIC_API_URL:splat  200
-
-# Якщо у вас є окремий URL для аналітики
-# /api/analytics/*  https://your-analytics-backend.com/analytics/:splat  200 

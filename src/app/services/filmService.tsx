@@ -16,11 +16,14 @@ const API_BASE = '/api';
 
 async function customFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${API_BASE}${normalizedEndpoint}`;
+    // Видаляємо подвійні слеші з URL
+    const cleanEndpoint = normalizedEndpoint.replace(/\/+/g, '/');
+    const url = `${API_BASE}${cleanEndpoint}`;
     
     console.log('API_BASE:', API_BASE);
     console.log('endpoint:', endpoint);
     console.log('normalizedEndpoint:', normalizedEndpoint);
+    console.log('cleanEndpoint:', cleanEndpoint);
     console.log('Виконується запит до URL:', url);
     
     const token = localStorage.getItem('token');
@@ -134,7 +137,9 @@ async function fetchWithParams<T>(endpoint: string, params: Record<string, any> 
     
     const queryString = queryParams.toString();
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = queryString ? `${normalizedEndpoint}?${queryString}` : normalizedEndpoint;
+    // Видаляємо подвійні слеші з URL
+    const cleanEndpoint = normalizedEndpoint.replace(/\/+/g, '/');
+    const url = queryString ? `${cleanEndpoint}?${queryString}` : cleanEndpoint;
     
     return customFetch<T>(url);
 }
@@ -752,7 +757,8 @@ interface IPerformanceUpdate {
 
 export const updatePerformance = async (performanceId: number, updateData: IPerformanceUpdate): Promise<IPerfomance> => {
     try {
-        console.log('Відправка даних на сервер:', updateData);
+        console.log('Оновлення вистави:', performanceId, updateData);
+        
         const data = await customFetch<any>(
             `/performances/${performanceId}`, 
             {
@@ -760,8 +766,6 @@ export const updatePerformance = async (performanceId: number, updateData: IPerf
                 body: JSON.stringify(updateData)
             }
         );
-        
-        console.log('Отримана відповідь від сервера:', data);
         
         if (!data) {
             throw new Error('Відповідь сервера не містить даних');
@@ -771,13 +775,10 @@ export const updatePerformance = async (performanceId: number, updateData: IPerf
         let performance: IPerfomance;
         
         if (data.performance) {
-            // Структура: { performance: {...} }
             performance = data.performance;
         } else if (data.id) {
-            // Структура: { id: ..., title: ..., ... } (пряма відповідь)
             performance = data;
         } else if (Array.isArray(data) && data.length > 0) {
-            // Структура: [{ id: ..., title: ..., ... }]
             performance = data[0];
         } else {
             console.error('Невідома структура відповіді:', data);
@@ -789,7 +790,7 @@ export const updatePerformance = async (performanceId: number, updateData: IPerf
             throw new Error('Сервер не повернув валідні дані вистави');
         }
         
-        console.log('Успішно оброблено відповідь:', performance);
+        console.log('Вистава успішно оновлена:', performance);
         return performance;
     } catch (error: any) {
         console.error('Помилка оновлення вистави:', error);
@@ -799,6 +800,8 @@ export const updatePerformance = async (performanceId: number, updateData: IPerf
             throw new Error('Вистава не знайдена на сервері');
         } else if (error.message && error.message.includes('500')) {
             throw new Error('Внутрішня помилка сервера. Перевірте дані та спробуйте знову');
+        } else if (error.message && (error.message.includes('socket hang up') || error.message.includes('ECONNRESET'))) {
+            throw new Error('Проблема з підключенням до сервера. Перевірте з\'єднання та спробуйте знову');
         }
         
         throw new Error(error.message || 'Помилка при оновленні вистави');
@@ -1153,7 +1156,7 @@ export const getShowsByFilters = async (filters: {
   }
 };
 
-// Функції для завантаження PDF квитків
+// Функції для завантаження PDF квитків (використовуємо альтернативний endpoint)
 export const downloadTicketPdf = async (ticketId: number): Promise<void> => {
   try {
     const token = localStorage.getItem('token');
@@ -1162,6 +1165,7 @@ export const downloadTicketPdf = async (ticketId: number): Promise<void> => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Accept': 'application/pdf, application/octet-stream, */*',
       },
     });
     
@@ -1206,6 +1210,7 @@ export const downloadAllUserTicketsPdf = async (): Promise<void> => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Accept': 'application/pdf, application/octet-stream, */*',
       },
     });
     
@@ -1238,6 +1243,71 @@ export const downloadAllUserTicketsPdf = async (): Promise<void> => {
     document.body.removeChild(a);
   } catch (error) {
     console.error('Помилка завантаження PDF усіх квитків:', error);
+    throw error;
+  }
+};
+
+export const downloadTicketAsCsv = async (ticketId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE}/analytics/ticket-csv/${ticketId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/csv, application/csv, */*',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Помилка при завантаженні CSV звіту квитка');
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `ticket-${ticketId}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Помилка завантаження CSV звіту квитка:', error);
+    throw error;
+  }
+};
+
+// Альтернативна функція для експорту всіх квитків користувача у CSV форматі
+export const downloadAllUserTicketsAsCsv = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE}/analytics/user-tickets-csv`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/csv, application/csv, */*',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Помилка при завантаженні CSV звіту всіх квитків');
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'my-tickets.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Помилка завантаження CSV звіту всіх квитків:', error);
     throw error;
   }
 };

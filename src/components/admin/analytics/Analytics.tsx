@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportPdfDataBase64, exportCsvData, checkPdfHealth, testPdfGeneration, checkApiAvailability } from '@/app/services/analyticsService';
+import { getNewsletterStats, getAnalytics, getDashboardAnalytics, exportExcelData, exportPdfData, exportCsvData } from '@/app/services/analyticsService';
 import { NewsletterStats, AnalyticsData, DashboardData } from '@/app/types/analytics';
 import './Analytics.styles.css';
 
@@ -15,17 +15,14 @@ export default function Analytics() {
   const [exportLoading, setExportLoading] = useState<{[key: string]: boolean}>({
     excel: false,
     pdf: false,
-    csv: false
+    csv: false,
+    test: false
   });
   const [exportMessage, setExportMessage] = useState<{type: 'success' | 'error' | null, text: string}>({
     type: null,
     text: ''
   });
-  const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
-  const [lastPdfError, setLastPdfError] = useState<string | null>(null);
-  const [pdfExportMethod, setPdfExportMethod] = useState<'standard' | 'base64' | null>(null);
-  const [pdfTestResult, setPdfTestResult] = useState<{success: boolean; message: string; details?: any} | null>(null);
-  const [pdfTestLoading, setPdfTestLoading] = useState(false);
+  const [apiTestResult, setApiTestResult] = useState<{status: string; message: string} | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,11 +54,45 @@ export default function Analytics() {
     setExportMessage({ type, text });
     setTimeout(() => {
       setExportMessage({ type: null, text: '' });
-      // Очищуємо інформацію про метод PDF після 10 секунд
-      if (type === 'success' && pdfExportMethod) {
-        setPdfExportMethod(null);
-      }
     }, 5000);
+  };
+
+  const testApiConnection = async () => {
+    try {
+      setExportLoading(prev => ({ ...prev, test: true }));
+      
+      // Базовий тест підключення
+      const response = await fetch('/api/analytics', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        setApiTestResult({
+          status: 'success', 
+          message: `API доступне. Статус: ${response.status}`
+        });
+        showMessage('success', 'API підключення працює!');
+      } else {
+        setApiTestResult({
+          status: 'error', 
+          message: `API повертає помилку: ${response.status} ${response.statusText}`
+        });
+        showMessage('error', `API недоступне: ${response.status}`);
+      }
+    } catch (error: any) {
+      console.error('API connection test failed:', error);
+      setApiTestResult({
+        status: 'error', 
+        message: error.message || 'Не вдалося підключитися до API'
+      });
+      showMessage('error', 'Тест API не пройдено');
+    } finally {
+      setExportLoading(prev => ({ ...prev, test: false }));
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -360,93 +391,22 @@ export default function Analytics() {
             </ul>
           </div>
           
-          {/* Додаткова інформація про PDF помилку */}
-          {lastPdfError && lastPdfError.includes('502') && (
-            <div className="info-card error-info">
-              <h4>⚠️ Проблема з PDF експортом:</h4>
-              <p>Виявлено помилку сервера (502) при створенні PDF файлу.</p>
-              
-              <div className="pdf-troubleshoot">
-                <h5>Можливі рішення:</h5>
-                <ul>
-                  <li>Спробуйте експорт знову через 2-3 хвилини</li>
-                  <li>Використайте Excel або CSV формат як альтернативу</li>
-                  <li>Перевірте стабільність інтернет-з'єднання</li>
-                </ul>
+          <div className="info-card">
+            <h4>Діагностика підключення:</h4>
+            <button 
+              className={`export-button test ${exportLoading.test ? 'loading' : ''}`}
+              onClick={testApiConnection}
+              disabled={exportLoading.test}
+            >
+              {exportLoading.test ? 'Тестування...' : 'Тест API підключення'}
+            </button>
+            
+            {apiTestResult && (
+              <div className={`api-test-result ${apiTestResult.status}`}>
+                <strong>Результат тесту:</strong> {apiTestResult.message}
               </div>
-              
-              <div className="technical-details">
-                <button 
-                  type="button"
-                  onClick={() => setShowTechnicalInfo(!showTechnicalInfo)}
-                  className="toggle-technical-info"
-                >
-                  {showTechnicalInfo ? 'Приховати' : 'Показати'} технічні деталі
-                </button>
-                
-                {showTechnicalInfo && (
-                  <div className="technical-info">
-                    <p><strong>Код помилки:</strong> 502 Bad Gateway</p>
-                    <p><strong>Повідомлення:</strong> {lastPdfError}</p>
-                    <p><strong>Причина:</strong> Сервер не може обробити запит на створення PDF, можливо через перевантаження або тимчасову недоступність сервісу PDF генерації.</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="retry-section">
-                <button 
-                  className="export-button pdf retry-button"
-                  onClick={() => exportData('pdf')}
-                  disabled={exportLoading.pdf}
-                >
-                  🔄 Спробувати PDF знову
-                </button>
-                
-                <button 
-                  className={`export-button test ${pdfTestLoading ? 'loading' : ''}`}
-                  onClick={testPdf}
-                  disabled={pdfTestLoading}
-                  style={{marginLeft: '10px'}}
-                >
-                  {pdfTestLoading ? '🔄' : '🧪'} Тест PDF
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Результат тесту PDF */}
-          {pdfTestResult && (
-            <div className={`info-card ${pdfTestResult.success ? 'success-info' : 'error-info'}`}>
-              <h4>{pdfTestResult.success ? '✅ Тест PDF успішний' : '❌ Тест PDF не вдався'}</h4>
-              <p>{pdfTestResult.message}</p>
-              {pdfTestResult.details && (
-                <details style={{marginTop: '10px'}}>
-                  <summary>Технічні деталі</summary>
-                  <pre style={{fontSize: '12px', background: '#f5f5f5', padding: '10px', borderRadius: '4px', overflow: 'auto'}}>
-                    {JSON.stringify(pdfTestResult.details, null, 2)}
-                  </pre>
-                </details>
-              )}
-            </div>
-          )}
-          
-          {/* Інформація про успішний PDF експорт */}
-          {pdfExportMethod && (
-            <div className="info-card success-info">
-              <h4>✅ PDF експорт успішний</h4>
-              <p>
-                Файл було створено через {pdfExportMethod === 'standard' ? 'стандартний' : 'альтернативний (base64)'} метод.
-              </p>
-              {pdfExportMethod === 'base64' && (
-                <p className="method-note">
-                  <small>
-                    Використано альтернативний метод через проблеми з основним сервісом.
-                    Якщо проблема повторюється, зв'яжіться з адміністратором.
-                  </small>
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     );
@@ -454,123 +414,41 @@ export default function Analytics() {
 
   const exportData = async (format: string) => {
     try {
-      console.log(`Почато експорт у форматі: ${format}`);
       // Встановлюємо стан завантаження для конкретної кнопки
       setExportLoading(prev => ({ ...prev, [format]: true }));
       
       if (format === 'excel') {
-        console.log('Виконується Excel експорт...');
         await exportExcelData();
         showMessage('success', 'Excel файл успішно завантажено!');
       } else if (format === 'pdf') {
-        console.log('Виконується PDF експорт...');
-        console.log('Час початку PDF експорту:', new Date().toISOString());
-        
-        try {
-          // Спочатку перевіряємо здоров'я PDF сервісу
-          console.log('Перевіряємо стан PDF сервісу...');
-          const isHealthy = await checkPdfHealth();
-          console.log('Результат перевірки PDF сервісу:', isHealthy);
-          
-          if (!isHealthy) {
-            console.warn('PDF сервіс може бути недоступний, але спробуємо стандартний метод...');
-          }
-          
-          // Завжди спочатку пробуємо стандартний метод
-          try {
-            console.log('Спроба стандартного PDF експорту...');
-            await exportPdfData();
-            setPdfExportMethod('standard');
-            setLastPdfError(null);
-            console.log('✅ Стандартний PDF експорт успішний');
-            showMessage('success', 'PDF файл успішно завантажено!');
-          } catch (standardError: any) {
-            const standardErrorMessage = standardError instanceof Error ? standardError.message : String(standardError);
-            console.warn('❌ Стандартний PDF експорт не вдався:', standardErrorMessage);
-            
-            // Якщо стандартний метод не працює, пробуємо base64
-            console.log('🔄 Пробуємо base64 fallback метод...');
-            try {
-              await exportPdfDataBase64();
-              console.log('✅ PDF експорт через base64 успішний');
-              setLastPdfError(null);
-              setPdfExportMethod('base64');
-              showMessage('success', 'PDF файл успішно завантажено (через альтернативний метод)!');
-            } catch (base64Error: any) {
-              const base64ErrorMessage = base64Error instanceof Error ? base64Error.message : String(base64Error);
-              console.error('❌ Обидва методи PDF експорту не вдалися');
-              console.error('Стандартний метод:', standardErrorMessage);
-              console.error('Base64 метод:', base64ErrorMessage);
-              setPdfExportMethod(null);
-              
-              // Кидаємо помилку стандартного методу, як основну
-              throw new Error(`PDF експорт не вдався. Основна помилка: ${standardErrorMessage}`);
-            }
-          }
-        } catch (pdfError: any) {
-          // Загальна обробка помилок PDF експорту
-          const pdfErrorMessage = pdfError instanceof Error ? pdfError.message : String(pdfError);
-          console.error('🚨 Критична помилка PDF експорту:', pdfError);
-          setLastPdfError(pdfErrorMessage);
-          setPdfExportMethod(null);
-          throw pdfError;
-        }
+        await exportPdfData();
+        showMessage('success', 'PDF файл успішно завантажено!');
       } else if (format === 'csv') {
-        console.log('Виконується CSV експорт...');
         await exportCsvData();
         showMessage('success', 'CSV файл успішно завантажено!');
       }
-      console.log(`Експорт у форматі ${format} завершено успішно`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Помилка експорту даних:', error);
-      console.error(`Деталі помилки експорту ${format}:`, {
-        name: error instanceof Error ? error.name : 'Unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        format: format,
-        timestamp: new Date().toISOString()
-      });
       
-      // Додаткова інформація для PDF помилок
-      if (format === 'pdf' && error instanceof Error && error.message.includes('502')) {
-        console.error('Помилка 502 для PDF експорту. Можливі рішення:');
-        console.error('1. Спробуйте експорт через декілька хвилин');
-        console.error('2. Перевірте стан сервера');
-        console.error('3. Зв\'яжіться з адміністратором системи');
-        
-        // Зберігаємо інформацію про останню PDF помилку
-        setLastPdfError(error.message);
-        
-        // Показуємо спеціальне повідомлення для 502 помилки
-        showMessage('error', 'Помилка сервера при створенні PDF (502). Сервер тимчасово недоступний або перевантажений.');
+      // Специфічна обробка для різних типів помилок
+      let userMessage = '';
+      
+      if (error.message?.includes('socket hang up') || error.message?.includes('ECONNRESET')) {
+        userMessage = `Помилка підключення до сервера. Перевірте з'єднання з інтернетом і спробуйте знову.`;
+      } else if (error.message?.includes('502')) {
+        userMessage = `Сервер тимчасово недоступний. Спробуйте експорт в іншому форматі або повторіть спробу через кілька хвилин.`;
+      } else if (error.message?.includes('504') || error.message?.includes('Таймаут')) {
+        userMessage = `Генерація файлу займає занадто багато часу. Спробуйте повторити спробу або використайте інший формат.`;
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        userMessage = `Помилка авторизації. Спробуйте перезавантажити сторінку.`;
       } else {
-        showMessage('error', `Помилка експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`);
+        userMessage = `Помилка експорту: ${error instanceof Error ? error.message : 'Невідома помилка'}`;
       }
+      
+      showMessage('error', userMessage);
     } finally {
       // Прибираємо стан завантаження
       setExportLoading(prev => ({ ...prev, [format]: false }));
-      console.log(`Завершено процес експорту для формату: ${format}`);
-    }
-  };
-
-  const testPdf = async () => {
-    setPdfTestLoading(true);
-    setPdfTestResult(null);
-    
-    try {
-      console.log('🧪 Запуск тесту PDF генерації...');
-      const result = await testPdfGeneration();
-      console.log('🧪 Результат тесту PDF:', result);
-      setPdfTestResult(result);
-    } catch (error: any) {
-      console.error('❌ Помилка тесту PDF:', error);
-      setPdfTestResult({
-        success: false,
-        message: error instanceof Error ? error.message : 'Невідома помилка тесту',
-        details: { error: error instanceof Error ? error.stack : String(error) }
-      });
-    } finally {
-      setPdfTestLoading(false);
     }
   };
 

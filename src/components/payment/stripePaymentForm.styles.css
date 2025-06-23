@@ -1,197 +1,391 @@
-.payment-form {
-  padding: 30px;
-  background-color: #140E28;
-  border-radius: 16px;
-  color: #ffffff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+/* Сучасний дизайн форми платежів */
+.modern-payment-container {
+  max-width: 480px;
   margin: 0 auto;
-  border: 1px solid #7545FD;
-}
-
-.payment-form h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  text-align: center;
+  background: linear-gradient(135deg, #1a1b3e 0%, #2a1b4e 100%);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  font-weight: 600;
-}
-
-.payment-form p {
-  font-size: 1.1rem;
-  text-align: center;
-  margin-bottom: 30px;
-  color: #c0c0c0;
-}
-
-.payment-form strong {
-  color: #ffffff;
-  font-size: 1.2rem;
-}
-
-.card-info {
-  margin-bottom: 20px;
-}
-
-.card-info h4 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 1.1rem;
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.card-element-container {
-  margin: 20px 0 15px;
-  padding: 15px;
-  border: 1px solid #7545FD;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.05);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card-element-container:hover {
-  border-color: #ECE6FF;
-  box-shadow: 0 0 10px rgba(117, 69, 253, 0.3);
-}
-
-.card-note {
-  font-size: 0.85rem;
-  color: #aab7c4;
-  margin-top: 10px;
-  line-height: 1.4;
-}
-
-.card-note code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-  color: #ECE6FF;
-}
-
-.payment-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 30px;
-  gap: 20px;
-}
-
-.payment-buttons button {
-  flex: 1;
-  padding: 14px 20px;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.payment-buttons button.btn-secondary {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.payment-buttons button.btn-secondary:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.payment-buttons button.btn-primary {
-  background-color: #C1272D;
-  color: white;
   position: relative;
   overflow: hidden;
 }
 
-.payment-buttons button.btn-primary:hover:not(:disabled) {
-  background-color: #e62932;
+.modern-payment-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7c3aed, #c084fc, #7c3aed);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+}
+
+/* Заголовок */
+.payment-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.payment-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.payment-header h3 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.payment-header p {
+  font-size: 16px;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.payment-header strong {
+  color: #7c3aed;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+/* Повідомлення */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.error-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Форма */
+.payment-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-section {
+  margin-bottom: 32px;
+}
+
+.card-section h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-element-container {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(124, 58, 237, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.card-element-container:hover {
+  border-color: rgba(124, 58, 237, 0.5);
+  background: rgba(255, 255, 255, 0.12);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(193, 39, 45, 0.3);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
 }
 
-.payment-buttons button.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+.card-element-container:focus-within {
+  border-color: #7c3aed;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 0 0 4px rgba(124, 58, 237, 0.1),
+    0 8px 25px rgba(124, 58, 237, 0.25);
 }
 
-.payment-buttons button:disabled {
-  opacity: 0.6;
+.card-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #c7d2fe;
+  line-height: 1.5;
+}
+
+.info-icon {
+  color: #818cf8;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.card-note code {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e0e7ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Кнопки */
+.payment-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  padding: 16px 24px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-pay {
+  flex: 2;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border: none;
+  color: #ffffff;
+  padding: 16px 24px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-pay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-pay:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-pay:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 30px rgba(124, 58, 237, 0.4),
+    0 0 0 4px rgba(124, 58, 237, 0.1);
+}
+
+.btn-pay:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-pay:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.error-message {
-  color: #ff4d4d;
-  margin: 20px 0;
-  padding: 10px;
-  background-color: rgba(255, 77, 77, 0.1);
-  border-radius: 8px;
-  border-left: 3px solid #ff4d4d;
-  font-size: 0.9rem;
+.btn-icon {
+  font-size: 18px;
 }
 
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Адаптивний дизайн */
+@media (max-width: 480px) {
+  .modern-payment-container {
+    margin: 16px;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  
+  .payment-header h3 {
+    font-size: 24px;
+  }
+  
+  .payment-icon {
+    font-size: 40px;
+  }
+  
+  .payment-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn-cancel,
+  .btn-pay {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+  
+  .card-element-container {
+    padding: 16px;
+  }
+  
+  .card-note {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+}
+
+/* Стилі для Stripe Elements */
 .StripeElement {
-  height: 40px;
-  padding: 12px;
+  height: 24px;
+  padding: 0;
   width: 100%;
-  color: #ffffff;
-  transition: all 0.3s ease;
-  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
 }
 
 .StripeElement--focus {
-  box-shadow: 0 0 0 1px #7545FD;
+  outline: none;
 }
 
 .StripeElement--invalid {
-  border-color: #ff4d4d;
+  color: #ef4444 !important;
 }
 
-.StripeElement--webkit-autofill {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+.StripeElement--complete {
+  color: #10b981 !important;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0.6;
-  }
+/* Приховуємо всі помилки Stripe */
+[role="alert"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
-.payment-buttons button.btn-primary:disabled {
-  animation: pulse 1.5s infinite;
-  background-color: #7545FD;
+/* Анімації входу */
+.modern-payment-container {
+  animation: slideInUp 0.6s ease-out;
 }
 
-@media screen and (max-width: 480px) {
-  .payment-form {
-    padding: 20px;
-    border-radius: 12px;
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.95);
   }
-  
-  .payment-form h3 {
-    font-size: 1.3rem;
-  }
-  
-  .payment-form p {
-    font-size: 1rem;
-    margin-bottom: 20px;
-  }
-  
-  .payment-buttons {
-    flex-direction: column;
-  }
-  
-  .payment-buttons button {
-    width: 100%;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

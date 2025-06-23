@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getUserTickets, getUserProfile, cancelTicketBooking, getPerfomances, getShows, downloadTicketPdf, downloadAllUserTicketsPdf } from '@/app/services/filmService';
+import { getUserTickets, getUserProfile, cancelTicketBooking, getPerfomances, getShows, downloadTicketPdf, downloadAllUserTicketsPdf, downloadTicketAsCsv, downloadAllUserTicketsAsCsv } from '@/app/services/filmService';
 import { ITicket } from '@/app/types/ticket';
 import { IUser } from '@/app/types/user';
 import './tickets-profile.styles.css';
@@ -169,11 +169,21 @@ export default function TicketsProfile() {
         });
       }
       
-      await downloadTicketPdf(ticketId);
-      console.log('PDF успішно завантажено для квитка:', ticketId);
+      try {
+        // Спочатку намагаємося завантажити PDF через новий endpoint
+        await downloadTicketPdf(ticketId);
+        console.log('PDF успішно завантажено для квитка:', ticketId);
+      } catch (pdfError: any) {
+        console.warn('PDF завантаження не вдалося, пробуємо CSV:', pdfError.message);
+        // Якщо PDF не працює, завантажуємо CSV альтернативу
+        await downloadTicketAsCsv(ticketId);
+        console.log('CSV звіт успішно завантажено для квитка:', ticketId);
+        setError('PDF недоступний, завантажено CSV звіт');
+        setTimeout(() => setError(null), 3000);
+      }
     } catch (err: any) {
-      console.error('Помилка завантаження PDF квитка:', err);
-      setError(err.message || 'Помилка при завантаженні PDF квитка');
+      console.error('Помилка завантаження квитка:', err);
+      setError(err.message || 'Помилка при завантаженні квитка');
     } finally {
       setDownloadingTicketId(null);
     }

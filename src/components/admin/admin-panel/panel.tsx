@@ -15,12 +15,11 @@ import EditActor from '@/components/admin/edit/EditActor';
 import EditProducer from '@/components/admin/edit/EditProducer';
 import EditShow from '@/components/admin/edit/EditShow';
 import EditUser from '@/components/admin/edit/EditUser';
-import Analytics from '@/components/admin/analytics/Analytics';
 
 export default function Panel() {
   const router = useRouter();
   const { isAuthenticated, isAdmin } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('Analytics');
+  const [activeTab, setActiveTab] = useState('Events');
   const [performances, setPerformances] = useState<IPerfomance[]>([]);
   const [producers, setProducers] = useState<IProducer[]>([]);
   const [actors, setActors] = useState<IActor[]>([]);
@@ -423,12 +422,6 @@ export default function Panel() {
     >
       <div className='buttons-container'>
         <button 
-          className={activeTab === 'Analytics' ? 'active' : ''} 
-          onClick={() => setActiveTab('Analytics')}
-        >
-          Analytics
-        </button>
-        <button 
           className={activeTab === 'Events' ? 'active' : ''} 
           onClick={() => setActiveTab('Events')}
         >
@@ -459,13 +452,6 @@ export default function Panel() {
           Users
         </button>
       </div>
-
-      {/* Analytics Tab */}
-      {activeTab === 'Analytics' && (
-        <div className="analytics-tab">
-          <Analytics />
-        </div>
-      )}
 
       {/* Performances Tab */}
       {activeTab === 'Events' && (

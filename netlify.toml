@@ -8,13 +8,20 @@
 # Редіректи для API запитів до вашого бекенду
 [[redirects]]
   from = "/api/*"
-  to = "${NEXT_PUBLIC_API_URL}/api/:splat"
+  to = "https://backend-3ih2.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Альтернативний редірект для акторів
+[[redirects]]
+  from = "/actors/*"
+  to = "https://backend-3ih2.onrender.com/actors/:splat"
   status = 200
   force = true
 
 # Альтернативний редірект тільки для аналітики (якщо бекенд на іншому домені)
 # [[redirects]]
 #   from = "/api/analytics/*"
-#   to = "${ANALYTICS_BACKEND_URL}/analytics/:splat"
+#   to = "https://eticket-backend-7h5e.onrender.com/analytics/:splat"
 #   status = 200
 #   force = true

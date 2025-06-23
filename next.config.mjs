@@ -11,14 +11,18 @@ const nextConfig = {
   async rewrites() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend-3ih2.onrender.com';
       console.log('API URL:', apiUrl);
+      
+      // Видаляємо зайві слеші з API URL
+      const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+      
       return [
           {
               source: '/api/:path*',
-              destination: `${apiUrl}/api/:path*`
+              destination: `${cleanApiUrl}/api/:path*`
           },
           {
               source: '/actors/:path*',
-              destination: `${apiUrl}/actors/:path*`
+              destination: `${cleanApiUrl}/actors/:path*`
           }
       ];
   },
