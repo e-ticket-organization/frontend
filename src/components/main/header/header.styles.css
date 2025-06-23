@@ -7,8 +7,12 @@
     top: 0;
     left: 0;
     right: 0;
-    background: #140E28;
+    background: linear-gradient(90deg, #18132a 0%, #120f23 100%);
+    box-shadow: 0 4px 24px 0 rgba(24,19,42,0.22);
+    border-radius: 0 0 18px 18px;
     z-index: 10000;
+    padding: 0 2vw;
+    transition: background 0.3s, box-shadow 0.3s;
 }
 
 .container li{
@@ -20,38 +24,37 @@ ol {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: 24px;
     background-color: transparent;
 }
 
 ol li {
     font-size: 18px;
-    color: var(--foreground);
-    font-weight: 400;
+    color: #fff;
+    font-weight: 500;
     background-color: transparent;
     display: flex;
     align-items: center; 
     height: 100%;
+    transition: color 0.2s;
 }
 a{
     background-color: transparent;
-    
+    color: #fff;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: color 0.2s, opacity 0.2s;
 }
 a:hover{
     cursor: pointer;
-    transition: 0.3s;
-    opacity: 0.5;
+    opacity: 0.7;
     text-decoration: underline;
-}
-*{
-    font-family: var(--font-family);
-
+    color: #7c4dff;
 }
 
 .profile-icon:hover{
     cursor: pointer;
-    transition: 0.3s;
-    opacity: 0.5;
+    opacity: 0.7;
     text-decoration: underline;
 }
 
@@ -61,8 +64,7 @@ svg{
 
 svg:hover{
     cursor: pointer;
-    transition: 0.3s;
-    opacity: 0.5;
+    opacity: 0.7;
 }
 
 #logo {
@@ -121,14 +123,23 @@ svg:hover{
 .profile-circle {
   width: 32px;
   height: 32px;
-  background: #486CCB;
+  background: #7c4dff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124,77,255,0.13);
+  border: 1.5px solid #fff;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.profile-circle:hover {
+  background: #a084ee;
+  color: #fff;
+  box-shadow: 0 0 12px 2px #a084ee;
 }
 
 .profile-icon {
@@ -141,6 +152,7 @@ svg:hover{
     left: 0;
     padding: 0 15px;
     margin: 15px auto;
+    border-radius: 0 0 12px 12px;
   }
 
   #logo {
@@ -174,8 +186,9 @@ svg:hover{
     flex-direction: column;
     gap: 15px;
     position: relative;
-    background-color: rgba(1, 15, 41, 0.9);
+    background: linear-gradient(90deg, #7c4dff 0%, #a084ee 100%);
     padding: 10px;
+    border-radius: 0 0 10px 10px;
   }
 
   ol {
@@ -190,7 +203,6 @@ svg:hover{
     top: 100%;
     left: 0;
     padding: 10px;
-    background-color: rgba(1, 15, 41, 0.9);
   }
 
   .search-wrapper.open .search-input {

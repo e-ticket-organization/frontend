@@ -1,7 +1,11 @@
 .footer{
     width: 100%;
-    background-color: #140E28;
+    background: linear-gradient(90deg, #18132a 0%, #120f23 100%);
+    box-shadow: 0 -4px 24px 0 rgba(24,19,42,0.22);
+    border-radius: 18px 18px 0 0;
     margin-top: 5%;
+    padding: 24px 0 12px 0;
+    transition: background 0.3s, box-shadow 0.3s;
 }
 
 .footer-wrapper{
@@ -13,13 +17,25 @@
 }
 
 .footer-text-wrapper p{
-    color: #D6D9DD;
-    font-size: 14px;
+    color: #fff;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(124,77,255,0.13);
 }
 
 .footer-social{
     display: flex;
-    gap: 10px;
+    gap: 16px;
+}
+
+.footer-social svg {
+    transition: filter 0.2s, transform 0.2s;
+    filter: drop-shadow(0 2px 8px rgba(124,77,255,0.10));
+}
+
+.footer-social svg:hover {
+    filter: drop-shadow(0 0 8px #a084ee);
+    transform: scale(1.12);
 }
 
 @media screen and (max-width: 768px) {
@@ -29,7 +45,7 @@
   }
 
   .footer-text-wrapper p {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   svg {
@@ -46,6 +62,8 @@
 @media screen and (max-width: 480px) {
   .footer {
     margin-top: 40px;
+    border-radius: 12px 12px 0 0;
+    padding: 18px 0 8px 0;
   }
 
   .footer-wrapper {
