@@ -390,23 +390,6 @@ export default function Analytics() {
               <li>Статистика розсилки</li>
             </ul>
           </div>
-          
-          <div className="info-card">
-            <h4>Діагностика підключення:</h4>
-            <button 
-              className={`export-button test ${exportLoading.test ? 'loading' : ''}`}
-              onClick={testApiConnection}
-              disabled={exportLoading.test}
-            >
-              {exportLoading.test ? 'Тестування...' : 'Тест API підключення'}
-            </button>
-            
-            {apiTestResult && (
-              <div className={`api-test-result ${apiTestResult.status}`}>
-                <strong>Результат тесту:</strong> {apiTestResult.message}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
