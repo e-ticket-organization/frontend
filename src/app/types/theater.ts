@@ -6,4 +6,16 @@ export interface ITheater {
   address?: string;
   cities?: { id: number; name: string; }[];
   shows?: IShow[];
+}
+
+export interface ICreateTheater {
+  name: string;
+  address?: string;
+  cityIds: number[];
+}
+
+export interface IUpdateTheater {
+  name?: string;
+  address?: string;
+  cityIds?: number[];
 } 

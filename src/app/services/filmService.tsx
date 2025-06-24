@@ -8,8 +8,8 @@ import { IActor } from '../types/actor';
 import { IGenre } from '../types/genre';
 import { ISeat } from '../types/seat';
 import { ITicket } from '../types/ticket';
-import { ICity } from '../types/city';
-import { ITheater } from '../types/theater';
+import { ICity, ICreateCity, IUpdateCity } from '../types/city';
+import { ITheater, ICreateTheater, IUpdateTheater } from '../types/theater';
 
 // Використовуємо проксі Next.js для уникнення проблем з CORS
 const API_BASE = '/api';
@@ -1308,6 +1308,106 @@ export const downloadAllUserTicketsAsCsv = async (): Promise<void> => {
     document.body.removeChild(a);
   } catch (error) {
     console.error('Помилка завантаження CSV звіту всіх квитків:', error);
+    throw error;
+  }
+};
+
+// Cities API functions
+export const createCity = async (cityData: ICreateCity): Promise<ICity> => {
+  try {
+    const response = await customFetch<{ message: string; city: ICity }>('/cities', {
+      method: 'POST',
+      body: JSON.stringify(cityData),
+    });
+    
+    return response.city;
+  } catch (error: any) {
+    console.error('Помилка створення міста:', error);
+    throw error;
+  }
+};
+
+export const updateCity = async (cityId: number, updateData: IUpdateCity): Promise<ICity> => {
+  try {
+    const response = await customFetch<{ message: string; city: ICity }>(`/cities/${cityId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    
+    return response.city;
+  } catch (error: any) {
+    console.error('Помилка оновлення міста:', error);
+    throw error;
+  }
+};
+
+export const deleteCity = async (cityId: number): Promise<void> => {
+  try {
+    await customFetch<{ message: string }>(`/cities/${cityId}`, {
+      method: 'DELETE',
+    });
+  } catch (error: any) {
+    console.error('Помилка видалення міста:', error);
+    throw error;
+  }
+};
+
+// Theaters API functions
+export const createTheater = async (theaterData: ICreateTheater): Promise<ITheater> => {
+  try {
+    const response = await customFetch<{ message: string; theater: ITheater }>('/cities/theaters', {
+      method: 'POST',
+      body: JSON.stringify(theaterData),
+    });
+    
+    return response.theater;
+  } catch (error: any) {
+    console.error('Помилка створення театру:', error);
+    throw error;
+  }
+};
+
+export const updateTheater = async (theaterId: number, updateData: IUpdateTheater): Promise<ITheater> => {
+  try {
+    const response = await customFetch<{ message: string; theater: ITheater }>(`/cities/theaters/${theaterId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    
+    return response.theater;
+  } catch (error: any) {
+    console.error('Помилка оновлення театру:', error);
+    throw error;
+  }
+};
+
+export const deleteTheater = async (theaterId: number): Promise<void> => {
+  try {
+    await customFetch<{ message: string }>(`/cities/theaters/${theaterId}`, {
+      method: 'DELETE',
+    });
+  } catch (error: any) {
+    console.error('Помилка видалення театру:', error);
+    throw error;
+  }
+};
+
+export const getTheater = async (theaterId: number): Promise<ITheater> => {
+  try {
+    const theater = await customFetch<ITheater>(`/cities/theaters/${theaterId}`);
+    return theater;
+  } catch (error: any) {
+    console.error('Помилка отримання театру:', error);
+    throw error;
+  }
+};
+
+export const getCity = async (cityId: number): Promise<ICity> => {
+  try {
+    const city = await customFetch<ICity>(`/cities/${cityId}`);
+    return city;
+  } catch (error: any) {
+    console.error('Помилка отримання міста:', error);
     throw error;
   }
 };

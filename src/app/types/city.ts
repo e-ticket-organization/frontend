@@ -9,4 +9,12 @@ export interface ICity {
   upcomingShows?: IShow[];
   showsCount?: number;
   upcomingShowsCount?: number;
+}
+
+export interface ICreateCity {
+  name: string;
+}
+
+export interface IUpdateCity {
+  name?: string;
 } 
