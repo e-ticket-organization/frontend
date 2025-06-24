@@ -176,7 +176,7 @@ export default function TicketsProfile() {
       } catch (pdfError: any) {
         console.warn('PDF завантаження не вдалося, пробуємо CSV:', pdfError.message);
         // Якщо PDF не працює, завантажуємо CSV альтернативу
-        await downloadTicketAsCsv(ticketId);
+        await downloadTicketPdf(ticketId);
         console.log('CSV звіт успішно завантажено для квитка:', ticketId);
         setError('PDF недоступний, завантажено CSV звіт');
         setTimeout(() => setError(null), 3000);

@@ -107,11 +107,6 @@ export default function SeatsGrid({
 
     return (
         <div className="seats-container">
-            {onBack && (
-                <button onClick={onBack} className="back-button">
-                    ← Назад до вибору показів
-                </button>
-            )}
             <div className="stage"></div>
             
             <div className="seats-grid">

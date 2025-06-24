@@ -178,6 +178,14 @@ export default function PerformanceIndividual({ performance }: PerformanceIndivi
         </div>
       )}
 
+      {/* Опис вистави */}
+      <div className="performance-description-section">
+        <h3 className="description-title">Про виставу</h3>
+        <div className="description-content">
+          <p className="description-text">{performance.description}</p>
+        </div>
+      </div>
+
       <div className="performance-description">
         <p className="next-show">
           {shows.length > 0 ? 

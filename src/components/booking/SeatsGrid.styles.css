@@ -13,13 +13,12 @@
 .back-button {
     align-self: flex-start;
     margin-bottom: 20px;
-    padding: 12px 24px;
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: none;
     border-radius: 25px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;

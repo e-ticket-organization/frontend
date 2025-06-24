@@ -153,12 +153,7 @@ export default function CityTheaterSelector({
 
   return (
     <div className="city-theater-selector">
-      {onBack && (
-        <button onClick={onBack} className="back-button">
-          ← Назад
-        </button>
-      )}
-      
+    
       <h2>{selectedPerformance?.title}</h2>
       <p className="subtitle">Виберіть місто та театр для перегляду доступних показів</p>
 
