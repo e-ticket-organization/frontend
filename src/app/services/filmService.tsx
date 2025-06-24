@@ -730,7 +730,7 @@ export const cancelTicketBooking = async (ticketId: number) => {
         console.log('Початок відміни бронювання для квитка:', ticketId);
         
         const data = await customFetch(`/tickets/${ticketId}/cancel`, {
-            method: 'POST'
+            method: 'DELETE'
         });
         
         console.log('Відповідь від сервера:', data);

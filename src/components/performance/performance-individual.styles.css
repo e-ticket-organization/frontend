@@ -503,3 +503,123 @@
         gap: 6px;
     }
 }
+
+/* Стилі для секції опису вистави */
+.performance-description-section {
+    margin: 40px 5%;
+    padding: 30px;
+    background: rgba(11, 40, 104, 0.1);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 215, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.performance-description-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(11, 40, 104, 0.05) 100%);
+    pointer-events: none;
+}
+
+.description-title {
+    color: #FFD700;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.description-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #C1272D, #FFD700);
+    border-radius: 2px;
+}
+
+.description-content {
+    position: relative;
+    z-index: 1;
+}
+
+.description-text {
+    color: #ffffff;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    text-align: justify;
+    margin: 0;
+    position: relative;
+    padding: 20px;
+    background: rgba(1, 15, 41, 0.3);
+    border-radius: 10px;
+    border-left: 4px solid #C1272D;
+}
+
+.description-text::first-letter {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #FFD700;
+    float: left;
+    line-height: 1;
+    margin-right: 8px;
+    margin-top: 4px;
+}
+
+/* Респонсивні стилі для опису */
+@media screen and (max-width: 700px) {
+    .performance-description-section {
+        margin: 30px 3%;
+        padding: 20px;
+    }
+    
+    .description-title {
+        font-size: 1.6rem;
+    }
+    
+    .description-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        padding: 15px;
+    }
+    
+    .description-text::first-letter {
+        font-size: 2.5rem;
+        margin-right: 6px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .performance-description-section {
+        margin: 20px 2%;
+        padding: 15px;
+    }
+    
+    .description-title {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+    
+    .description-text {
+        font-size: 1rem;
+        line-height: 1.5;
+        padding: 12px;
+        text-align: left;
+    }
+    
+    .description-text::first-letter {
+        font-size: 2rem;
+        margin-right: 5px;
+        margin-top: 2px;
+    }
+}

@@ -115,7 +115,11 @@ export default function PerformanceRelises() {
             console.log('Отримані вистави для релізів:', result);
             
             if (result && result.performances && Array.isArray(result.performances)) {
-                setPerformances(result.performances);
+                const performancesWithGenres = result.performances.map(performance => ({
+                    ...performance,
+                    genres: performance.genres || []
+                }));
+                setPerformances(performancesWithGenres);
                 await fetchAllShows();
             } else {
                 console.error('Неочікувана структура відповіді:', result);
@@ -189,7 +193,7 @@ const hasPerformancesWithPrice = (): boolean => {
     };
 
     const handlePerformanceClick = (performanceId: number) => {
-        router.push(`/performance/${performanceId}`);
+        router.push(`/performances/${performanceId}`);
     };
 
     return (
