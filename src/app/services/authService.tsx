@@ -334,7 +334,7 @@ export const registerUser = async (registerData: RegisterData): Promise<Register
 
 export const requestPasswordReset = async (email: string): Promise<{ message: string }> => {
   try {
-    const data = await customFetch(`${AUTH_BASE}/request-password-reset`, {
+    const data = await customFetch(`${AUTH_BASE}/forgot-password`, {
       method: 'POST',
       body: JSON.stringify({ email })
     });

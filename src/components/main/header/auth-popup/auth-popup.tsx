@@ -63,6 +63,11 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const handleForgotPassword = () => {
+    onClose();
+    window.location.href = '/reset-password';
+  };
+
   return (
     <div className='auth-popup'>
       <div className='auth-content'>
@@ -121,10 +126,20 @@ export default function AuthPopup({ onClose }: { onClose: () => void }) {
               />
             </div>
           )}
+          
           <button type='submit' className='submit-button'>
             {isLogin ? 'Увійти' : 'Зареєструватися'}
           </button>
         </form>
+
+        {isLogin && (
+          <div className='forgot-password-section'>
+            <button className='forgot-password-link' onClick={handleForgotPassword}>
+              Забули пароль?
+            </button>
+          </div>
+        )}
+        
         <div className='toggle-section'>
           {isLogin ? (
             <p>

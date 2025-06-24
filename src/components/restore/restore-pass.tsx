@@ -143,10 +143,6 @@ export default function RestorePass() {
                                 Відновити пароль
                             </button>
                         </form>
-                        
-                        <button className="back-link" onClick={handleLogin}>
-                            Повернутися до <span>входу в систему</span>
-                        </button>
                     </>
                 )}
                 
