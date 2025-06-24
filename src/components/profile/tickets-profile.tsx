@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getUserTickets, getUserProfile, cancelTicketBooking, getPerfomances, getShows, downloadTicketPdf, downloadAllUserTicketsPdf, downloadTicketAsCsv, downloadAllUserTicketsAsCsv } from '@/app/services/filmService';
+import { getUserTickets, getUserProfile, cancelTicketBooking, downloadTicketPdf, downloadAllUserTicketsPdf, downloadTicketAsCsv, downloadAllUserTicketsAsCsv } from '@/app/services/filmService';
 import { ITicket } from '@/app/types/ticket';
 import { IUser } from '@/app/types/user';
 import './tickets-profile.styles.css';
-import { IShow } from '@/app/types/show';
 
 export default function TicketsProfile() {
   const [tickets, setTickets] = useState<ITicket[]>([]);
@@ -13,14 +12,12 @@ export default function TicketsProfile() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<IUser | null>(null);
   const [cancellingTicketId, setCancellingTicketId] = useState<number | null>(null);
-  const [performance, setPerformance] = useState<IShow[]>([]);
   const [downloadingTicketId, setDownloadingTicketId] = useState<number | null>(null);
   const [downloadingAllTickets, setDownloadingAllTickets] = useState(false);
   const [pdfFeatureEnabled, setPdfFeatureEnabled] = useState(true); // Можна тимчасово вимкнути функціонал PDF
 
   useEffect(() => {
     fetchUserAndTickets();
-    fetchPerformance();
   }, []);
 
   const validateTicketDates = (tickets: ITicket[]) => {
@@ -122,11 +119,6 @@ export default function TicketsProfile() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fetchPerformance = async () => {
-    const result = await getShows(1, 1000);
-    setPerformance(result?.shows || []);
   };
 
   const handleCancelBooking = async (ticketId: number) => {
@@ -266,7 +258,7 @@ export default function TicketsProfile() {
             <div key={ticket.id} className={`ticket-card ${isActive ? 'active' : 'past'}`}>
               <div className="ticket-header">
                 <h3>
-                  {performance.find(p => p.id === ticket.show.performance_id)?.performance?.title || 
+                  {ticket.show.performance?.title || 
                    `Вистава ID: ${ticket.show.performance_id}`}
                 </h3>
                 <span className={`status ${isActive ? 'status-active' : 'status-past'}`}>
