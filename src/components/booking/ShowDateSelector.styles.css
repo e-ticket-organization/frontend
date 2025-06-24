@@ -1,109 +1,231 @@
 .date-selector {
-    padding: 20px;
+    padding: 30px;
     color: #ffffff;
 }
 
 .react-calendar {
     width: 100%;
-    background: #0B2868;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px;
     color: white;
+    backdrop-filter: blur(10px);
 }
 
 .react-calendar__tile {
     color: white;
-    padding: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus {
-    background-color: #486CCB;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transform: scale(1.05);
 }
 
 .react-calendar__tile--active {
-    background-color: #C1272D !important;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #FFD700, #FFC107) !important;
+    color: #333 !important;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
 }
 
 .available-date {
-    background-color: #486CCB;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border-radius: 10px;
     color: white !important;
+    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
 }
 
 .time-slots-container {
-    margin-top: 20px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 5px;
 }
 
 .time-slot {
-    padding: 12px 20px;
-    border: 2px solid #C1272D;
-    border-radius: 4px;
-    background: none;
-    color: #C1272D;
+    padding: 15px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.time-slot::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.time-slot:hover::before {
+    left: 100%;
 }
 
 .time-slot:hover {
-    background-color: #C1272D;
-    color: white;
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #FFD700, #FFC107);
+    border-color: #FFD700;
+    color: #333;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
 }
 
 .show-date-selector {
-    padding: 20px;
-    max-width: 600px;
+    padding: 30px;
+    max-width: 900px;
+    width: 100%;
     margin: 0 auto;
+    color: white;
+    min-height: 600px;
 }
 
 .show-date-selector h2 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.show-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .dates-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
 }
 
 .date-group {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.date-group:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .date-group h3 {
-    margin-bottom: 10px;
-    color: #333;
+    margin-bottom: 15px;
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .back-button {
-    margin-bottom: 20px;
-    padding: 8px 16px;
+    margin-bottom: 25px;
+    padding: 12px 24px;
     border: none;
-    background: none;
-    color: #C1272D;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
     cursor: pointer;
     font-size: 16px;
+    font-weight: 500;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
 .back-button:hover {
-    text-decoration: underline;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.no-shows {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.2rem;
+    font-style: italic;
+    padding: 40px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .loading-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 200px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    gap: 20px;
+}
+
+.loading-container p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .show-date-selector {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .show-date-selector h2,
+    .show-title {
+        font-size: 1.6rem;
+    }
+
+    .time-slots-container {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+    }
+
+    .time-slot {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    .date-group {
+        padding: 20px;
+    }
+
+    .date-group h3 {
+        font-size: 1.1rem;
+    }
 }

@@ -112,29 +112,34 @@ export default function SeatsGrid({
                     ← Назад до вибору показів
                 </button>
             )}
+            <div className="stage"></div>
+            
             <div className="seats-grid">
-                <div className="side-seats left">
-                    {leftSeats.map((seat, index) => (
-                        <React.Fragment key={seat.id}>
-                            {renderSeat(index + 1, seat)}
-                        </React.Fragment>
-                    ))}
-                </div>
+                {/* Перший ряд залу - горизонтальне розташування */}
+                <div className="seats-row">
+                    <div className="side-seats left">
+                        {leftSeats.map((seat, index) => (
+                            <React.Fragment key={seat.id}>
+                                {renderSeat(index + 1, seat)}
+                            </React.Fragment>
+                        ))}
+                    </div>
 
-                <div className="center-seats">
-                    {centerSeats.map((seat, index) => (
-                        <React.Fragment key={seat.id}>
-                            {renderSeat(index + 51, seat)}
-                        </React.Fragment>
-                    ))}
-                </div>
+                    <div className="center-seats">
+                        {centerSeats.map((seat, index) => (
+                            <React.Fragment key={seat.id}>
+                                {renderSeat(index + 51, seat)}
+                            </React.Fragment>
+                        ))}
+                    </div>
 
-                <div className="side-seats right">
-                    {rightSeats.map((seat, index) => (
-                        <React.Fragment key={seat.id}>
-                            {renderSeat(index + 26, seat)}
-                        </React.Fragment>
-                    ))}
+                    <div className="side-seats right">
+                        {rightSeats.map((seat, index) => (
+                            <React.Fragment key={seat.id}>
+                                {renderSeat(index + 26, seat)}
+                            </React.Fragment>
+                        ))}
+                    </div>
                 </div>
             </div>
 

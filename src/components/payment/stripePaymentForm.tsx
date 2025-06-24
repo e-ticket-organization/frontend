@@ -245,10 +245,6 @@ const PaymentForm = ({ amount, onSuccess, onCancel, bookingData }: PaymentFormPr
               }}
             />
           </div>
-          <div className="card-note">
-            <span className="info-icon">ℹ️</span>
-            Для тестування використовуйте карту: <code>4242 4242 4242 4242</code>
-          </div>
         </div>
         
         <div className="payment-actions">

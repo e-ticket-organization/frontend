@@ -26,13 +26,16 @@
 }
 
 .modal-content {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
     padding: 0;
-    position: relative;
-    max-width: 90vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 1200px;
     max-height: 90vh;
-    width: auto;
     min-width: 320px;
     overflow: hidden;
     box-shadow: 
@@ -54,15 +57,7 @@
     }
 }
 
-/* Налаштування розміру контенту */
-.modal-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: auto;
-    height: auto;
-}
+
 
 /* Декоративний верхній градієнт */
 .modal-content::before {
@@ -85,36 +80,58 @@
 
 .modal-close {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e2e8f0;
-    width: 40px;
-    height: 40px;
+    top: 2%;
+    left: 90%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 300;
+    line-height: 1;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.modal-close::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.modal-close:hover::before {
+    left: 100%;
 }
 
 .modal-close:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #fca5a5;
+    background: rgba(255, 107, 107, 0.25);
+    border-color: rgba(255, 107, 107, 0.5);
+    color: #ffffff;
     transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 12px 35px rgba(255, 107, 107, 0.3);
 }
 
 .modal-close:active {
     transform: scale(0.95) rotate(90deg);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
 }
+
+
 
 /* Контент всередині модалки */
 .modal-content > :not(.modal-close) {
@@ -126,8 +143,10 @@
 .modal-content .city-theater-selector,
 .modal-content .show-date-selector,
 .modal-content .seats-grid,
-.modal-content .promo-code-input {
-    min-height: 400px;
+.modal-content .promo-code-input,
+.modal-content .modern-payment-container {
+    min-height: 600px;
+    min-width: 600px;
     display: flex;
     flex-direction: column;
 }
@@ -172,7 +191,6 @@
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
-    position: relative;
     overflow: hidden;
 }
 
@@ -257,6 +275,22 @@
     font-weight: 500;
 }
 
+/* Адаптивний дизайн для великих екранів */
+@media (min-width: 1400px) {
+    .modal-content {
+        max-width: 1400px;
+    }
+    
+    .modal-content .city-theater-selector,
+    .modal-content .show-date-selector,
+    .modal-content .seats-grid,
+    .modal-content .promo-code-input,
+    .modal-content .modern-payment-container {
+        min-width: 800px;
+        min-height: 700px;
+    }
+}
+
 /* Адаптивний дизайн */
 @media (max-width: 768px) {
     .modal-overlay {
@@ -264,6 +298,7 @@
     }
     
     .modal-content {
+        width: 95vw;
         max-width: 95vw;
         max-height: 95vh;
         border-radius: 16px;
@@ -295,8 +330,8 @@
     }
     
     .modal-close {
-        top: 12px;
-        right: 12px;
+        top: 2%;
+        left: 85%;
         width: 36px;
         height: 36px;
         font-size: 20px;
@@ -304,11 +339,18 @@
 }
 
 @media (max-width: 480px) {
+    .modal-content {
+        width: 98vw;
+        max-width: 98vw;
+    }
+    
     .modal-content .city-theater-selector,
     .modal-content .show-date-selector,
     .modal-content .seats-grid,
-    .modal-content .promo-code-input {
-        min-height: 300px;
+    .modal-content .promo-code-input,
+    .modal-content .modern-payment-container {
+        min-height: 400px;
+        min-width: auto;
     }
     
     .modal-content .error-container,
